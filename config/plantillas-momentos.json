@@ -1,0 +1,83 @@
+{
+  "_nota": "Plantillas de momentos críticos. Las tres preguntas de 'prueba_de_sonido' vienen del planteamiento original; las demás plantillas son propuestas a validar con productores.",
+  "plantillas": [
+    {
+      "clave": "prueba_de_sonido",
+      "nombre": "Prueba de sonido",
+      "area": "Sonido",
+      "documento_base": "rider",
+      "preguntas": [
+        "¿Qué sientes que no funciona bien?",
+        "¿Qué te prometió el proveedor?",
+        "Ingresa aquí el rider técnico."
+      ],
+      "compromisos_tipicos": ["Consola", "Monitores de piso", "Microfonía", "Sistema principal (PA)", "Técnico de sala"],
+      "evidencia_sugerida": ["audio", "photo"]
+    },
+    {
+      "clave": "montaje_de_estructuras",
+      "nombre": "Montaje de estructuras",
+      "area": "Montaje",
+      "documento_base": "quote",
+      "preguntas": [
+        "¿Qué falta por montar y cuánto tiempo necesita?",
+        "¿Lo montado coincide con el plano y la cotización?",
+        "¿Hay algo que te preocupe de la seguridad de la estructura?"
+      ],
+      "compromisos_tipicos": ["Escenario (medidas)", "Techo o truss", "Pantallas", "Barandas y accesos"],
+      "evidencia_sugerida": ["photo", "video"]
+    },
+    {
+      "clave": "luces_y_pantallas",
+      "nombre": "Luces y pantallas",
+      "area": "Luces",
+      "documento_base": "rider",
+      "preguntas": [
+        "¿Qué equipo no enciende o no responde?",
+        "¿Coincide la cantidad de equipos con lo cotizado?",
+        "¿El contenido de pantallas ya fue probado?"
+      ],
+      "compromisos_tipicos": ["Pantalla LED (medidas)", "Cabezas móviles", "Consola de luces", "Operador"],
+      "evidencia_sugerida": ["photo", "video"]
+    },
+    {
+      "clave": "apertura_de_puertas",
+      "nombre": "Apertura de puertas",
+      "area": "Sala",
+      "documento_base": "permit",
+      "preguntas": [
+        "¿La sala está lista para recibir público?",
+        "¿Seguridad, acreditación y señalética están en posición?",
+        "¿Hay algún permiso o inspección pendiente?"
+      ],
+      "compromisos_tipicos": ["Personal de seguridad", "Acreditación", "Señalética y rutas de evacuación"],
+      "evidencia_sugerida": ["photo"]
+    },
+    {
+      "clave": "transporte_y_logistica",
+      "nombre": "Transporte y logística",
+      "area": "Logística",
+      "documento_base": "quote",
+      "preguntas": [
+        "¿Qué unidad o carga no ha llegado?",
+        "¿Cuál era la hora comprometida?",
+        "¿Quién es el contacto y qué dijo?"
+      ],
+      "compromisos_tipicos": ["Unidades", "Hora de llegada", "Carga completa"],
+      "evidencia_sugerida": ["photo", "note"]
+    },
+    {
+      "clave": "permisos_y_seguridad",
+      "nombre": "Permisos y seguridad",
+      "area": "Permisos",
+      "documento_base": "permit",
+      "preguntas": [
+        "¿Qué permiso, carta o seguro falta presentar?",
+        "¿Ante qué autoridad y con qué plazo?",
+        "¿El personal cuenta con su equipo de protección?"
+      ],
+      "compromisos_tipicos": ["Permiso municipal", "Cartas presentadas", "Seguros vigentes", "Equipo de protección personal"],
+      "evidencia_sugerida": ["document", "photo"]
+    }
+  ]
+}

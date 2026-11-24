@@ -1,0 +1,44 @@
+/* MANDO · Event Control — tokens de marca.
+   Heredan del Sistema de Diseño HUB51 (navy / oro / hielo). */
+:root {
+  /* Color */
+  --navy-950: #061428;   /* cabeceras, fondo oscuro, ícono de app */
+  --navy-800: #0a2342;   /* navy del logo, bloques de marca */
+  --navy-600: #16406e;   /* encabezados de tabla, horas */
+  --gold-500: #c9a227;   /* el único acento: uno por pantalla */
+  --gold-300: #e4c65b;   /* oro sobre fondo navy */
+  --ice-500:  #6fa3cc;
+  --ice-300:  #a9cce8;
+  --ice-100:  #e3eef7;
+  --surface-000: #f7f9fc; /* fondo de trabajo */
+  --surface-100: #ffffff; /* tarjetas */
+  --ink:        #10233f;
+  --ink-muted:  #4a5b72;
+  --ink-inverse:#f7f9fc;
+  --line:       #d8e0ea;  /* líneas de 1px */
+  --line-dark:  #1e3a5c;
+
+  /* Estados */
+  --ok:        #2e7d5b;   /* Listo */
+  --critical:  #b3402e;   /* Crítico, En vivo */
+  --record:    #e02424;   /* marco y punto del botón GRABA AQUÍ */
+
+  /* Criticidad (siempre con su nombre escrito) */
+  --level-1: #a9cce8;     /* Informativo */
+  --level-2: #c9a227;     /* Atención */
+  --level-3: #b3402e;     /* Crítico */
+  --level-4: #061428;     /* Red Flag */
+
+  /* Tipografía */
+  --font-display: "Space Grotesk", "Segoe UI", sans-serif;  /* títulos */
+  --font-body:    "Inter", "Segoe UI", sans-serif;          /* texto */
+  --font-mono:    "IBM Plex Mono", "Consolas", monospace;   /* horas y cifras */
+
+  /* Espacio y forma */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px;
+  --radius-0: 0px;   /* bloques de marca */
+  --radius-sm: 4px;  /* chips y píldoras */
+  --radius-md: 8px;  /* tarjetas */
+  --tap-min: 44px;   /* objetivo táctil mínimo */
+}

@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Cache Components queda apagado en la Fase 0: todas las pantallas dependen de la sesión
+  // y se generan en cada pedido. Se puede activar más adelante, pantalla por pantalla.
   turbopack: {
     rules: {
       "*.css": {
