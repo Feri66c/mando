@@ -4,14 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+// Iconos propios (decisión 38): rectos, con esquina viva.
 const TABS = [
-  { key: "hoy", label: "Hoy", path: "", icon: "M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" },
-  { key: "ruta", label: "Hoja de ruta", path: "/hoja-de-ruta", icon: "M4 6h16M4 12h16M4 18h10" },
-  { key: "alertas", label: "Alertas", path: "/alertas", icon: "M12 4 2.5 20h19zM12 10v4m0 3v.5" },
-  { key: "mas", label: "Más", path: "/mas", icon: "M5 12h.01M12 12h.01M19 12h.01" },
+  { key: "hoy", label: "Hoy", path: "", icon: <><path d="M12 2.5 L20.5 7.2 V16.8 L12 21.5 L3.5 16.8 V7.2 Z" /><path d="M12 9 L15 12 L12 15 L9 12 Z" fill="currentColor" /></> },
+  { key: "ruta", label: "Hoja de ruta", path: "/hoja-de-ruta", icon: <><path d="M3 4 H11 L13 8 H21 V14 H13 L11 10 H3 Z" /><path d="M3 15 H10 L12 19 H21" /></> },
+  { key: "alertas", label: "Alertas", path: "/alertas", icon: <><path d="M8 2.5 H16 L21.5 8 V16 L16 21.5 H8 L2.5 16 V8 Z" /><path d="M12 7 V13" /><path d="M12 16.5 V17" /></> },
+  { key: "mas", label: "Más", path: "/mas", icon: <><path d="M4 4 H10 V10 H4 Z" /><path d="M14 4 H20 V10 H14 Z" /><path d="M4 14 H10 V20 H4 Z" /><path d="M17 13.5 L20.5 17 L17 20.5 L13.5 17 Z" fill="currentColor" /></> },
 ];
 
-/** Barra inferior flotante en forma de píldora, con cuatro pestañas. */
+/** Barra inferior: una sola pieza de mando con cuatro pestañas. */
 export function BottomNav({ eventId, openAlerts }: { eventId: string; openAlerts: number }) {
   const pathname = usePathname();
   const base = `/eventos/${eventId}`;
@@ -22,11 +23,8 @@ export function BottomNav({ eventId, openAlerts }: { eventId: string; openAlerts
     return pathname.startsWith(base + path);
   };
   return (
-    <nav
-      aria-label="Secciones del evento"
-      className="barra-inferior fixed inset-x-3 z-30 mx-auto max-w-md rounded-full border border-line bg-[#0b1f3a]/95 p-1.5 shadow-2xl backdrop-blur"
-    >
-      <ul className="grid grid-cols-4">
+    <nav aria-label="Secciones del evento" className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-2xl">
+      <ul className="barra-mando grid grid-cols-4 bg-[#0c1f3d] pb-[env(safe-area-inset-bottom)]">
         {TABS.map((t) => {
           const on = active(t.path);
           return (
@@ -34,18 +32,18 @@ export function BottomNav({ eventId, openAlerts }: { eventId: string; openAlerts
               <Link
                 href={base + t.path}
                 aria-current={on ? "page" : undefined}
-                className={`relative flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[11px] font-semibold ${
-                  on ? "bg-surface-200 text-ink" : "text-ink-muted"
-                }`}
+                className={`relative flex min-h-[72px] flex-col items-center justify-center gap-1 px-1 text-[12.5px] ${on ? "font-semibold text-gold-300" : "font-medium text-[#d5e2f0]"}`}
               >
-                <svg aria-hidden viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={t.key === "mas" ? 3 : 1.8} strokeLinecap="round" strokeLinejoin="round">
-                  <path d={t.icon} />
+                <svg aria-hidden viewBox="0 0 24 24" className="size-6" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="square" strokeLinejoin="miter">
+                  {t.icon}
                 </svg>
                 {t.label}
                 {t.key === "alertas" && openAlerts > 0 && (
-                  <span className="absolute right-3 top-1 min-w-5 rounded-full bg-[#ff7a5c] px-1 text-center font-mono text-[10px] leading-5 text-navy-950">
-                    {openAlerts}
-                    <span className="sr-only"> alertas abiertas</span>
+                  <span className="absolute left-[56%] top-2.5 flex size-5 rotate-45 items-center justify-center bg-critical font-mono text-xs font-semibold text-white">
+                    <span className="-rotate-45">
+                      {openAlerts}
+                      <span className="sr-only"> alertas abiertas</span>
+                    </span>
                   </span>
                 )}
               </Link>
@@ -97,11 +95,11 @@ export function PlusButton({ eventId }: { eventId: string }) {
   return (
     <div ref={ref} className="boton-mas fixed right-4 z-40">
       {open && (
-        <ul className="absolute bottom-16 right-0 w-64 overflow-hidden rounded-card border border-line bg-surface-100 shadow-2xl" role="menu">
+        <ul className="absolute bottom-16 right-0 w-64 overflow-hidden rounded-card bg-surface-200" role="menu">
           {options.map((o) => (
             <li key={o.label} role="none">
-              <Link role="menuitem" href={o.href} className="block min-h-12 px-4 py-3 hover:bg-surface-200">
-                <span className="block font-semibold">{o.label}</span>
+              <Link role="menuitem" href={o.href} className="block min-h-12 px-4 py-3 hover:bg-surface-300">
+                <span className="block font-display font-semibold">{o.label}</span>
                 <span className="block text-xs text-ink-muted">{o.hint}</span>
               </Link>
             </li>
@@ -116,7 +114,7 @@ export function PlusButton({ eventId }: { eventId: string }) {
           e.stopPropagation();
           setOpen((v) => !v);
         }}
-        className="flex size-14 items-center justify-center rounded-full border-2 border-ink bg-surface-200 text-3xl font-light text-ink shadow-2xl"
+        className="hexagono flex h-14 w-16 items-center justify-center bg-gold-300 text-3xl font-light text-navy-950"
       >
         <span aria-hidden className={`transition-transform ${open ? "rotate-45" : ""}`}>+</span>
       </button>

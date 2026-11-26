@@ -46,7 +46,7 @@ test("el productor ve Hoy con el tema oscuro, la barra inferior y el botón +", 
   await waitLive(page); // la página ya está hidratada
   await page.getByRole("button", { name: /Crear: evidencia/ }).click();
   await expect(page.getByRole("menuitem", { name: /Evidencia/ })).toBeVisible();
-  const bg = await page.locator(".tema-operacion").evaluate((el) => getComputedStyle(el).backgroundColor);
+  const bg = await page.locator("body").evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(bg).toBe("rgb(6, 20, 40)"); // navy-950
   await waitLive(page);
   await shot(page, "1-productor-hoy");

@@ -4,7 +4,37 @@ import { ITEM_STATUS_LABEL, type ItemStatus } from "@mando/core/labels";
 
 // Piezas visuales del tema oscuro de operación. Regla 8: todo estado y nivel lleva su nombre escrito.
 
-const DARK_BG = "#0d2443"; // tarjetas del tema oscuro
+const DARK_BG = "#0c1f3d"; // tarjetas del tema oscuro
+
+/** Una forma por nivel de criticidad (decisión 38). Siempre va junto al nombre, nunca sola. */
+export function LevelShape({ level, className = "size-4" }: { level: number; className?: string }) {
+  const common = { "aria-hidden": true, viewBox: "0 0 30 30", className: `shrink-0 ${className}` } as const;
+  if (level >= 4)
+    return (
+      <svg {...common} fill="#FFFFFF">
+        <path d="M5 2 H8 V28 H5 Z" />
+        <path d="M10 3 H27 L22 9.5 L27 16 H10 Z" fill="#E0503A" stroke="#FFFFFF" strokeWidth="1.5" />
+      </svg>
+    );
+  if (level === 3)
+    return (
+      <svg {...common}>
+        <path d="M9.5 2 H20.5 L28 9.5 V20.5 L20.5 28 H9.5 L2 20.5 V9.5 Z" fill="#E0503A" />
+        <path d="M13.5 8 H16.5 V17 H13.5 Z M13.5 19.5 H16.5 V22.5 H13.5 Z" fill="#FFFFFF" />
+      </svg>
+    );
+  if (level === 2)
+    return (
+      <svg {...common}>
+        <path d="M15 1.5 L28.5 15 L15 28.5 L1.5 15 Z" fill="#E4C65B" />
+      </svg>
+    );
+  return (
+    <svg {...common}>
+      <path d="M15 2 L26.5 8.5 V21.5 L15 28 L3.5 21.5 V8.5 Z" fill="#A9CCE8" />
+    </svg>
+  );
+}
 
 export function LevelChip({
   level,
@@ -19,9 +49,10 @@ export function LevelChip({
   const c = levelChipColors(info.color, background);
   return (
     <span
-      className="inline-flex shrink-0 items-center rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide"
-      style={{ background: c.bg, color: c.fg, borderColor: c.border }}
+      className="inline-flex shrink-0 items-center gap-1.5 bg-surface-000 px-2 py-1 font-mono text-[11px] font-semibold uppercase tracking-wider"
+      style={{ color: c.fg === "#061428" ? "#f7f9fc" : c.fg }}
     >
+      <LevelShape level={level} />
       {info.nombre}
     </span>
   );
@@ -52,7 +83,7 @@ export function Card({ children, className = "" }: { children: React.ReactNode; 
 export function PageTitle({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <h1 className="font-display text-2xl font-semibold leading-tight">{children}</h1>
+      <h1 className="font-display text-[28px] font-bold leading-[1.05]">{children}</h1>
       {aside}
     </div>
   );
@@ -61,9 +92,9 @@ export function PageTitle({ children, aside }: { children: React.ReactNode; asid
 export function SectionTitle({ children, href, linkLabel }: { children: React.ReactNode; href?: string; linkLabel?: string }) {
   return (
     <div className="mb-2 mt-6 flex items-baseline justify-between">
-      <h2 className="font-display text-base font-semibold">{children}</h2>
+      <h2 className="etiqueta-mando text-ice-300">{children}</h2>
       {href && (
-        <Link href={href} className="text-sm font-medium text-ice-300 underline-offset-4 hover:underline">
+        <Link href={href} className="text-sm font-medium text-ink underline underline-offset-4">
           {linkLabel ?? "Ver todo"}
         </Link>
       )}

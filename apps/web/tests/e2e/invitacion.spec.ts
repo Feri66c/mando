@@ -5,6 +5,7 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
 // ve la bienvenida, toma el mando y cae en el evento.
 // Requiere el Supabase local con el seed y su buzón de prueba (Mailpit).
 const PASSWORD = process.env.E2E_PASSWORD;
+const SHOTS = process.env.E2E_SCREENSHOTS;
 const MAILPIT = process.env.E2E_MAILPIT_URL ?? "http://127.0.0.1:54324";
 
 async function latestCode(request: APIRequestContext, to: string): Promise<string> {
@@ -33,18 +34,21 @@ test.describe("invitación a un evento nuevo", () => {
 
     // 1. El productor general entra y crea el evento desde su panel.
     await page.goto("/ingresar");
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/a-ingreso.png`, fullPage: true });
     await page.getByRole("button", { name: "Entrar con contraseña" }).click();
     await expect(page.getByLabel("Contraseña")).toBeVisible();
     await page.getByLabel("Correo").fill("torre@mando.test");
     await page.getByLabel("Contraseña").fill(PASSWORD!);
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
     await expect(page).toHaveURL(/\/eventos$/);
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/b-mis-eventos.png`, fullPage: true });
 
     await page.getByRole("link", { name: /Ir al panel/ }).click();
     await expect(page.getByRole("heading", { name: "Tú repartes el mando." })).toBeVisible();
     await page.goto("/panel/nuevo");
     await page.getByRole("radio", { name: /Sampling/ }).check();
     await expect(page.getByText(/Sampling · 5 piezas/)).toBeVisible();
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/c-panel-nuevo.png`, fullPage: true });
     await page.getByLabel("Nombre del evento").fill(eventName);
     await page.getByRole("textbox", { name: "Cliente" }).fill("Sodimac");
     await page.getByLabel("Fecha", { exact: true }).fill("2027-03-14");
@@ -67,6 +71,7 @@ test.describe("invitación a un evento nuevo", () => {
     const pending = page.getByRole("list", { name: "Invitaciones pendientes" });
     await expect(pending.getByText("Tatiana Ríos")).toBeVisible();
     await expect(pending.getByText(guest)).toBeVisible();
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/d-panel-equipo.png`, fullPage: true });
 
     // 3. La invitada entra en otro teléfono, con el código que le llega.
     const phone = await browser.newContext({ locale: "es-PE", timezoneId: "America/Lima" });
@@ -82,10 +87,16 @@ test.describe("invitación a un evento nuevo", () => {
     await expect(guestPage).toHaveURL(/\/bienvenida\//);
     await expect(guestPage.getByRole("heading", { name: "Gracias, Tatiana, por sumarte a MANDO." })).toBeVisible();
     await expect(guestPage.getByText(eventName)).toBeVisible();
+    if (SHOTS) await guestPage.waitForTimeout(800);
+    if (SHOTS) await guestPage.screenshot({ path: `${SHOTS}/e-bienvenida.png`, fullPage: true });
     await guestPage.getByRole("button", { name: "Continuar" }).click();
     await expect(guestPage.getByRole("heading", { name: "Esto no se negocia." })).toBeVisible();
     await expect(guestPage.getByText("El cliente mira minuto a minuto")).toBeVisible();
+    if (SHOTS) await guestPage.waitForTimeout(800);
+    if (SHOTS) await guestPage.screenshot({ path: `${SHOTS}/f-mandatorios.png`, fullPage: true });
     await guestPage.getByRole("button", { name: "Entendido" }).click();
+    if (SHOTS) await guestPage.waitForTimeout(800);
+    if (SHOTS) await guestPage.screenshot({ path: `${SHOTS}/g-reto.png`, fullPage: true });
     await guestPage.getByRole("button", { name: "Tomar el mando" }).click();
     await expect(guestPage.getByRole("heading", { name: "Se inició la acción." })).toBeVisible({ timeout: 10_000 });
 

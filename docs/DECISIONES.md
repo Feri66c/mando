@@ -201,3 +201,17 @@ Fecha: 26 de noviembre de 2026.
 - **Quién lee:** cada persona ve lo suyo. El productor general y el productor de campo leen todos los aprendizajes y la ficha del cliente. El cliente no ve los aprendizajes del equipo.
 - **Bitácora:** registra que alguien compartió sus aprendizajes o que el cliente dejó su ficha, nunca el contenido.
 - **Pendiente, necesita servicios externos:** cortos de video hechos por IA, publicación directa en YouTube y TikTok, tiempos estimados por IA a partir del brief y el código de ingreso por WhatsApp o SMS.
+
+# Decisiones del look: lenguaje de mando
+
+Fecha: 26 de noviembre de 2026. Fer aprobó el rediseño y pidió aplicarlo a la app.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 38 | Lenguaje de mando | Toda la app usa el tema navy con un solo oro. Cuatro piezas: corte (dos esquinas cortadas en tarjetas y botones), encastre (Ahora calza en Sigue), tramo (el avance en tramos inclinados) y botón hexagonal (acciones rápidas, «+» y el selector de tiempos). Una forma por nivel de criticidad, siempre con su nombre: hexágono, rombo, octágono y bandera. Tipografías: Chakra Petch en títulos y botones, IBM Plex Sans en texto, IBM Plex Mono en horas y cifras. Iconos propios, rectos. |
+
+## Supuestos
+
+- **Dónde vive:** las reglas de forma están en `apps/web/src/app/globals.css` y las piezas en `components/operacion/ui.tsx` y `nav.tsx`, para que todas las pantallas cambien juntas. La lógica no se tocó.
+- **Foco y contraste:** lo que está cortado dibuja el foco hacia adentro. Los estados siguen llevando su palabra escrita.
+- **Pendiente del rediseño:** el teclado propio del código de 6 dígitos, «elige tu mando», las insignias y las pantallas de podcast y minuto a minuto del lienzo de diseño.

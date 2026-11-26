@@ -6,7 +6,7 @@ import { signOut } from "@/app/actions/auth";
 export function Logo({ variant = "oscuro", className = "" }: { variant?: "oscuro" | "claro"; className?: string }) {
   return (
     <Image
-      src={`/brand/mando-logo-ajustado-${variant}.svg`}
+      src={variant === "oscuro" ? "/brand/mando-logo-sobre-navy.svg" : "/brand/mando-logo-ajustado-claro.svg"}
       alt="MANDO · Event Control"
       width={2400}
       height={969}
@@ -19,7 +19,7 @@ export function Logo({ variant = "oscuro", className = "" }: { variant?: "oscuro
 /** Cabecera navy de las pantallas con sesión. El oro del logo es el único acento de la pantalla. */
 export function AppHeader({ label, userName }: { label: string; userName: string }) {
   return (
-    <header className="bg-navy-950 text-ink-inverse">
+    <header className="text-ink-inverse">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <Link href="/eventos" className="flex items-center gap-3" aria-label="Ir a Mis eventos">
           <Logo className="h-7 w-auto" />
@@ -28,7 +28,7 @@ export function AppHeader({ label, userName }: { label: string; userName: string
           <span className="hidden text-sm text-ice-300 sm:inline">{userName}</span>
           <button
             type="submit"
-            className="min-h-11 rounded-chip border border-line-dark px-3 text-sm font-medium text-ink-inverse hover:bg-navy-800"
+            className="min-h-11 rounded-full bg-surface-200 px-4 text-sm font-medium text-ink-inverse"
           >
             Salir
           </button>

@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es-PE">
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="tema-operacion min-h-dvh antialiased">{children}</body>
     </html>
   );
 }

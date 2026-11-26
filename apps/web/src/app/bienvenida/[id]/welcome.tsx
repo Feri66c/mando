@@ -99,7 +99,7 @@ export function Welcome(props: Props) {
   }
 
   const eyebrow = "font-mono text-xs uppercase tracking-[0.16em] text-gold-300";
-  const title = "mt-3 font-display text-4xl font-semibold leading-[1.05] outline-none sm:text-5xl";
+  const title = "mt-3 font-display text-4xl font-bold leading-[1.02] outline-none sm:text-5xl";
   const left = target !== null && now !== null ? remaining(target, now) : null;
 
   return (
@@ -120,7 +120,7 @@ export function Welcome(props: Props) {
               {props.isViewer ? "invitó a ver esta experiencia en vivo." : "dio el mando de esta experiencia."}
             </p>
 
-            <div className="mt-6 bg-surface-100 p-5">
+            <div className="corte mt-6 bg-surface-100 p-5">
               <p className="font-display text-2xl font-semibold leading-tight">{props.eventName}</p>
               <dl className="mt-4 space-y-2 text-sm">
                 {props.dateText && (
@@ -163,7 +163,7 @@ export function Welcome(props: Props) {
             </h1>
             <ul className="mt-6 space-y-2">
               {rules.map((m) => (
-                <li key={m.titulo} className="flex gap-3 bg-surface-100 p-4">
+                <li key={m.titulo} className="corte flex gap-3 bg-surface-100 p-4">
                   <span aria-hidden="true" className={`mt-0.5 font-mono text-lg leading-none ${props.isViewer ? "text-ice-300" : "text-[#ff8f7a]"}`}>
                     {props.isViewer ? "○" : "✕"}
                   </span>

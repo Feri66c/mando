@@ -17,12 +17,12 @@ export default async function MyEventsPage() {
     <>
       <AppHeader label="Mis eventos" userName={user.fullName} />
       <main className="mx-auto max-w-3xl px-4 py-6">
-        <h1 className="font-display text-2xl font-semibold">Mis eventos</h1>
+        <h1 className="font-display text-[28px] font-bold leading-none">Mis eventos</h1>
         <p className="mt-1 text-sm text-ink-muted">Hola, {user.fullName}. Elige el evento que vas a controlar.</p>
         {canCreate && (
           <Link
             href="/panel"
-            className="mt-4 inline-flex min-h-11 items-center rounded-card bg-navy-800 px-4 font-display text-sm font-semibold text-ink-inverse hover:bg-navy-950"
+            className="mt-4 inline-flex min-h-12 items-center rounded-full bg-gold-500 px-5 text-sm text-navy-950"
           >
             Ir al panel: crear eventos e invitar
           </Link>
@@ -41,7 +41,7 @@ export default async function MyEventsPage() {
               <li key={event.id}>
                 <Link
                   href={event.welcomedAt ? `/eventos/${event.id}` : `/bienvenida/${event.id}`}
-                  className="block rounded-card border border-line bg-surface-100 p-4 transition-colors hover:border-navy-600"
+                  className="block rounded-card bg-surface-100 p-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <EventStatusText status={event.status} />
