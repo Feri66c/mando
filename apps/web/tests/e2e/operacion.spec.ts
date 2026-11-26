@@ -20,6 +20,7 @@ async function login(browser: Browser, email: string): Promise<Page> {
   const page = await context.newPage();
   await page.goto("/ingresar");
   await page.getByRole("button", { name: "Entrar con contraseña" }).click();
+  await expect(page.getByLabel("Contraseña")).toBeVisible(); // el formulario se reinicia al cambiar de paso
   await page.getByLabel("Correo").fill(email);
   await page.getByLabel("Contraseña").fill(PASSWORD!);
   await page.getByRole("button", { name: "Entrar", exact: true }).click();

@@ -21,6 +21,7 @@ test.describe("ingreso de los tres roles (requiere Supabase con el seed)", () =>
     test(`${user.role} ve solo el evento de ejemplo con su rol`, async ({ page }) => {
       await page.goto("/ingresar");
       await page.getByRole("button", { name: "Entrar con contraseña" }).click();
+      await expect(page.getByLabel("Contraseña")).toBeVisible(); // el formulario se reinicia al cambiar de paso
       await page.getByLabel("Correo").fill(user.email);
       await page.getByLabel("Contraseña").fill(PASSWORD!);
       await page.getByRole("button", { name: "Entrar", exact: true }).click();
@@ -48,6 +49,7 @@ test.describe("ingreso de los tres roles (requiere Supabase con el seed)", () =>
   test("contraseña equivocada muestra el error en español", async ({ page }) => {
     await page.goto("/ingresar");
     await page.getByRole("button", { name: "Entrar con contraseña" }).click();
+    await expect(page.getByLabel("Contraseña")).toBeVisible(); // el formulario se reinicia al cambiar de paso
     await page.getByLabel("Correo").fill("cliente@mando.test");
     await page.getByLabel("Contraseña").fill("incorrecta");
     await page.getByRole("button", { name: "Entrar", exact: true }).click();
