@@ -135,3 +135,19 @@ Fecha: 26 de noviembre de 2026. Pedido de Fer: toda la documentación del evento
 - **Archivos:** van al mismo cubo privado, en `<evento>/expediente/`, con su huella SHA-256. Se pueden subir también con el evento cerrado, porque facturas y cobranza llegan después.
 - **Recordatorio a la persona:** el botón «Recordar por WhatsApp» arma el mensaje («Tatiana, falta subir… te quedan 2 días. Recuerda que es un requisito no negociable»). El aviso automático al teléfono llega con la app móvil; el reenvío automático de facturas por correo, cuando haya servicio de correo.
 - **Eventos anteriores:** no reciben la lista sola; se les agregan documentos a mano desde la pantalla.
+
+# Decisiones de las aprobaciones del cliente
+
+Fecha: 26 de noviembre de 2026. Pedido de Fer: un recuadro para que la productora suba casting, utilería, uniforme y referencias visuales, que el cliente apruebe en tiempo real, y que sin todo aprobado no se marque el inicio.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 28 | Aprobaciones del cliente | Cuatro grupos (`config/aprobaciones.json`): casting, uniforme, utilería y referencias visuales. Cada tipo de evento trae los suyos y los niveles 1 y 2 los ajustan según el brief. El equipo (niveles 1 a 3) sube cada elemento con foto, nombre y detalle; recibe un código corto (C-01, U-02). El cliente aprueba con un toque o pide un cambio contando qué cambiar. Reemplazar la foto devuelve el elemento a «por aprobar». Cada paso queda en la bitácora. |
+| 29 | Sin todo aprobado no se empieza | Mientras un grupo pedido no tenga elementos o quede algo sin aprobar, las piezas clave de la hoja de ruta no se pueden marcar como empezadas. Lo impide la base de datos, no solo la pantalla, y el mensaje dice qué falta. «Hoy» muestra el aviso al equipo y al cliente. |
+
+## Supuestos
+
+- **Quién aprueba:** el cliente. El productor general puede registrar una aprobación que el cliente dio por otro medio, y debe anotar cómo la recibió; la bitácora lo dice así. Los demás del equipo no pueden aprobar.
+- **Fotos:** van al cubo privado, en `<evento>/aprobaciones/`, con su huella. Las ve todo miembro del evento, porque el cliente tiene que verlas.
+- **Eventos anteriores:** nacen sin grupos pedidos, así que nada se bloquea; se prenden desde la pantalla.
+- **Minuto a minuto referencial desde el brief:** hoy cada tipo de evento ya crea su hoja de ruta de referencia desde la plantilla. Que una IA lea el brief y proponga guion y minuto a minuto necesita un servicio de IA conectado en el servidor; queda pendiente hasta conectar los servicios.

@@ -38,6 +38,7 @@ Supuestos tomados para arrancar: ver [`docs/DECISIONES.md`](docs/DECISIONES.md).
 - `/eventos/<evento>/citados`: hosts e invitados con su hora de citación, recordatorio por WhatsApp o correo y marca de llegada.
 - `/eventos/<evento>/expediente`: documentos por subir según el tipo de evento (`config/expediente.json`), con plazo, responsable y recordatorio.
 - `/eventos/<evento>/locacion`: punto de encuentro, mapa, transporte y antecedentes del lugar.
+- `/eventos/<evento>/aprobaciones`: casting, uniforme, utilería y referencias que el cliente aprueba (`config/aprobaciones.json`). Sin todo aprobado no se marca el inicio. Decisiones 28 y 29.
 - Pruebas: `tests/db/meritos.test.ts` y `apps/web/tests/e2e/z-cierre.spec.ts` (corre al final porque cierra el evento de ejemplo). Decisiones 22 a 24.
 
 ## Comandos

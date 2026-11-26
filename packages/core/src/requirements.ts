@@ -1,6 +1,7 @@
 // Expediente del evento (decisión 25): documentos que hay que subir, con plazo y recordatorio.
 // La lista vive en datos (config/expediente.json) y se copia al evento al crearlo.
 import config from "../../../config/expediente.json";
+import { approvalGroup, approvalGroupsFor } from "./approvals";
 import type { EventTemplate } from "./event-types";
 
 export type RequirementCategory = "seguridad" | "permisos" | "proveedores" | "logistica" | "administracion" | "eventualidades";
@@ -30,10 +31,14 @@ export function documentsFor(kind: string): DocumentSpec[] {
   return CONFIG.documentos.filter((d) => d.tipos === "todos" || d.tipos.includes(kind));
 }
 
-/** La plantilla que se guarda en el evento: la del tipo más su lista de documentos. */
-export function withDocuments<T extends Pick<EventTemplate, "clave">>(template: T): T & { documentos: Omit<DocumentSpec, "tipos">[] } {
+/** La plantilla que se guarda en el evento: la del tipo más su lista de documentos y sus grupos de aprobación. */
+export function withDocuments<T extends Pick<EventTemplate, "clave">>(
+  template: T,
+): T & { documentos: Omit<DocumentSpec, "tipos">[]; aprobaciones: { clave: string; prefijo: string }[] } {
   return {
     ...template,
+    // Grupos que el cliente aprueba antes de empezar (config/aprobaciones.json).
+    aprobaciones: approvalGroupsFor(template.clave).map((clave) => ({ clave, prefijo: approvalGroup(clave)?.prefijo ?? "X" })),
     documentos: documentsFor(template.clave).map(({ clave, titulo, categoria, plazo_dias, no_negociable }) => ({
       clave,
       titulo,

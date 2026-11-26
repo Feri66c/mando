@@ -3,9 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertCard, EvidenceGrid, LogList } from "@/components/operacion/blocks";
 import { Card, Empty, SectionTitle, StatusChip, buttonPrimary, buttonSecondary } from "@/components/operacion/ui";
+import { approvalGate } from "@mando/core/approvals";
 import { nowAndNext } from "@mando/core/route";
 import { formatEventRange, formatTime } from "@mando/core/time";
-import { getAlerts, getEventContext, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
+import { getAlerts, getApprovalGroups, getApprovals, getEventContext, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Hoy" };
 
@@ -35,12 +36,15 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
   const ctx = await getEventContext(id);
   if (!ctx) notFound();
   const { event, criticality, isTeam } = ctx;
-  const [items, alerts, log, evidences] = await Promise.all([
+  const [items, alerts, log, evidences, approvalGroups, approvals] = await Promise.all([
     getRouteItems(id),
     getAlerts(id),
     getLog(id, isTeam ? 6 : 12),
     isTeam ? Promise.resolve([]) : getEvidences(id),
+    getApprovalGroups(id),
+    getApprovals(id),
   ]);
+  const gate = approvalGate(approvalGroups, approvals);
   const { current, next } = nowAndNext(items, new Date());
   const base = `/eventos/${id}`;
   const active = alerts.filter((a) => a.status !== "resolved");
@@ -53,6 +57,15 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
         <NowCard label="Ahora" item={current} timeZone={event.timezone} />
         <NowCard label="Sigue" item={next} timeZone={event.timezone} />
       </div>
+
+      {!gate.ready && event.status !== "closed" && (
+        <Link href={`${base}/aprobaciones`} className="mt-3 block rounded-card border border-gold-300/50 bg-surface-100 px-4 py-3 text-sm">
+          <span className="block font-semibold text-gold-300">
+            {isTeam ? "Falta la aprobación del cliente para empezar" : "Tienes elementos por aprobar"}
+          </span>
+          <span className="block text-ink-muted">{gate.missing.join(" · ")}</span>
+        </Link>
+      )}
 
       {isTeam && (
         <>

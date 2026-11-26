@@ -652,3 +652,57 @@ export async function fetchLocation(client: SupabaseClient, eventId: string): Pr
     updatedAt: data.updated_at ?? null,
   };
 }
+
+// ---- Aprobaciones del cliente ----
+
+export type Approval = {
+  id: string;
+  group: string;
+  code: string;
+  name: string;
+  detail: string | null;
+  fileUrl: string | null;
+  version: number;
+  status: "pending" | "approved" | "changes_requested";
+  decisionNote: string | null;
+  decidedAt: string | null;
+  decidedByName: string | null;
+};
+
+/** Elementos que el cliente aprueba, con enlace firmado de corta duración para la foto. */
+export async function fetchApprovals(client: SupabaseClient, eventId: string): Promise<Approval[]> {
+  const { data, error } = await client
+    .from("event_approvals")
+    .select("id, group_key, code, name, detail, file_path, version, status, decision_note, decided_at, decider:profiles!event_approvals_decided_by_fkey (full_name)")
+    .eq("event_id", eventId)
+    .is("removed_at", null)
+    .order("code", { ascending: true });
+  if (error) throw new Error(`No se pudieron leer las aprobaciones: ${error.message}`);
+  const rows = data ?? [];
+  const paths = rows.map((r) => r.file_path as string | null).filter((p): p is string => Boolean(p));
+  const urls = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await client.storage.from("evidences").createSignedUrls(paths, 60 * 60);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  return rows.map((r) => ({
+    id: r.id as string,
+    group: r.group_key as string,
+    code: r.code as string,
+    name: r.name as string,
+    detail: (r.detail as string | null) ?? null,
+    fileUrl: r.file_path ? (urls.get(r.file_path as string) ?? null) : null,
+    version: Number(r.version),
+    status: r.status as Approval["status"],
+    decisionNote: (r.decision_note as string | null) ?? null,
+    decidedAt: (r.decided_at as string | null) ?? null,
+    decidedByName: (first(r.decider) as { full_name: string | null } | null)?.full_name ?? null,
+  }));
+}
+
+/** Grupos que este evento pide aprobar antes de empezar. */
+export async function fetchApprovalGroups(client: SupabaseClient, eventId: string): Promise<string[]> {
+  const { data, error } = await client.from("events").select("approval_groups").eq("id", eventId).maybeSingle();
+  if (error) throw new Error(`No se pudieron leer las aprobaciones: ${error.message}`);
+  return Array.isArray(data?.approval_groups) ? data.approval_groups.map(String) : [];
+}

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { evaluateClockRulesAction } from "@/app/actions/operacion";
 import { getBrowserClient } from "@/lib/supabase/browser";
 
-const TABLES = ["route_items", "log_entries", "alerts", "evidences", "critical_moments", "commitments", "event_criteria", "event_guests", "event_requirements", "event_locations"];
+const TABLES = ["route_items", "log_entries", "alerts", "evidences", "critical_moments", "commitments", "event_criteria", "event_guests", "event_requirements", "event_locations", "event_approvals"];
 
 /**
  * Tiempo real: escucha los cambios del evento y vuelve a dibujar la pantalla con los datos del servidor.

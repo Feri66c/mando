@@ -31,3 +31,8 @@ export const MAX_EVIDENCE_BYTES = 50 * 1024 * 1024;
 export function requirementPath(eventId: string, fileId: string, fileName: string): string {
   return `${eventId}/expediente/${fileId}.${safeExtension(fileName)}`;
 }
+
+/** Ruta de la foto de un elemento por aprobar: <evento>/aprobaciones/<id>.<extensión>. */
+export function approvalPath(eventId: string, fileId: string, fileName: string): string {
+  return `${eventId}/aprobaciones/${fileId}.${safeExtension(fileName)}`;
+}

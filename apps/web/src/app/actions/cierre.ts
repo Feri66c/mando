@@ -152,3 +152,45 @@ export async function setLocationAction(_prev: CierreState, fd: FormData): Promi
     "Locación guardada. Ya la ve todo el equipo.",
   );
 }
+
+// ---------------------------------------------------------------- Aprobaciones del cliente
+
+/** La foto ya se subió desde el teléfono al cubo privado; aquí se registra el elemento. */
+export async function addApprovalAction(input: {
+  eventId: string;
+  group: string;
+  name: string;
+  detail: string;
+  filePath: string | null;
+  sha256: string | null;
+}): Promise<CierreState> {
+  if (!input.name.trim()) return { ok: false, error: "Escribe el nombre." };
+  return run(
+    "add_approval_item",
+    { p_event: input.eventId, p_group: input.group, p_name: input.name, p_detail: input.detail.trim() || null, p_file_path: input.filePath, p_sha256: input.sha256 },
+    "Subido. El cliente ya lo ve.",
+  );
+}
+
+export async function replaceApprovalAction(input: { itemId: string; filePath: string; sha256: string }): Promise<CierreState> {
+  return run(
+    "update_approval_item",
+    { p_item: input.itemId, p_action: "replace", p_file_path: input.filePath, p_sha256: input.sha256 },
+    "Reemplazado. Vuelve a estar por aprobar.",
+  );
+}
+
+export async function removeApprovalAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("update_approval_item", { p_item: text(fd, "item_id"), p_action: "remove" }, "Retirado.");
+}
+
+export async function decideApprovalAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  const approve = text(fd, "decision") === "approve";
+  const note = text(fd, "note");
+  if (!approve && !note) return { ok: false, error: "Cuenta qué hay que cambiar." };
+  return run("decide_approval", { p_item: text(fd, "item_id"), p_approve: approve, p_note: note || null }, approve ? "Aprobado." : "Cambio pedido. El equipo ya lo ve.");
+}
+
+export async function setApprovalGroupsAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("set_approval_groups", { p_event: text(fd, "event_id"), p_groups: fd.getAll("grupo").map(String) }, "Guardado.");
+}

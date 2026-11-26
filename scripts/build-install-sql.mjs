@@ -53,6 +53,9 @@ writeFileSync(
     "",
     "-- Expediente y locación.",
     readFileSync(join(root, "supabase/migrations/20261130000007_expediente_y_locacion.sql"), "utf8"),
+    "",
+    "-- Aprobaciones del cliente.",
+    readFileSync(join(root, "supabase/migrations/20261201000008_aprobaciones_del_cliente.sql"), "utf8"),
   ].join("\n"),
 );
 console.log("✓ supabase/actualizar-etapa-2.sql actualizado");
