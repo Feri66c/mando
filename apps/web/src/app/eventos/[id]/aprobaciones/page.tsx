@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Aprobaciones" };
 const STATUS_COLOR: Record<ApprovalStatus, string> = {
   pending: "text-gold-300",
   approved: "text-[#8fe0b8]",
-  changes_requested: "text-[#ff8f7a]",
+  changes_requested: "text-[#ff6f86]",
 };
 const STATUS_MARK: Record<ApprovalStatus, string> = { pending: "◆", approved: "✓", changes_requested: "!" };
 

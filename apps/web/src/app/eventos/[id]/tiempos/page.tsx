@@ -70,8 +70,8 @@ export default async function TimesPage({ params }: { params: Promise<{ id: stri
           ) : (
             <ul aria-label="Avisos de MANDO" className="grid gap-2">
               {issues.map((issue) => (
-                <li key={`${issue.kind}-${issue.itemId}`} className="rounded-card border border-[#ff8f7a]/50 bg-surface-100 p-4 text-sm">
-                  <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#ff8f7a]">{issue.kind === "margen" ? "Margen" : "No cuadra"}</span>
+                <li key={`${issue.kind}-${issue.itemId}`} className="rounded-card border border-[#ff6f86]/50 bg-surface-100 p-4 text-sm">
+                  <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#ff6f86]">{issue.kind === "margen" ? "Margen" : "No cuadra"}</span>
                   <p className="mt-1">{issue.message}</p>
                 </li>
               ))}
@@ -83,7 +83,7 @@ export default async function TimesPage({ params }: { params: Promise<{ id: stri
             {live.map((i) => {
               const flagged = issues.some((x) => x.itemId === i.id);
               return (
-                <li key={i.id} className={`rounded-card bg-surface-100 p-4 ${flagged ? "border border-[#ff8f7a]/50" : ""}`}>
+                <li key={i.id} className={`rounded-card bg-surface-100 p-4 ${flagged ? "border border-[#ff6f86]/50" : ""}`}>
                   <p className="font-medium leading-snug">
                     {i.title}
                     {i.isMilestone && <span className="ml-2 text-[11px] font-semibold uppercase tracking-wide text-gold-300">Hito</span>}

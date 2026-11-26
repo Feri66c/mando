@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Expediente" };
 const DUE_COLOR: Record<DueState, string> = {
   done: "text-[#8fe0b8]",
   not_applicable: "text-ink-muted",
-  overdue: "text-[#ff8f7a]",
+  overdue: "text-[#ff6f86]",
   soon: "text-gold-300",
   on_track: "text-ink-muted",
   no_date: "text-ink-muted",

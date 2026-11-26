@@ -14,7 +14,16 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
   if (!ctx) notFound();
   const { event, user, isTeam } = ctx;
   const base = `/eventos/${id}`;
-  const links = [
+  const isBackend = event.role === "backend";
+  const express = [
+    { href: base, label: "MANDO Express", hint: "El estado de tu evento y tus avisos." },
+    { href: `${base}/aprobaciones`, label: "Aprobaciones", hint: "Casting, uniforme, utilería y referencias que te toca aprobar." },
+    { href: `${base}/presupuesto`, label: "Presupuesto", hint: "El monto de tu evento, para aprobarlo o pedir un cambio." },
+    { href: `${base}/aprendizajes`, label: "Ficha de satisfacción", hint: "Cuéntanos qué impresión te deja el evento." },
+    { href: "/eventos", label: "Mis eventos", hint: "Cambiar de evento." },
+  ];
+  const team = [
+    ...(isBackend ? [{ href: `${base}/backend`, label: "Backend", hint: "Instrucciones al productor, avisos al cliente, plazo y lo que espera tu revisión." }] : []),
     { href: `${base}/cierre`, label: "Estrellas y cierre", hint: "Cómo va el evento, los no negociables y el informe para guardar en PDF." },
     { href: `${base}/aprendizajes`, label: isTeam ? "Aprendizajes" : "Ficha de satisfacción", hint: isTeam ? "Lo que te llevas de este evento, en seis puntos." : "Cuéntanos qué impresión te deja el evento." },
     { href: `${base}/planificacion`, label: "Planificación", hint: "Los 5 elementos: legal, personal, técnico, presupuesto y aprobaciones. Desbloquean el timeline." },
@@ -32,6 +41,7 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
     ...(isTeam ? [{ href: `${base}/momentos`, label: "Momentos críticos", hint: "Prueba de sonido, montaje, puertas: prometido contra entregado." }] : []),
     { href: "/eventos", label: "Mis eventos", hint: "Cambiar de evento." },
   ];
+  const links = isTeam ? team : express;
   return (
     <>
       <PageTitle>Más</PageTitle>

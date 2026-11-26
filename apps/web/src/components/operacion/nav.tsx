@@ -13,19 +13,27 @@ const TABS = [
 ];
 
 /** Barra inferior: una sola pieza de mando con cuatro pestañas. */
-export function BottomNav({ eventId, openAlerts }: { eventId: string; openAlerts: number }) {
+// MANDO Express (decisión 47): el cliente solo ve sus avisos, sus aprobaciones y Más.
+const CLIENT_TABS = [
+  { ...TABS[0], label: "Express" },
+  { key: "aprobaciones", label: "Aprobaciones", path: "/aprobaciones", icon: <><path d="M4 4 H20 V20 H4 Z" /><path d="M8 12 L11 15 L16.5 9" /></> },
+  TABS[3],
+];
+
+export function BottomNav({ eventId, openAlerts, client = false }: { eventId: string; openAlerts: number; client?: boolean }) {
+  const tabs = client ? CLIENT_TABS : TABS;
   const pathname = usePathname();
   const base = `/eventos/${eventId}`;
   const active = (path: string) => {
     if (path === "") return pathname === base || pathname === `${base}/`;
-    if (path === "/mas") return ["/mas", "/bitacora", "/momentos", "/evidencias", "/cierre", "/citados", "/expediente", "/locacion", "/aprobaciones", "/planificacion", "/personal", "/tecnico", "/presupuesto", "/tiempos", "/aprendizajes"].some((p) => pathname.startsWith(base + p));
+    if (path === "/mas") return ["/mas", "/bitacora", "/momentos", "/evidencias", "/cierre", "/citados", "/expediente", "/locacion", "/aprobaciones", "/planificacion", "/personal", "/tecnico", "/presupuesto", "/tiempos", "/aprendizajes", "/backend"].filter((p) => !(client && p === "/aprobaciones")).some((p) => pathname.startsWith(base + p));
     if (path === "/hoja-de-ruta") return pathname.startsWith(base + path) || pathname.startsWith(`${base}/actividad`);
     return pathname.startsWith(base + path);
   };
   return (
     <nav aria-label="Secciones del evento" className="fixed inset-x-0 bottom-0 z-30 mx-auto max-w-2xl">
-      <ul className="barra-mando grid grid-cols-4 bg-[#0c1f3d] pb-[env(safe-area-inset-bottom)]">
-        {TABS.map((t) => {
+      <ul className={`barra-mando grid ${client ? "grid-cols-3" : "grid-cols-4"} bg-[#0c1f3d] pb-[env(safe-area-inset-bottom)]`}>
+        {tabs.map((t) => {
           const on = active(t.path);
           return (
             <li key={t.key}>

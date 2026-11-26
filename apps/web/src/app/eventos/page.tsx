@@ -3,7 +3,8 @@ import Link from "next/link";
 import { AppHeader } from "@/components/brand";
 import { EventStatusText, RolePill } from "@/components/pills";
 import { getAdminOrgs, getCurrentUser, getMyEvents } from "@/lib/data";
-import { ROLE_DESCRIPTION } from "@mando/core/labels";
+import { AcceptRole } from "@/components/accept-role";
+import { ROLE_DESCRIPTION, ROLE_LABEL } from "@mando/core/labels";
 import { formatEventRange, zoneLabel } from "@mando/core/time";
 
 export const metadata: Metadata = { title: "Mis eventos" };
@@ -37,16 +38,19 @@ export default async function MyEventsPage() {
           </div>
         ) : (
           <ul className="mt-6 space-y-3">
-            {events.map((event) => (
-              <li key={event.id}>
-                <Link
-                  href={event.welcomedAt ? `/eventos/${event.id}` : `/bienvenida/${event.id}`}
-                  className="block rounded-card bg-surface-100 p-4"
-                >
+            {events.map((event) => {
+              const body = (
+                <>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <EventStatusText status={event.status} />
                     <RolePill role={event.role} />
                   </div>
+                  {event.role !== "viewer" && (
+                    <p className="mt-3 font-mono text-xs uppercase tracking-[0.14em] text-ink-muted">
+                      {event.acceptedAt ? "Tu cargo" : "Te convocaron como"}
+                    </p>
+                  )}
+                  {event.role !== "viewer" && <p className="font-display text-xl font-bold uppercase tracking-wide text-gold-500">{event.title ?? ROLE_LABEL[event.role]}</p>}
                   <h2 className="mt-2 font-display text-lg font-semibold leading-snug">{event.name}</h2>
                   <p className="mt-1 font-mono text-sm text-navy-600">
                     {formatEventRange(event.startsAt, event.endsAt, event.timezone)}{" "}
@@ -55,13 +59,29 @@ export default async function MyEventsPage() {
                   <p className="mt-1 text-sm text-ink-muted">
                     {[event.venueName, event.clientName].filter(Boolean).join(" · ")}
                   </p>
-                  <p className="mt-3 border-t border-line pt-3 text-xs text-ink-muted">
-                    {event.title ? `${event.title}. ` : ""}
-                    {ROLE_DESCRIPTION[event.role]}
-                  </p>
-                </Link>
-              </li>
-            ))}
+                </>
+              );
+              // Quien todavía no acepta su cargo no entra: primero «Acepto» (decisión 40). El cliente no tiene cargo que aceptar.
+              if (event.role !== "viewer" && !event.acceptedAt) {
+                return (
+                  <li key={event.id} className="rounded-card bg-surface-100 p-4">
+                    {body}
+                    <AcceptRole eventId={event.id} />
+                  </li>
+                );
+              }
+              return (
+                <li key={event.id}>
+                  <Link
+                    href={event.welcomedAt ? `/eventos/${event.id}` : `/bienvenida/${event.id}`}
+                    className="block rounded-card bg-surface-100 p-4"
+                  >
+                    {body}
+                    <p className="mt-3 border-t border-line pt-3 text-xs text-ink-muted">{ROLE_DESCRIPTION[event.role]}</p>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         )}
       </main>

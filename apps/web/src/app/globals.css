@@ -72,14 +72,22 @@ body {
    Contrastes verificados: texto #f7f9fc y #b9d3ea sobre #061428 y #0d2443 superan AA.
    --------------------------------------------------------------------------- */
 .tema-operacion {
-  --surface-000: #061428;   /* fondo: navy-950 */
-  --surface-100: #0c1f3d;   /* tarjetas */
-  --surface-200: #16335f;   /* botones secundarios, hexágonos */
-  --surface-300: #12294f;   /* tarjeta destacada */
-  --ink: #f7f9fc;
-  --ink-muted: #c3d3e6;
-  --line: #2a4873;
-  --gold-500: #e4c65b;      /* sobre navy el oro es uno solo */
+  /* Modo oscuro con neón de evento (decisión 39). */
+  --surface-000: #07080c;   /* fondo */
+  --surface-100: #12141c;   /* tarjetas */
+  --surface-200: #1d2130;   /* botones secundarios, hexágonos */
+  --surface-300: #171a25;   /* tarjeta destacada */
+  --ink: #ffffff;
+  --ink-muted: #c3c9d6;
+  --line: #2c3244;
+  --gold-500: #ffd60a;      /* amarillo: el acento principal */
+  --gold-300: #ffd60a;
+  --naranja: #ff8a1f;       /* atención, observaciones */
+  --ice-500: #3dd6ff;
+  --ice-300: #8fe6ff;
+  --ok: #1cf2a0;
+  --critical: #ff2d55;
+  --record: #ff2d55;
   --radius-md: 0px;         /* las tarjetas no se redondean: se cortan */
   --radius-sm: 0px;
   --corte: 14px;
@@ -205,7 +213,7 @@ body.tema-operacion::before {
   position: absolute;
   inset: 0 0 auto 0;
   height: 200px;
-  background: #0a1c38;
+  background: #0d0f17;
   clip-path: polygon(0 0, 100% 0, 100% 58%, 0 100%);
   z-index: 0;
   pointer-events: none;
@@ -232,7 +240,7 @@ body.tema-operacion > * {
     linear-gradient(315deg, var(--filo) calc(var(--corte) * 0.7071 + 1.5px), transparent 0);
 }
 .tema-operacion .rounded-card[class*="border-gold"] { --filo: color-mix(in srgb, var(--gold-300) 60%, transparent); }
-.tema-operacion .rounded-card[class*="ff8f7a"] { --filo: color-mix(in srgb, #ff8f7a 60%, transparent); }
+.tema-operacion .rounded-card[class*="ff6f86"] { --filo: color-mix(in srgb, #ff6f86 60%, transparent); }
 .tema-operacion .rounded-card.border-dashed { background-image: none; }
 
 /* Botones y enlaces con forma de botón: corte chico, letra de mando. */
@@ -286,9 +294,9 @@ body.tema-operacion > * {
   flex: 1;
   height: 12px;
   clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
-  background: #1b3766;
+  background: #23283a;
 }
-.tramo[data-estado="hecho"] { background: #6fa3cc; }
+.tramo[data-estado="hecho"] { background: var(--ok); box-shadow: 0 0 10px var(--ok); }
 .tramo[data-estado="ahora"] { background: var(--gold-300); }
 
 /* Encastre: cada actividad calza en la siguiente. */
@@ -334,4 +342,67 @@ body.tema-operacion > * {
   clip-path: polygon(var(--corte) 0, 100% 0, 100% calc(100% - var(--corte)), calc(100% - var(--corte)) 100%, 0 100%, 0 var(--corte));
   font-family: var(--font-display);
   letter-spacing: 0.04em;
+}
+
+
+/* ---------------------------------------------------------------------------
+   Modo oscuro con neón de evento (decisión 39). Botones de contorno fino con brillo
+   por dentro, letra más grande para iPhone y iPad, y acentos intensos: amarillo,
+   naranja, rojo y verde.
+   --------------------------------------------------------------------------- */
+html:has(.tema-operacion) { font-size: 17px; }
+@media (min-width: 700px) { html:has(.tema-operacion) { font-size: 18px; } }
+/* Línea de evento arriba de todo. */
+body.tema-operacion::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 2;
+  background: linear-gradient(90deg, var(--gold-300), var(--naranja), var(--critical), var(--ok));
+  pointer-events: none;
+}
+/* Secundarios: contorno de neón sobre relleno oscuro. */
+.tema-operacion :is(a, button, summary).rounded-full:not([class*="bg-gold"]):not([class*="bg-critical"]):not([class*="bg-record"]) {
+  background-color: #12141c;
+  box-shadow: inset 0 0 0 1.5px #6b7590, inset 0 0 16px rgba(107, 117, 144, 0.38);
+}
+/* Primarios: amarillo lleno con luz. */
+.tema-operacion :is(a, button).rounded-full[class*="bg-gold"] {
+  background-image: linear-gradient(180deg, #ffe44d 0%, #ffc400 100%);
+  color: #0a0a0a;
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.55), inset 0 -10px 18px rgba(255, 138, 31, 0.45);
+}
+.tema-operacion :is(a, button).rounded-full:active:not(:disabled) { transform: scale(0.98); }
+.tema-operacion .tramo[data-estado="ahora"] { box-shadow: 0 0 10px var(--gold-300); }
+/* Semáforo de avance: rojo, amarillo y verde total. */
+.semaforo-pista {
+  height: 16px;
+  background: #1d2130;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.semaforo-pista > i { display: block; height: 100%; transition: width 0.4s; }
+
+/* Botón «Acepto» (decisión 40): hexágono grande con pulso. */
+.acepto {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 76px;
+  clip-path: polygon(26px 0, calc(100% - 26px) 0, 100% 50%, calc(100% - 26px) 100%, 26px 100%, 0 50%);
+  background: linear-gradient(180deg, #ffe44d 0%, #ffc400 55%, #ff8a1f 100%);
+  color: #0a0a0a;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.acepto:disabled { opacity: 0.6; }
+@media (prefers-reduced-motion: no-preference) {
+  .acepto:not(:disabled) { animation: pulso 1.8s ease-in-out infinite; }
+}
+@keyframes pulso {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 214, 10, 0.5)) brightness(1); }
+  50% { filter: drop-shadow(0 0 20px rgba(255, 214, 10, 0.9)) brightness(1.08); }
 }

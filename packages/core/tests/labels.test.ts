@@ -3,7 +3,7 @@ import { EVENT_STATUS_LABEL, ITEM_STATUS_LABEL, ROLE_LABEL, isEventRole } from "
 
 describe("textos visibles", () => {
   it("los tres roles tienen nombre en español", () => {
-    expect(ROLE_LABEL).toEqual({ viewer: "Cliente", producer: "Productor", backend: "Torre de control" });
+    expect(ROLE_LABEL).toEqual({ viewer: "Cliente", producer: "Productor", backend: "Backend" });
   });
 
   it("todo estado tiene su palabra (regla 8)", () => {

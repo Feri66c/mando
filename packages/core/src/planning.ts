@@ -20,6 +20,24 @@ export function planningProgress(status: ElementStatus[]): { ready: number; tota
   return { ready: PLANNING_ELEMENTS.filter((e) => status.find((s) => s.key === e.clave)?.ready).length, total: PLANNING_ELEMENTS.length };
 }
 
+/** Avance en porcentaje (decisión 44): lo hecho sobre lo pedido en los cinco elementos. */
+export function planningPercent(status: ElementStatus[]): number {
+  const mine = PLANNING_ELEMENTS.map((e) => status.find((s) => s.key === e.clave)).filter((s): s is ElementStatus => Boolean(s));
+  const total = mine.reduce((sum, s) => sum + Math.max(s.total, 1), 0);
+  if (total === 0) return 0;
+  const done = mine.reduce((sum, s) => sum + (s.ready ? Math.max(s.total, 1) : Math.min(s.done, Math.max(s.total, 1) - 1)), 0);
+  return Math.round((done / total) * 100);
+}
+
+/** Semáforo del avance: rojo hasta la mitad, amarillo mientras falte algo, verde solo con todo completo. */
+export type Semaphore = "rojo" | "amarillo" | "verde";
+export function planningSemaphore(status: ElementStatus[]): { percent: number; color: Semaphore; label: string } {
+  const percent = planningPercent(status);
+  if (status.length > 0 && planningReady(status)) return { percent: 100, color: "verde", label: "Verde total · todo completo" };
+  if (percent >= 50) return { percent: Math.min(percent, 99), color: "amarillo", label: "En amarillo · avanzando" };
+  return { percent, color: "rojo", label: "En rojo · falta lo mínimo" };
+}
+
 // ---- Personal ----
 
 export type DocState = "vigente" | "vencido" | "sin_vigencia" | "sin_dni";

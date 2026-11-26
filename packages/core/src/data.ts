@@ -37,6 +37,8 @@ export type MyEvent = {
   level: number | null;
   /** Cuándo vio la bienvenida y tomó el mando. null = todavía no. */
   welcomedAt: string | null;
+  /** Cuándo aceptó su cargo. Quien ya tomó el mando, ya aceptó. */
+  acceptedAt: string | null;
 };
 
 export type RouteItem = {
@@ -83,7 +85,7 @@ type EventRow = {
 
 const EVENT_COLUMNS = "id, name, event_type, client_name, venue_name, timezone, starts_at, ends_at, status, kind, tier";
 
-function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: number | null, welcomedAt: string | null): MyEvent {
+function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: number | null, welcomedAt: string | null, acceptedAt: string | null = null): MyEvent {
   return {
     id: e.id,
     name: e.name,
@@ -100,6 +102,7 @@ function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: nu
     tier: e.tier,
     level,
     welcomedAt,
+    acceptedAt: acceptedAt ?? welcomedAt,
   };
 }
 
@@ -107,7 +110,7 @@ function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: nu
 export async function fetchMyEvents(client: SupabaseClient, userId: string): Promise<MyEvent[]> {
   const { data, error } = await client
     .from("event_members")
-    .select(`role, title, level, welcomed_at, events (${EVENT_COLUMNS})`)
+    .select(`role, title, level, welcomed_at, accepted_at, events (${EVENT_COLUMNS})`)
     .eq("profile_id", userId);
   if (error) throw new Error(`No se pudieron leer tus eventos: ${error.message}`);
 
@@ -115,7 +118,7 @@ export async function fetchMyEvents(client: SupabaseClient, userId: string): Pro
     .map((row) => {
       const event = (Array.isArray(row.events) ? row.events[0] : row.events) as EventRow | null;
       if (!event || !isEventRole(row.role)) return null;
-      return toMyEvent(event, row.role, row.title as string | null, row.level as number | null, row.welcomed_at as string | null);
+      return toMyEvent(event, row.role, row.title as string | null, row.level as number | null, row.welcomed_at as string | null, row.accepted_at as string | null);
     })
     .filter((e): e is MyEvent => e !== null)
     .sort((a, b) => (a.startsAt ?? "9999").localeCompare(b.startsAt ?? "9999"));
@@ -772,12 +775,18 @@ export type TechItem = {
   mandatory: boolean;
   dueHours: number | null;
   status: "pending" | "confirmed" | "not_applicable";
+  /** Nombre del documento adjunto (decisión 42). */
+  docName: string | null;
+  /** «No aplica» pedido y esperando la revisión del backend. */
+  naRequested: boolean;
+  /** El backend revisó y dijo que sí aplica. */
+  naRejected: boolean;
 };
 
 export async function fetchTechItems(client: SupabaseClient, eventId: string): Promise<TechItem[]> {
   const { data, error } = await client
     .from("event_tech_items")
-    .select("id, category, title, detail, quantity, mandatory, due_hours, status")
+    .select("id, category, title, detail, quantity, mandatory, due_hours, status, doc_name, na_requested_at, na_rejected_at")
     .eq("event_id", eventId)
     .order("sort_order", { ascending: true });
   if (error) throw new Error(`No se pudo leer la lista técnica: ${error.message}`);
@@ -790,6 +799,9 @@ export async function fetchTechItems(client: SupabaseClient, eventId: string): P
     mandatory: Boolean(r.mandatory),
     dueHours: (r.due_hours as number | null) ?? null,
     status: r.status as TechItem["status"],
+    docName: (r.doc_name as string | null) ?? null,
+    naRequested: Boolean(r.na_requested_at),
+    naRejected: Boolean(r.na_rejected_at),
   }));
 }
 
@@ -801,13 +813,25 @@ export type Budget = {
   decisionNote: string | null;
   decidedAt: string | null;
   lines: { id: string; title: string; conceptKey: string | null; quantity: number; unitCost: number }[];
+  /** El backend abrió la opción de adicionales (decisión 43). */
+  extrasOpen: boolean;
+  extras: { id: string; kind: BudgetExtraKind; note: string | null; status: "requested" | "approved" | "rejected" }[];
+};
+
+export type BudgetExtraKind = "personal" | "tecnico" | "locacion" | "otro";
+export const BUDGET_EXTRA_LABEL: Record<BudgetExtraKind, string> = {
+  personal: "Incluye adicionales de personal",
+  tecnico: "Incluye adicionales técnicos",
+  locacion: "Incluye horas extra de locación",
+  otro: "Otro adicional",
 };
 
 /** El presupuesto tal como la base deja verlo: null si no hay o si a esta persona no le toca ver montos. */
 export async function fetchBudget(client: SupabaseClient, eventId: string): Promise<Budget | null> {
-  const { data, error } = await client.from("event_budgets").select("total, currency, breakdown_visible, status, decision_note, decided_at").eq("event_id", eventId).maybeSingle();
+  const { data, error } = await client.from("event_budgets").select("total, currency, breakdown_visible, status, decision_note, decided_at, extras_open").eq("event_id", eventId).maybeSingle();
   if (error) throw new Error(`No se pudo leer el presupuesto: ${error.message}`);
   if (!data) return null;
+  const { data: extras } = await client.from("event_budget_extras").select("id, kind, note, status").eq("event_id", eventId).order("requested_at", { ascending: true });
   const { data: lines } = await client.from("event_budget_lines").select("id, title, concept_key, quantity, unit_cost").eq("event_id", eventId).order("created_at", { ascending: true });
   return {
     total: Number(data.total),
@@ -817,6 +841,8 @@ export async function fetchBudget(client: SupabaseClient, eventId: string): Prom
     decisionNote: (data.decision_note as string | null) ?? null,
     decidedAt: (data.decided_at as string | null) ?? null,
     lines: (lines ?? []).map((l) => ({ id: l.id as string, title: l.title as string, conceptKey: (l.concept_key as string | null) ?? null, quantity: Number(l.quantity), unitCost: Number(l.unit_cost) })),
+    extrasOpen: Boolean(data.extras_open),
+    extras: (extras ?? []).map((x) => ({ id: x.id as string, kind: x.kind as BudgetExtraKind, note: (x.note as string | null) ?? null, status: x.status as "requested" | "approved" | "rejected" })),
   };
 }
 
@@ -839,4 +865,69 @@ export async function fetchFeedbackBoard(client: SupabaseClient, eventId: string
   if (error) throw new Error(`No se pudo leer la encuesta de cierre: ${error.message}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return ((data ?? []) as any[]).map((r) => ({ name: r.name, title: r.title ?? null, kind: r.kind, stars: r.stars ?? null, items: r.items ?? [], extra: r.extra ?? null }));
+}
+
+
+/** Brief del evento (decisión 41): el guion que carga el backend, con lo que respondió esta persona. */
+export type EventBrief = {
+  version: number;
+  summary: string;
+  objective: string | null;
+  attendees: string | null;
+  /** Esta persona ya confirmó que está enterada de la versión vigente. */
+  acked: boolean;
+  /** Su última duda, si dejó alguna. */
+  doubt: { id: string; question: string; status: "open" | "answered"; answer: string | null; corrected: boolean } | null;
+};
+
+export async function fetchBrief(client: SupabaseClient, eventId: string, userId: string): Promise<EventBrief | null> {
+  const { data: brief } = await client.from("event_briefs").select("version, summary, objective, attendees").eq("event_id", eventId).maybeSingle();
+  if (!brief) return null;
+  const [{ data: ack }, { data: doubts }] = await Promise.all([
+    client.from("brief_acks").select("version").eq("event_id", eventId).eq("profile_id", userId).eq("version", brief.version).maybeSingle(),
+    client.from("brief_doubts").select("id, question, status, answer, corrected").eq("event_id", eventId).eq("profile_id", userId).order("created_at", { ascending: false }).limit(1),
+  ]);
+  const d = doubts?.[0];
+  return {
+    version: brief.version as number,
+    summary: brief.summary as string,
+    objective: (brief.objective as string | null) ?? null,
+    attendees: (brief.attendees as string | null) ?? null,
+    acked: !!ack,
+    doubt: d ? { id: d.id as string, question: d.question as string, status: d.status as "open" | "answered", answer: (d.answer as string | null) ?? null, corrected: !!d.corrected } : null,
+  };
+}
+
+/** Dudas del brief de todo el evento, para el backend. La base solo se las muestra a él. */
+export type BriefDoubt = { id: string; who: string; question: string; status: "open" | "answered"; answer: string | null; createdAt: string };
+
+export async function fetchBriefDoubts(client: SupabaseClient, eventId: string): Promise<BriefDoubt[]> {
+  const { data } = await client
+    .from("brief_doubts")
+    .select("id, question, status, answer, created_at, profiles!brief_doubts_profile_id_fkey (full_name)")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((r) => {
+    const p = (Array.isArray(r.profiles) ? r.profiles[0] : r.profiles) as { full_name: string | null } | null;
+    return { id: r.id as string, who: p?.full_name ?? "Alguien del equipo", question: r.question as string, status: r.status as "open" | "answered", answer: (r.answer as string | null) ?? null, createdAt: r.created_at as string };
+  });
+}
+
+
+// ---- Backend y MANDO Express (decisiones 46 a 48) ----
+
+export type ClientNotice = { id: string; kind: "ok" | "observation" | "unconfirmed"; body: string; source: "system" | "backend"; createdAt: string };
+export const NOTICE_LABEL: Record<ClientNotice["kind"], string> = { ok: "Todo OK", observation: "Observación", unconfirmed: "Sin confirmación" };
+
+/** Avisos al cliente, del más reciente al más antiguo. */
+export async function fetchClientNotices(client: SupabaseClient, eventId: string): Promise<ClientNotice[]> {
+  const { data, error } = await client.from("client_notices").select("id, kind, body, source, created_at").eq("event_id", eventId).order("created_at", { ascending: false });
+  if (error) throw new Error(`No se pudieron leer los avisos: ${error.message}`);
+  return (data ?? []).map((r) => ({ id: r.id as string, kind: r.kind as ClientNotice["kind"], body: r.body as string, source: r.source as ClientNotice["source"], createdAt: r.created_at as string }));
+}
+
+/** Horas antes del evento en que vence la planificación. Lo fija el backend. */
+export async function fetchPlanningDeadline(client: SupabaseClient, eventId: string): Promise<number> {
+  const { data } = await client.from("events").select("planning_deadline_hours").eq("id", eventId).maybeSingle();
+  return Number(data?.planning_deadline_hours ?? 5);
 }

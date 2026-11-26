@@ -62,7 +62,7 @@ export function DurationDial({ itemId, title, planned, estimated, canEdit }: { i
         <span>{formatDuration(DURATION_STEPS[DURATION_STEPS.length - 1]!)}</span>
       </div>
       {note && (
-        <p role={note.tone === "error" ? "alert" : "status"} className={`mt-1 text-xs ${note.tone === "error" ? "text-[#ff8f7a]" : note.tone === "ok" ? "text-[#8fe0b8]" : "text-ink-muted"}`}>
+        <p role={note.tone === "error" ? "alert" : "status"} className={`mt-1 text-xs ${note.tone === "error" ? "text-[#ff6f86]" : note.tone === "ok" ? "text-[#8fe0b8]" : "text-ink-muted"}`}>
           {note.text}
         </p>
       )}

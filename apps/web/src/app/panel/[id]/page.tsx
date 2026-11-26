@@ -5,9 +5,10 @@ import { notFound, redirect } from "next/navigation";
 import { revokeInvitation } from "@/app/actions/panel";
 import { Eyebrow, LevelBadge, PanelShell, PieceChain, TierMeter } from "@/components/panel/kit";
 import { Card, Empty, buttonGhost, buttonSecondary } from "@/components/operacion/ui";
-import { getCurrentUser, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
+import { getBrief, getBriefDoubts, getCurrentUser, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
 import { DEFAULT_CARGOS, LEVEL_LABEL, TIERS, invitationMessage, type TierKey } from "@mando/core/event-types";
 import { formatDate, formatTime } from "@mando/core/time";
+import { BriefForm, DoubtAnswer } from "./brief-panel";
 import { CopyButton, InviteForm } from "./invite-form";
 
 export const metadata: Metadata = { title: "Equipo del evento" };
@@ -30,10 +31,12 @@ export default async function EventTeamPage({
   if (!event) notFound();
   if (event.role !== "backend") redirect(`/eventos/${id}`); // solo el productor general arma el equipo
 
-  const [{ template }, team, invitations, headerList] = await Promise.all([
+  const [{ template }, team, invitations, brief, doubts, headerList] = await Promise.all([
     getEventTemplate(id),
     getTeam(id),
     getPendingInvitations(id),
+    getBrief(id, user.id),
+    getBriefDoubts(id),
     headers(),
   ]);
   const cargos = template?.cargos ?? [...DEFAULT_CARGOS];
@@ -80,6 +83,40 @@ export default async function EventTeamPage({
           <PieceChain pieces={template.piezas} />
         </section>
       )}
+
+      <section className="mt-10">
+        <h2 className="mb-1 font-display text-lg font-semibold">Brief del evento</h2>
+        <p className="mb-3 text-sm text-ink-muted">
+          Es lo primero que lee cada persona del equipo después de aceptar su cargo. Sin confirmar que está enterada, no toma el mando.
+        </p>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <BriefForm eventId={id} brief={brief} />
+          </Card>
+          <div>
+            <h3 className="mb-2 font-mono text-xs uppercase tracking-[0.14em] text-ink-muted">
+              Dudas del equipo · {doubts.filter((d) => d.status === "open").length} por responder
+            </h3>
+            {doubts.length === 0 ? (
+              <Empty>Nadie dejó dudas sobre el brief.</Empty>
+            ) : (
+              <ul className="space-y-2">
+                {doubts.map((d) => (
+                  <li key={d.id}>
+                    <Card className={d.status === "open" ? "border border-gold-500/60" : ""}>
+                      <p className="font-mono text-xs uppercase tracking-wider text-ink-muted">
+                        {d.who} · {d.status === "open" ? "Espera tu respuesta" : "Respondida"}
+                      </p>
+                      <p className="mt-1 text-lg font-medium">«{d.question}»</p>
+                      {d.status === "open" ? <DoubtAnswer doubt={d} /> : <p className="mt-2 text-sm text-ink-muted">Respondiste: {d.answer}</p>}
+                    </Card>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
         <div className="min-w-0">

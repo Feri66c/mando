@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Citados" };
 const STATE_COLOR: Record<GuestState, string> = {
   arrived_on_time: "text-[#8fe0b8]",
   arrived_late: "text-gold-300",
-  late: "text-[#ff8f7a]",
+  late: "text-[#ff6f86]",
   waiting: "text-ink-muted",
 };
 

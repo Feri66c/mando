@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { getCurrentUser, getEventTemplate, getMyEvent } from "@/lib/data";
+import { getBrief, getCurrentUser, getEventTemplate, getMyEvent } from "@/lib/data";
 import { TIERS, welcomeMandatories, type TierKey } from "@mando/core/event-types";
 import { ROLE_LABEL } from "@mando/core/labels";
 import { formatDate, formatTime, zoneLabel } from "@mando/core/time";
@@ -20,10 +20,13 @@ export default async function WelcomePage({ params }: { params: Promise<{ id: st
   if (event.welcomedAt) redirect(`/eventos/${id}`);
   const { template, createdByName } = await getEventTemplate(id);
   const isViewer = event.role === "viewer";
+  if (!isViewer && !event.acceptedAt) redirect("/eventos"); // primero acepta su cargo
+  const brief = isViewer ? null : await getBrief(id, user.id);
 
   return (
     <Welcome
       eventId={id}
+      brief={brief}
       firstName={user.fullName.split(" ")[0]}
       inviter={createdByName}
       eventName={event.name}
