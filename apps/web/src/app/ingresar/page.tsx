@@ -5,8 +5,8 @@ import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Ingresar" };
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ volver?: string }> }) {
-  const { volver } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ volver?: string; correo?: string }> }) {
+  const { volver, correo } = await searchParams;
   const configured = getSupabaseConfig() !== null;
 
   return (
@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <div className="mt-6 rounded-card bg-surface-100 p-6">
           <h1 className="font-display text-2xl font-semibold text-ink">Identifícate.</h1>
           <p className="mt-1 text-sm text-ink-muted">Entra con el correo con el que te invitaron al evento.</p>
-          <div className="mt-6">{configured ? <LoginForm returnTo={volver ?? "/eventos"} /> : <SetupNotice />}</div>
+          <div className="mt-6">{configured ? <LoginForm returnTo={volver ?? "/eventos"} initialEmail={typeof correo === "string" ? correo.slice(0, 200) : ""} /> : <SetupNotice />}</div>
         </div>
       </div>
     </main>

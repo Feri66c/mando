@@ -29,6 +29,13 @@ export type MyEvent = {
   status: EventStatus;
   role: EventRole;
   title: string | null;
+  /** Clave de la plantilla del tipo de evento (sampling, feria...) y su tamaño. */
+  kind: string | null;
+  tier: string | null;
+  /** Nivel en la jerarquía: 1 productor general … 4 técnicos y proveedores. El cliente no tiene. */
+  level: number | null;
+  /** Cuándo vio la bienvenida y tomó el mando. null = todavía no. */
+  welcomedAt: string | null;
 };
 
 export type RouteItem = {
@@ -67,11 +74,13 @@ type EventRow = {
   starts_at: string | null;
   ends_at: string | null;
   status: EventStatus;
+  kind: string | null;
+  tier: string | null;
 };
 
-const EVENT_COLUMNS = "id, name, event_type, client_name, venue_name, timezone, starts_at, ends_at, status";
+const EVENT_COLUMNS = "id, name, event_type, client_name, venue_name, timezone, starts_at, ends_at, status, kind, tier";
 
-function toMyEvent(e: EventRow, role: EventRole, title: string | null): MyEvent {
+function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: number | null, welcomedAt: string | null): MyEvent {
   return {
     id: e.id,
     name: e.name,
@@ -84,6 +93,10 @@ function toMyEvent(e: EventRow, role: EventRole, title: string | null): MyEvent 
     status: e.status,
     role,
     title,
+    kind: e.kind,
+    tier: e.tier,
+    level,
+    welcomedAt,
   };
 }
 
@@ -91,7 +104,7 @@ function toMyEvent(e: EventRow, role: EventRole, title: string | null): MyEvent 
 export async function fetchMyEvents(client: SupabaseClient, userId: string): Promise<MyEvent[]> {
   const { data, error } = await client
     .from("event_members")
-    .select(`role, title, events (${EVENT_COLUMNS})`)
+    .select(`role, title, level, welcomed_at, events (${EVENT_COLUMNS})`)
     .eq("profile_id", userId);
   if (error) throw new Error(`No se pudieron leer tus eventos: ${error.message}`);
 
@@ -99,7 +112,7 @@ export async function fetchMyEvents(client: SupabaseClient, userId: string): Pro
     .map((row) => {
       const event = (Array.isArray(row.events) ? row.events[0] : row.events) as EventRow | null;
       if (!event || !isEventRole(row.role)) return null;
-      return toMyEvent(event, row.role, row.title as string | null);
+      return toMyEvent(event, row.role, row.title as string | null, row.level as number | null, row.welcomed_at as string | null);
     })
     .filter((e): e is MyEvent => e !== null)
     .sort((a, b) => (a.startsAt ?? "9999").localeCompare(b.startsAt ?? "9999"));
@@ -347,4 +360,101 @@ export async function fetchEvidences(
     routeItemId: (r.route_item_id as string | null) ?? null,
     momentId: (r.moment_id as string | null) ?? null,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Panel del productor general: equipo, invitaciones y plantilla del evento
+// ---------------------------------------------------------------------------
+
+export type TeamMember = {
+  profileId: string;
+  fullName: string;
+  role: EventRole;
+  title: string | null;
+  level: number | null;
+  welcomedAt: string | null;
+};
+
+export type Invitation = {
+  id: string;
+  email: string;
+  fullName: string;
+  role: EventRole;
+  title: string;
+  level: number | null;
+  createdAt: string;
+};
+
+/** Organizaciones donde la persona es productor general (administra y puede crear eventos). */
+export async function fetchAdminOrgs(client: SupabaseClient, userId: string): Promise<{ id: string; name: string }[]> {
+  const { data, error } = await client
+    .from("organization_members")
+    .select("organization_id, is_admin, organizations (name)")
+    .eq("profile_id", userId)
+    .eq("is_admin", true);
+  if (error) throw new Error(`No se pudo leer tu organización: ${error.message}`);
+  return (data ?? []).map((row) => {
+    const org = first(row.organizations) as { name: string } | null;
+    return { id: row.organization_id as string, name: org?.name ?? "Organización" };
+  });
+}
+
+/** Equipo del evento, ordenado por jerarquía. El cliente va al final. */
+export async function fetchTeam(client: SupabaseClient, eventId: string): Promise<TeamMember[]> {
+  const { data, error } = await client
+    .from("event_members")
+    .select("profile_id, role, title, level, welcomed_at, profiles!event_members_profile_id_fkey (full_name)")
+    .eq("event_id", eventId);
+  if (error) throw new Error(`No se pudo leer el equipo: ${error.message}`);
+  return (data ?? [])
+    .filter((row) => isEventRole(row.role))
+    .map((row) => {
+      const profile = first(row.profiles) as { full_name: string | null } | null;
+      return {
+        profileId: row.profile_id as string,
+        fullName: profile?.full_name ?? "Sin nombre",
+        role: row.role as EventRole,
+        title: row.title as string | null,
+        level: row.level as number | null,
+        welcomedAt: row.welcomed_at as string | null,
+      };
+    })
+    .sort((a, b) => (a.level ?? 9) - (b.level ?? 9) || a.fullName.localeCompare(b.fullName));
+}
+
+/** Invitaciones que todavía nadie activó. Solo las ve el productor general. */
+export async function fetchPendingInvitations(client: SupabaseClient, eventId: string): Promise<Invitation[]> {
+  const { data, error } = await client
+    .from("invitations")
+    .select("id, email, full_name, role, title, level, created_at")
+    .eq("event_id", eventId)
+    .is("accepted_at", null)
+    .is("revoked_at", null)
+    .order("created_at", { ascending: true });
+  if (error) throw new Error(`No se pudieron leer las invitaciones: ${error.message}`);
+  return (data ?? []).map((row) => ({
+    id: row.id as string,
+    email: row.email as string,
+    fullName: row.full_name as string,
+    role: row.role as EventRole,
+    title: row.title as string,
+    level: row.level as number | null,
+    createdAt: row.created_at as string,
+  }));
+}
+
+/** Plantilla copiada en el evento y quién lo creó (para la bienvenida). */
+export async function fetchEventTemplate(
+  client: SupabaseClient,
+  eventId: string,
+): Promise<{ template: Record<string, unknown> | null; createdByName: string | null }> {
+  const { data, error } = await client
+    .from("events")
+    .select("template, creator:profiles!events_created_by_fkey (full_name)")
+    .eq("id", eventId)
+    .maybeSingle();
+  if (error) throw new Error(`No se pudo leer el tipo de evento: ${error.message}`);
+  const creator = first(data?.creator) as { full_name: string | null } | null;
+  const template = data?.template as Record<string, unknown> | null;
+  return { template: template && Object.keys(template).length > 0 ? template : null, createdByName: creator?.full_name ?? null };
 }

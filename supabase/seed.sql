@@ -59,10 +59,11 @@ insert into events (id, organization_id, name, event_type, client_name, venue_na
    'America/Lima', '2026-12-12 08:00-05', '2026-12-13 01:00-05', 'planned',
    '00000000-0000-0000-0000-0000000000a2');
 
-insert into event_members (event_id, profile_id, role, title) values
-  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a1', 'producer', 'Productor general'),
-  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a2', 'backend',  'Torre de control'),
-  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a3', 'viewer',   'Cliente');
+-- Los tres usuarios de ejemplo ya vieron la bienvenida (welcomed_at): entran directo al evento.
+insert into event_members (event_id, profile_id, role, title, level, welcomed_at) values
+  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a1', 'producer', 'Productor de campo', 2, now()),
+  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a2', 'backend',  'Productor general', 1, now()),
+  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a3', 'viewer',   'Cliente', null, now());
 
 insert into areas (id, event_id, name, sort_order) values
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000e1', 'Montaje', 1),

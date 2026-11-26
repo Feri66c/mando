@@ -3,8 +3,12 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import {
+  fetchAdminOrgs,
   fetchAlerts,
   fetchCriticality,
+  fetchEventTemplate,
+  fetchPendingInvitations,
+  fetchTeam,
   fetchEvidences,
   fetchLog,
   fetchMomentDetail,
@@ -16,10 +20,11 @@ import {
   type MyEvent,
   type RouteItem,
 } from "@mando/core/data";
+import { parseTemplate } from "@mando/core/event-types";
 
 // Capa de acceso a datos de la web: las consultas viven en @mando/core/data (las comparte la app móvil);
 // aquí solo se obtiene el cliente con la sesión de la cookie y se manda a ingresar si no hay sesión.
-export type { Alert, Commitment, CurrentUser, Evidence, LogEntry, Moment, MomentCheck, MyEvent, RouteItem } from "@mando/core/data";
+export type { Alert, Commitment, CurrentUser, Evidence, Invitation, LogEntry, Moment, MomentCheck, MyEvent, RouteItem, TeamMember } from "@mando/core/data";
 
 /** Devuelve el cliente o manda a la pantalla de ingreso si falta conectar Supabase. */
 async function requireClient() {
@@ -86,4 +91,25 @@ export async function getMomentDetail(eventId: string, momentId: string) {
 /** Evidencias con enlaces firmados de corta duración (los archivos son privados). */
 export async function getEvidences(eventId: string, filter: { routeItemId?: string; momentId?: string } = {}) {
   return fetchEvidences(await requireClient(), eventId, filter);
+}
+
+// ---- Panel del productor general ----
+
+/** Organizaciones donde la persona puede crear eventos. Vacío = no es productor general. */
+export const getAdminOrgs = cache(async function getAdminOrgs(userId: string) {
+  return fetchAdminOrgs(await requireClient(), userId);
+});
+
+export async function getTeam(eventId: string) {
+  return fetchTeam(await requireClient(), eventId);
+}
+
+export async function getPendingInvitations(eventId: string) {
+  return fetchPendingInvitations(await requireClient(), eventId);
+}
+
+/** Plantilla del tipo de evento copiada en el evento, ya revisada. */
+export async function getEventTemplate(eventId: string) {
+  const { template, createdByName } = await fetchEventTemplate(await requireClient(), eventId);
+  return { template: parseTemplate(template), createdByName };
 }

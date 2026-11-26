@@ -95,3 +95,16 @@ export function wallTimeToIso(hhmm: string, nearIso: string, timeZone?: string |
   if (instant < new Date(nearIso).getTime() - 12 * 3600_000) instant += 24 * 3600_000;
   return new Date(instant).toISOString();
 }
+
+/** Fecha ("2026-12-06") y hora de pared ("10:00") en la zona del evento → instante UTC (ISO). */
+export function zonedDateTimeToIso(date: string, hhmm: string, timeZone?: string | null): string | null {
+  const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date.trim());
+  const t = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim());
+  if (!d || !t || Number(t[1]) > 23 || Number(t[2]) > 59) return null;
+  const zone = safeZone(timeZone);
+  const guess = Date.UTC(Number(d[1]), Number(d[2]) - 1, Number(d[3]), Number(t[1]), Number(t[2]));
+  if (Number.isNaN(guess) || new Date(guess).getUTCDate() !== Number(d[3])) return null; // 31 de febrero, etc.
+  let instant = guess - zoneOffsetMs(guess, zone);
+  instant = guess - zoneOffsetMs(instant, zone);
+  return new Date(instant).toISOString();
+}

@@ -25,6 +25,13 @@ el diseño completo (producto, roles, criticidad, pantallas, plan) está en el p
 
 Supuestos tomados para arrancar: ver [`docs/DECISIONES.md`](docs/DECISIONES.md).
 
+## Eventos por invitación y por tipo
+
+- `/panel`: el productor general crea un evento eligiendo su tipo (plantillas en `config/tipos-de-evento.json`) e invita a cada persona con su cargo.
+- `/ingresar`: solo entran correos invitados, con un código de 6 dígitos.
+- `/bienvenida/<evento>`: la primera entrada de cada persona; ahí toma el mando.
+- Prueba del recorrido: `apps/web/tests/e2e/invitacion.spec.ts`. Decisiones 17 a 21 en `docs/DECISIONES.md`.
+
 ## Comandos
 
 ```

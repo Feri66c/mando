@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AppHeader } from "@/components/brand";
 import { EventStatusText, RolePill } from "@/components/pills";
-import { getCurrentUser, getMyEvents } from "@/lib/data";
+import { getAdminOrgs, getCurrentUser, getMyEvents } from "@/lib/data";
 import { ROLE_DESCRIPTION } from "@mando/core/labels";
 import { formatEventRange, zoneLabel } from "@mando/core/time";
 
@@ -11,6 +11,7 @@ export const metadata: Metadata = { title: "Mis eventos" };
 export default async function MyEventsPage() {
   const user = await getCurrentUser();
   const events = await getMyEvents(user.id);
+  const canCreate = (await getAdminOrgs(user.id)).length > 0;
 
   return (
     <>
@@ -18,12 +19,20 @@ export default async function MyEventsPage() {
       <main className="mx-auto max-w-3xl px-4 py-6">
         <h1 className="font-display text-2xl font-semibold">Mis eventos</h1>
         <p className="mt-1 text-sm text-ink-muted">Hola, {user.fullName}. Elige el evento que vas a controlar.</p>
+        {canCreate && (
+          <Link
+            href="/panel"
+            className="mt-4 inline-flex min-h-11 items-center rounded-card bg-navy-800 px-4 font-display text-sm font-semibold text-ink-inverse hover:bg-navy-950"
+          >
+            Ir al panel: crear eventos e invitar
+          </Link>
+        )}
 
         {events.length === 0 ? (
           <div className="mt-6 rounded-card border border-line bg-surface-100 p-5">
             <p className="font-medium">Todavía no tienes eventos.</p>
             <p className="mt-1 text-sm text-ink-muted">
-              Cuando la torre de control te invite a un evento, aparecerá aquí.
+              Cuando el productor general te invite a un evento, aparecerá aquí.
             </p>
           </div>
         ) : (
@@ -31,7 +40,7 @@ export default async function MyEventsPage() {
             {events.map((event) => (
               <li key={event.id}>
                 <Link
-                  href={`/eventos/${event.id}`}
+                  href={event.welcomedAt ? `/eventos/${event.id}` : `/bienvenida/${event.id}`}
                   className="block rounded-card border border-line bg-surface-100 p-4 transition-colors hover:border-navy-600"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">

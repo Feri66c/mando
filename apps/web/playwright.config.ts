@@ -8,6 +8,7 @@ const PORT = 3100;
 export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: false,
+  workers: 1, // las pruebas comparten la base de datos: van una tras otra
   retries: process.env.CI ? 1 : 0,
   use: { baseURL: `http://localhost:${PORT}`, trace: "off", locale: "es-PE", timezoneId: "America/Lima" },
   projects: [{ name: "movil", use: { ...devices["Pixel 7"] } }],

@@ -11,8 +11,8 @@ const primary =
   "min-h-11 w-full rounded-card bg-navy-800 px-4 font-display text-base font-semibold text-ink-inverse hover:bg-navy-950 disabled:opacity-60";
 const secondary = "min-h-11 w-full rounded-card px-4 text-sm font-medium text-navy-700 underline-offset-4 hover:underline";
 
-export function LoginForm({ returnTo }: { returnTo: string }) {
-  const [state, action, pending] = useActionState(signIn, initial);
+export function LoginForm({ returnTo, initialEmail = "" }: { returnTo: string; initialEmail?: string }) {
+  const [state, action, pending] = useActionState(signIn, { ...initial, email: initialEmail });
 
   return (
     <form action={action} className="space-y-4" noValidate>

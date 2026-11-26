@@ -76,3 +76,23 @@ Fecha: 26 de noviembre de 2026. Fer confirmó el plan de la Etapa 2 y sus cuatro
 
 - **Monorepo con npm workspaces:** `apps/web` (Next.js), `apps/mobile` (Expo) y `packages/core` (`@mando/core`). `config/`, `supabase/`, `docs/`, `scripts/` y `tests/db/` quedan en la raíz porque son de las tres partes. En Vercel, la carpeta raíz del proyecto pasa a ser `apps/web`.
 - **Expo SDK 58**, con Expo Router y React 19.3 (la misma versión que la web).
+
+# Decisiones de la arquitectura por invitación
+
+Fecha: 26 de noviembre de 2026. Fer confirmó la lógica («Estoy de acuerdo con toda la lógica. Comienza a crear.»). El aspecto visual se trabaja aparte; aquí solo la arquitectura.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 17 | Quién entra | Solo personas invitadas. Solo el productor general (administrador de la organización, nivel 1 en el evento) crea eventos e invita. Nadie se registra por su cuenta: la cuenta se crea al pedir el primer código, y solo si el correo tiene una invitación pendiente. |
+| 18 | Tipos de evento | Cinco tipos en `config/tipos-de-evento.json`: sampling, activación en centro comercial, fiesta corporativa, feria y concierto. Tres tamaños: ligero, medio y mayor. Cada tipo trae sus piezas, su hora clave, sus no negociables y sus cargos. Al crear el evento la plantilla se copia al evento y la hoja de ruta nace de sus piezas. |
+| 19 | Cargos y jerarquía | Cuatro niveles: 1 productor general, 2 productor de campo, 3 coordinación, 4 técnicos y proveedores. El cliente no tiene nivel y solo mira. El cargo puede llevar un nombre propio (por ejemplo, «Road manager»). |
+| 20 | Bienvenida | La primera vez que alguien entra a un evento ve: gracias con su nombre, el evento y su cargo; los mandatorios de MANDO y los no negociables del tipo; su reto; y una cuenta 3-2-1 que termina en «Se inició la acción» con el reloj hacia la hora clave. Recién ahí queda con el mando activo (`event_members.welcomed_at`). |
+| 21 | Primer evento real | Un sampling. |
+
+## Supuestos
+
+- **Cómo llega la invitación:** MANDO todavía no manda el correo de invitación por su cuenta (necesita un servicio de correo propio, que se configura junto con Supabase). Por ahora el panel arma el mensaje con el enlace de ingreso y el productor general lo manda por WhatsApp o correo con un toque. El código de 6 dígitos sí lo manda MANDO cuando la persona escribe su correo.
+- **Todo pasa por funciones de la base:** `create_event_from_template`, `invite_to_event`, `revoke_invitation`, `claim_invitations` y `mark_welcomed`. La tabla `invitations` solo la lee el productor general del evento y nadie escribe en ella directo. Invitar y unirse quedan en la bitácora.
+- **Quien ya tiene cuenta** entra al evento en el momento de la invitación; quien no, al iniciar sesión por primera vez.
+- **Eventos anteriores a los tipos:** siguen funcionando; sus miembros quedaron con nivel según su rol y con la bienvenida ya vista.
+- **Pruebas:** `tests/db/invitaciones.test.ts` (permisos) y `apps/web/tests/e2e/invitacion.spec.ts` (el recorrido completo en el teléfono, con el código leído del buzón de prueba). Las pruebas del navegador corren una tras otra porque comparten la base.

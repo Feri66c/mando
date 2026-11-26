@@ -44,6 +44,9 @@ writeFileSync(
     "-- Archivo generado con `npm run db:bundle`. Pégalo entero en Supabase → SQL Editor → New query → Run.",
     "",
     readFileSync(join(root, "supabase/migrations/20261127000004_app_movil.sql"), "utf8"),
+    "",
+    "-- Eventos por invitación y tipos de evento.",
+    readFileSync(join(root, "supabase/migrations/20261128000005_invitaciones_y_tipos.sql"), "utf8"),
   ].join("\n"),
 );
 console.log("✓ supabase/actualizar-etapa-2.sql actualizado");

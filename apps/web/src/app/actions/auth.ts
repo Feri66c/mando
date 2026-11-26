@@ -17,6 +17,29 @@ function safeReturnPath(value: FormDataEntryValue | null): string {
   return path.startsWith("/") && !path.startsWith("//") ? path : "/eventos";
 }
 
+/**
+ * Al entrar: la persona se une a los eventos a los que la invitaron y, si le falta ver alguna bienvenida,
+ * va primero ahí. Si algo falla aquí no se bloquea el ingreso: «Mis eventos» lo vuelve a intentar.
+ */
+async function afterSignIn(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>, fallback: string): Promise<string> {
+  try {
+    await supabase.rpc("claim_invitations");
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) return fallback;
+    const { data } = await supabase
+      .from("event_members")
+      .select("event_id, created_at")
+      .eq("profile_id", user.user.id)
+      .is("welcomed_at", null)
+      .order("created_at", { ascending: true })
+      .limit(1);
+    const pending = data?.[0]?.event_id as string | undefined;
+    return pending ? `/bienvenida/${pending}` : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 const NOT_CONNECTED = "La app aún no está conectada a Supabase.";
 
 /**
@@ -35,8 +58,10 @@ export async function signIn(prev: SignInState, formData: FormData): Promise<Sig
 
   if (intent === "send-code") {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Escribe un correo válido.", email, step: "email" };
-    // shouldCreateUser: false → solo entran personas invitadas a algún evento.
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
+    // Solo entran personas invitadas: quien ya tiene cuenta, o quien tiene una invitación pendiente
+    // (a esa persona se le crea la cuenta al pedir su primer código).
+    const { data: invited } = await supabase.rpc("invitation_pending", { p_email: email });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: invited === true } });
     if (error) {
       const tooMany = error.status === 429 || error.message.toLowerCase().includes("rate");
       return {
@@ -55,7 +80,7 @@ export async function signIn(prev: SignInState, formData: FormData): Promise<Sig
     if (token.length !== 6) return { error: "El código tiene 6 dígitos.", email, step: "code" };
     const { error } = await supabase.auth.verifyOtp({ email, token, type: "email" });
     if (error) return { error: "El código no es correcto o ya venció. Pide uno nuevo.", email, step: "code" };
-    redirect(safeReturnPath(formData.get("volver")));
+    redirect(await afterSignIn(supabase, safeReturnPath(formData.get("volver"))));
   }
 
   // intent === "password"
@@ -70,7 +95,7 @@ export async function signIn(prev: SignInState, formData: FormData): Promise<Sig
       step: "password",
     };
   }
-  redirect(safeReturnPath(formData.get("volver")));
+  redirect(await afterSignIn(supabase, safeReturnPath(formData.get("volver"))));
 }
 
 export async function signOut() {

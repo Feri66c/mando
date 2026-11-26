@@ -1,0 +1,151 @@
+{
+  "_nota": "Plantillas de los tipos de evento (decisión 18). Se copian al evento al crearlo; después se editan en el evento sin tocar esta plantilla. Los minutos de cada pieza se cuentan desde la hora clave del evento (negativos = antes). nivel: 1 productor general, 2 productor de campo, 3 coordinación, 4 técnicos y proveedores; el cliente no tiene nivel.",
+  "mandatorios_de_mando": [
+    { "titulo": "El cliente mira minuto a minuto", "detalle": "Ve cada movimiento en vivo. No necesita llamarte para saber qué pasa." },
+    { "titulo": "Los plazos son públicos", "detalle": "Si mueves la hoja de ruta, se mueve la hora que el cliente espera, y todos lo ven." }
+  ],
+  "tamanos": {
+    "ligero": { "nombre": "Ligero", "descripcion": "Un día, poco montaje, equipo chico." },
+    "medio": { "nombre": "Medio", "descripcion": "Montaje y proveedores técnicos, un programa con horario." },
+    "mayor": { "nombre": "Mayor", "descripcion": "Público masivo, permisos municipales, varias jornadas o escenarios." }
+  },
+  "tipos": [
+    {
+      "clave": "sampling",
+      "nombre": "Sampling",
+      "tamano": "ligero",
+      "descripcion": "Entregar producto a la gente en puntos y horas definidos, y probarle al cliente que pasó.",
+      "hora_clave": "Inicio de la distribución",
+      "datos": ["1 día", "1 a 5 puntos", "sin escenario", "2 a 15 personas"],
+      "piezas": [
+        { "titulo": "Convocatoria", "detalle": "Equipo invitado y confirmado", "inicio_min": -2880, "duracion_min": 60, "clave": false, "visible_cliente": false },
+        { "titulo": "Brief", "detalle": "Producto, mensaje y meta de entregas", "inicio_min": -1440, "duracion_min": 60, "clave": false, "visible_cliente": true },
+        { "titulo": "Distribución", "detalle": "Punto, hora estimada y unidades", "inicio_min": 0, "duracion_min": 240, "clave": true, "visible_cliente": true },
+        { "titulo": "Experiencia", "detalle": "Fotos, audios y conteo por hora", "inicio_min": 30, "duracion_min": 180, "clave": false, "visible_cliente": true },
+        { "titulo": "Cierre", "detalle": "Close out en PDF al cliente", "inicio_min": 270, "duracion_min": 60, "clave": true, "visible_cliente": true }
+      ],
+      "no_negociables": ["Permiso del punto (tienda, calle o centro comercial)", "Producto en buen estado y con stock suficiente", "Hora de inicio prometida al cliente"],
+      "hitos_estrella": ["Meta de entregas cumplida antes de hora", "Foto o video de la mejor reacción del público", "Cero quejas del punto de venta"],
+      "cargos": [
+        { "cargo": "Productor general", "nivel": 1, "rol": "backend" },
+        { "cargo": "Productor de campo", "nivel": 2, "rol": "producer" },
+        { "cargo": "Coordinador de punto", "nivel": 3, "rol": "producer" },
+        { "cargo": "Promotor", "nivel": 4, "rol": "producer" },
+        { "cargo": "Cliente", "nivel": null, "rol": "viewer" }
+      ]
+    },
+    {
+      "clave": "centro-comercial",
+      "nombre": "Activación en centro comercial",
+      "tamano": "ligero",
+      "descripcion": "Una activación dentro de un centro comercial, atada a su reglamento y a sus ventanas de montaje.",
+      "hora_clave": "Apertura de la activación",
+      "datos": ["1 a 3 días", "1 sede", "montaje liviano", "horario del mall"],
+      "piezas": [
+        { "titulo": "Convocatoria", "detalle": "Equipo y cargos", "inicio_min": -4320, "duracion_min": 60, "clave": false, "visible_cliente": false },
+        { "titulo": "Brief", "detalle": "Mecánica y metas", "inicio_min": -2880, "duracion_min": 60, "clave": false, "visible_cliente": true },
+        { "titulo": "Permiso del mall", "detalle": "Carta aprobada y seguro", "inicio_min": -1440, "duracion_min": 60, "clave": true, "visible_cliente": true },
+        { "titulo": "Montaje", "detalle": "Ventana nocturna del mall", "inicio_min": -720, "duracion_min": 360, "clave": true, "visible_cliente": true },
+        { "titulo": "Operación", "detalle": "Turnos, flujo y registros", "inicio_min": 0, "duracion_min": 600, "clave": false, "visible_cliente": true },
+        { "titulo": "Evidencias", "detalle": "Fotos y audios por turno", "inicio_min": 60, "duracion_min": 480, "clave": false, "visible_cliente": true },
+        { "titulo": "Desmontaje", "detalle": "Espacio entregado limpio", "inicio_min": 630, "duracion_min": 180, "clave": false, "visible_cliente": true },
+        { "titulo": "Cierre", "detalle": "PDF al cliente", "inicio_min": 840, "duracion_min": 60, "clave": false, "visible_cliente": true }
+      ],
+      "no_negociables": ["Carta de autorización del centro comercial", "Seguro de responsabilidad vigente", "Montaje y desmontaje dentro de la ventana permitida"],
+      "hitos_estrella": ["Pico de público registrado en video", "Activación lista antes de abrir el mall", "Comentario positivo del administrador del mall"],
+      "cargos": [
+        { "cargo": "Productor general", "nivel": 1, "rol": "backend" },
+        { "cargo": "Productor de campo", "nivel": 2, "rol": "producer" },
+        { "cargo": "Jefe de turno", "nivel": 3, "rol": "producer" },
+        { "cargo": "Animador o promotor", "nivel": 4, "rol": "producer" },
+        { "cargo": "Proveedor de montaje", "nivel": 4, "rol": "producer" },
+        { "cargo": "Cliente", "nivel": null, "rol": "viewer" }
+      ]
+    },
+    {
+      "clave": "fiesta-corporativa",
+      "nombre": "Fiesta corporativa",
+      "tamano": "medio",
+      "descripcion": "Una noche con programa: recepción, discursos, show y fiesta.",
+      "hora_clave": "Apertura de puertas",
+      "datos": ["1 noche", "1 sede", "escenario o pista", "5 a 12 proveedores"],
+      "piezas": [
+        { "titulo": "Brief", "detalle": "Programa, invitados y tono", "inicio_min": -10080, "duracion_min": 60, "clave": false, "visible_cliente": true },
+        { "titulo": "Venue y proveedores", "detalle": "Contratos y riders", "inicio_min": -4320, "duracion_min": 60, "clave": false, "visible_cliente": false },
+        { "titulo": "Montaje", "detalle": "Escenario, luces y sonido", "inicio_min": -480, "duracion_min": 300, "clave": false, "visible_cliente": true },
+        { "titulo": "Prueba técnica", "detalle": "Sonido, pantallas y micrófonos", "inicio_min": -150, "duracion_min": 90, "clave": true, "visible_cliente": true },
+        { "titulo": "Recepción", "detalle": "Puertas y registro", "inicio_min": 0, "duracion_min": 60, "clave": true, "visible_cliente": true },
+        { "titulo": "Programa", "detalle": "Discursos y show", "inicio_min": 60, "duracion_min": 120, "clave": true, "visible_cliente": true },
+        { "titulo": "Fiesta y cierre", "detalle": "Hora de fin pactada", "inicio_min": 180, "duracion_min": 240, "clave": false, "visible_cliente": true },
+        { "titulo": "Close out", "detalle": "PDF y comentarios", "inicio_min": 1440, "duracion_min": 60, "clave": false, "visible_cliente": true }
+      ],
+      "no_negociables": ["Energía de respaldo para sonido y luces", "Capacidad del local respetada", "Hora de inicio del programa"],
+      "hitos_estrella": ["Entrada del show en el segundo exacto", "Momento de impacto (pirotecnia fría, video o sorpresa)", "Valoración alta de técnicos y proveedores"],
+      "cargos": [
+        { "cargo": "Productor general", "nivel": 1, "rol": "backend" },
+        { "cargo": "Productor de campo", "nivel": 2, "rol": "producer" },
+        { "cargo": "Jefe de escenario", "nivel": 3, "rol": "producer" },
+        { "cargo": "Técnico de sonido, luces o video", "nivel": 4, "rol": "producer" },
+        { "cargo": "Catering", "nivel": 4, "rol": "producer" },
+        { "cargo": "Cliente", "nivel": null, "rol": "viewer" }
+      ]
+    },
+    {
+      "clave": "feria",
+      "nombre": "Feria",
+      "tamano": "medio",
+      "descripcion": "Un stand o la feria completa, con reglas del recinto, acreditaciones y una inauguración que no se mueve.",
+      "hora_clave": "Inauguración",
+      "datos": ["2 a 5 días", "1 recinto", "stand o pabellón", "acreditaciones"],
+      "piezas": [
+        { "titulo": "Brief", "detalle": "Stand, metas y agenda", "inicio_min": -20160, "duracion_min": 60, "clave": false, "visible_cliente": true },
+        { "titulo": "Diseño aprobado", "detalle": "Planos firmados por el recinto", "inicio_min": -10080, "duracion_min": 60, "clave": true, "visible_cliente": true },
+        { "titulo": "Acreditaciones", "detalle": "Equipo y proveedores", "inicio_min": -2880, "duracion_min": 60, "clave": false, "visible_cliente": false },
+        { "titulo": "Montaje", "detalle": "Ventana del recinto", "inicio_min": -1440, "duracion_min": 720, "clave": true, "visible_cliente": true },
+        { "titulo": "Visto bueno de seguridad", "detalle": "Revisión del recinto antes de abrir", "inicio_min": -30, "duracion_min": 30, "clave": true, "visible_cliente": true },
+        { "titulo": "Inauguración", "detalle": "Hora pública", "inicio_min": 0, "duracion_min": 60, "clave": true, "visible_cliente": true },
+        { "titulo": "Operación del día", "detalle": "Turnos, visitas y contactos", "inicio_min": 60, "duracion_min": 480, "clave": false, "visible_cliente": true },
+        { "titulo": "Close out del día", "detalle": "PDF por día y total", "inicio_min": 570, "duracion_min": 30, "clave": false, "visible_cliente": true }
+      ],
+      "no_negociables": ["Planos y materiales aprobados por el recinto", "Acreditación de cada persona del equipo", "Visto bueno de seguridad antes de abrir"],
+      "hitos_estrella": ["Stand completo antes de la inauguración", "Visita destacada registrada en video", "Meta de visitas o contactos superada"],
+      "cargos": [
+        { "cargo": "Productor general", "nivel": 1, "rol": "backend" },
+        { "cargo": "Productor de campo", "nivel": 2, "rol": "producer" },
+        { "cargo": "Jefe de stand", "nivel": 3, "rol": "producer" },
+        { "cargo": "Proveedor de montaje", "nivel": 4, "rol": "producer" },
+        { "cargo": "Promotor", "nivel": 4, "rol": "producer" },
+        { "cargo": "Cliente", "nivel": null, "rol": "viewer" }
+      ]
+    },
+    {
+      "clave": "concierto",
+      "nombre": "Concierto",
+      "tamano": "mayor",
+      "descripcion": "Aforo, seguridad y un horario que miles de personas esperan.",
+      "hora_clave": "Salida del artista al escenario",
+      "datos": ["1 a 2 días", "escenario", "público masivo", "permisos municipales"],
+      "piezas": [
+        { "titulo": "Rider y brief", "detalle": "Técnico y de camerino", "inicio_min": -43200, "duracion_min": 60, "clave": false, "visible_cliente": true },
+        { "titulo": "Permisos", "detalle": "Licencia municipal e inspección de seguridad", "inicio_min": -10080, "duracion_min": 60, "clave": true, "visible_cliente": true },
+        { "titulo": "Montaje", "detalle": "Escenario, torres y energía", "inicio_min": -2880, "duracion_min": 1440, "clave": false, "visible_cliente": true },
+        { "titulo": "Prueba de sonido", "detalle": "Con artista o backline", "inicio_min": -480, "duracion_min": 120, "clave": true, "visible_cliente": true },
+        { "titulo": "Apertura de puertas", "detalle": "Control de aforo", "inicio_min": -180, "duracion_min": 30, "clave": true, "visible_cliente": true },
+        { "titulo": "Show", "detalle": "Hora de salida al escenario", "inicio_min": 0, "duracion_min": 120, "clave": true, "visible_cliente": true },
+        { "titulo": "Salida del público", "detalle": "Evacuación ordenada", "inicio_min": 120, "duracion_min": 60, "clave": false, "visible_cliente": true },
+        { "titulo": "Desmontaje y cierre", "detalle": "PDF y lecciones", "inicio_min": 180, "duracion_min": 480, "clave": false, "visible_cliente": true }
+      ],
+      "no_negociables": ["Licencia municipal e inspección de seguridad aprobadas", "Aforo controlado en tiempo real", "Plan de evacuación y equipo médico en sitio", "Seguros y energía de respaldo"],
+      "hitos_estrella": ["Artista sale al escenario a la hora anunciada", "Momento visual de impacto registrado", "Salida del público sin incidentes"],
+      "cargos": [
+        { "cargo": "Productor general", "nivel": 1, "rol": "backend" },
+        { "cargo": "Torre de control", "nivel": 1, "rol": "backend" },
+        { "cargo": "Productor de campo", "nivel": 2, "rol": "producer" },
+        { "cargo": "Road manager", "nivel": 3, "rol": "producer" },
+        { "cargo": "Stage manager", "nivel": 3, "rol": "producer" },
+        { "cargo": "Seguridad o equipo médico", "nivel": 4, "rol": "producer" },
+        { "cargo": "Cliente o promotor", "nivel": null, "rol": "viewer" }
+      ]
+    }
+  ]
+}
