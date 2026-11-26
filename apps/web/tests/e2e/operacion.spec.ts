@@ -19,9 +19,10 @@ async function login(browser: Browser, email: string): Promise<Page> {
   const context = await browser.newContext();
   const page = await context.newPage();
   await page.goto("/ingresar");
+  await page.getByRole("button", { name: "Entrar con contraseña" }).click();
   await page.getByLabel("Correo").fill(email);
   await page.getByLabel("Contraseña").fill(PASSWORD!);
-  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(page).toHaveURL(/\/eventos$/);
   return page;
 }
