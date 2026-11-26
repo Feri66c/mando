@@ -195,8 +195,10 @@ update events set criticality_config = $crit${
     {
       "clave": "compromiso_no_coincide",
       "nivel": 3,
-      "cuando": "En un momento crítico, lo encontrado no coincide con lo prometido.",
-      "parametros": {}
+      "cuando": "En un momento crítico, lo encontrado no coincide con lo prometido. Si es parcial, usa `nivel_parcial`.",
+      "parametros": {
+        "nivel_parcial": 2
+      }
     },
     {
       "clave": "hito_comprometido",
