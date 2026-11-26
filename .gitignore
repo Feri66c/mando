@@ -48,3 +48,12 @@ next-env.d.ts
 # supabase cli
 /supabase/.temp/
 /supabase/.branches/
+
+# monorepo: cada app genera lo suyo
+apps/*/.next/
+apps/*/test-results/
+apps/*/playwright-report/
+apps/mobile/.expo/
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/dist/

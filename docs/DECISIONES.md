@@ -60,3 +60,19 @@ sección 6 de `docs/PROMPT-MAESTRO.md`.
 - Con el seed, alargar la prueba de sonido 60 minutos no arrastra nada: hay 2 h 30 de holgura antes de la apertura de puertas. El arrastre se ve al moverla más de 2 h 30 o al mover la apertura.
 - El Modo En Vivo solo dice «X min tarde / antes» cuando la diferencia es menor a 12 horas; si la marca es de otro día (por ejemplo, al probar antes de la fecha del evento) no muestra nada.
 - Siguiente: la Etapa 2 (app iOS/Android) se presenta como plan y no empieza sin la confirmación de Fer.
+
+# Decisiones de la Etapa 2 (app móvil)
+
+Fecha: 26 de noviembre de 2026. Fer confirmó el plan de la Etapa 2 y sus cuatro recomendaciones.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 13 | Cuentas de Apple y Google | A nombre de la empresa de Fer (con RUC). Apple pide número D-U-N-S para cuentas de empresa. |
+| 14 | GRABA AQUÍ | Completo: graba una nota de voz (evidencia), la pasa a texto en el teléfono y Claude propone el cambio, que la persona confirma con la misma vista previa de siempre. Sin clave de Anthropic en el servidor, el botón guarda solo la nota de voz. |
+| 15 | Qué funciona sin señal | Marcas Empezó / Terminó, fotos, videos, notas de voz y respuestas de momentos críticos se guardan en el teléfono y se envían al volver la señal. Los cambios a la hoja de ruta necesitan señal, porque la vista previa depende de la hoja de ruta al día. |
+| 16 | Primer teléfono de prueba | iPhone de Fer: la primera versión de prueba sale por TestFlight. |
+
+## Supuestos de la Etapa 2
+
+- **Monorepo con npm workspaces:** `apps/web` (Next.js), `apps/mobile` (Expo) y `packages/core` (`@mando/core`). `config/`, `supabase/`, `docs/`, `scripts/` y `tests/db/` quedan en la raíz porque son de las tres partes. En Vercel, la carpeta raíz del proyecto pasa a ser `apps/web`.
+- **Expo SDK 58**, con Expo Router y React 19.3 (la misma versión que la web).
