@@ -35,3 +35,15 @@ writeFileSync(
   ].join("\n"),
 );
 console.log("✓ supabase/actualizar-etapa-1.sql actualizado");
+
+// Para un Supabase que ya tiene la Etapa 1: solo lo nuevo de la Etapa 2.
+writeFileSync(
+  join(root, "supabase/actualizar-etapa-2.sql"),
+  [
+    "-- MANDO · actualización de la Etapa 1 a la Etapa 2, para un Supabase que YA tiene la Etapa 1.",
+    "-- Archivo generado con `npm run db:bundle`. Pégalo entero en Supabase → SQL Editor → New query → Run.",
+    "",
+    readFileSync(join(root, "supabase/migrations/20261127000004_app_movil.sql"), "utf8"),
+  ].join("\n"),
+);
+console.log("✓ supabase/actualizar-etapa-2.sql actualizado");
