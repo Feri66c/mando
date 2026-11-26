@@ -28,13 +28,20 @@ export function RealtimeRefresh({ eventId }: { eventId: string }) {
       channel = channel.on("postgres_changes", { event: "*", schema: "public", table, filter: `event_id=eq.${eventId}` }, refresh);
     }
     channel = channel.on("postgres_changes", { event: "*", schema: "public", table: "moment_checks" }, refresh);
-    channel.subscribe((status) => {
-      if (status === "SUBSCRIBED") setState("live");
-      else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setState("offline");
+    let cancelled = false;
+    // El canal tiene que ir con la sesión de la persona: sin ella, la seguridad por fila no le manda nada.
+    void supabase.auth.getSession().then(async ({ data }) => {
+      if (cancelled) return;
+      await supabase.realtime.setAuth(data.session?.access_token ?? null);
+      channel.subscribe((status) => {
+        if (status === "SUBSCRIBED") setState("live");
+        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") setState("offline");
+      });
     });
     const online = () => router.refresh();
     window.addEventListener("online", online);
     return () => {
+      cancelled = true;
       window.removeEventListener("online", online);
       if (timer.current) clearTimeout(timer.current);
       supabase.removeChannel(channel);

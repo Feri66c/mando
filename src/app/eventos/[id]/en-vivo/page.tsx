@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { MarkButtons } from "@/components/operacion/forms";
 import { LiveClock } from "@/components/operacion/live";
 import { Card, LevelChip, StatusChip, buttonGhost, buttonSecondary } from "@/components/operacion/ui";
-import { formatShift, minutesLate, nowAndNext } from "@/lib/core/route";
+import { formatLateness, minutesLate, nowAndNext } from "@/lib/core/route";
 import { formatTime, zoneLabel } from "@/lib/core/time";
 import { getAlerts, getEventContext, getRouteItems } from "@/lib/data";
 
@@ -23,6 +23,7 @@ export default async function LivePage({ params }: { params: Promise<{ id: strin
   const [items, alerts] = await Promise.all([getRouteItems(id), getAlerts(id)]);
   const now = new Date();
   const { current, next } = nowAndNext(items, now);
+  const lateness = current?.actualStart ? formatLateness(minutesLate(current.currentStart, current.actualStart, now)) : null;
   const worst = alerts.filter((a) => a.status === "open").sort((a, b) => b.level - a.level)[0] ?? null;
   const base = `/eventos/${id}`;
 
@@ -55,8 +56,8 @@ export default async function LivePage({ params }: { params: Promise<{ id: strin
             </div>
             {current.actualStart ? (
               <p className="mt-1 text-sm text-ink-muted">
-                Empezó a las <span className="font-mono">{formatTime(current.actualStart, tz)}</span> ·{" "}
-                {formatShift(minutesLate(current.currentStart, current.actualStart, now))}
+                Empezó a las <span className="font-mono">{formatTime(current.actualStart, tz)}</span>
+                {lateness && <> · <span className="font-mono">{lateness}</span></>}
               </p>
             ) : (
               <p className="mt-1 text-sm text-ink-muted">

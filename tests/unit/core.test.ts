@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { contrast, levelChipColors, levelOf } from "@/lib/core/criticality";
 import { evidencePath, kindFromMime, safeExtension, sha256Hex } from "@/lib/core/evidence";
-import { formatShift, minutesLate, nowAndNext } from "@/lib/core/route";
+import { formatLateness, formatShift, minutesLate, nowAndNext } from "@/lib/core/route";
 
 const item = (id: string, start: string, end: string, extra: Partial<{ actualStart: string; actualEnd: string; status: string }> = {}) => ({
   id,
@@ -88,5 +88,16 @@ describe("evidencias", () => {
     const hash = await sha256Hex(new TextEncoder().encode("MANDO").buffer as ArrayBuffer);
     expect(hash).toMatch(/^[0-9a-f]{64}$/);
     expect(hash).toBe(await sha256Hex(new TextEncoder().encode("MANDO").buffer as ArrayBuffer));
+  });
+});
+
+describe("formatLateness", () => {
+  it("dice tarde, antes o a tiempo", () => {
+    expect(formatLateness(12)).toBe("12 min tarde");
+    expect(formatLateness(-5)).toBe("5 min antes");
+    expect(formatLateness(0)).toBe("a tiempo");
+  });
+  it("calla cuando la marca es de otro día", () => {
+    expect(formatLateness(-23565)).toBeNull();
   });
 });

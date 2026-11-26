@@ -37,3 +37,10 @@ export function formatShift(minutes: number): string {
   if (minutes === 0) return "a tiempo";
   return `${minutes > 0 ? "+" : "−"}${Math.abs(minutes)} min`;
 }
+
+/** Para el Modo En Vivo: "+12 min tarde", "5 min antes" o "a tiempo". Fuera de ±12 h no dice nada (marca de otro día). */
+export function formatLateness(minutes: number): string | null {
+  if (Math.abs(minutes) > 12 * 60) return null;
+  if (minutes === 0) return "a tiempo";
+  return minutes > 0 ? `${minutes} min tarde` : `${Math.abs(minutes)} min antes`;
+}

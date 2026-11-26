@@ -32,10 +32,13 @@ test.describe("ingreso de los tres roles (requiere Supabase con el seed)", () =>
       await expect(cards.first()).toContainText(user.role);
 
       await cards.first().getByRole("link").click();
+      await expect(page.getByText("Ahora", { exact: true })).toBeVisible();
+      await page.getByRole("navigation", { name: "Secciones del evento" }).getByRole("link", { name: "Hoja de ruta" }).click();
       await expect(page.getByRole("heading", { name: "Hoja de ruta" })).toBeVisible();
-      await expect(page.getByRole("listitem")).toHaveCount(user.sees);
+      await expect(page.getByRole("list", { name: "Actividades" }).getByRole("listitem")).toHaveCount(user.sees);
       await expect(page.getByText("Prueba de sonido")).toBeVisible();
 
+      await page.goto("/eventos");
       await page.getByRole("button", { name: "Salir" }).click();
       await expect(page).toHaveURL(/\/ingresar/);
     });
