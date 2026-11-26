@@ -18,3 +18,20 @@ for (const f of readdirSync(dir).filter((f) => f.endsWith(".sql")).sort()) {
 parts.push("-- ===================== seed.sql (datos de ejemplo) =====================", readFileSync(join(root, "supabase/seed.sql"), "utf8"));
 writeFileSync(join(root, "supabase/instalar-todo.sql"), parts.join("\n"));
 console.log("✓ supabase/instalar-todo.sql actualizado");
+
+// Para un Supabase que ya tiene la Fase 0 instalada: solo lo nuevo de la Etapa 1.
+const seed = readFileSync(join(root, "supabase/seed.sql"), "utf8");
+const crit = seed.slice(seed.indexOf("update events set criticality_config"));
+writeFileSync(
+  join(root, "supabase/actualizar-etapa-1.sql"),
+  [
+    "-- MANDO · actualización de la Fase 0 a la Etapa 1, para un Supabase que YA tiene instalar-todo.sql de la Fase 0.",
+    "-- Archivo generado con `npm run db:bundle`. Pégalo entero en Supabase → SQL Editor → New query → Run.",
+    "",
+    readFileSync(join(root, "supabase/migrations/20261126000003_operacion_etapa_1.sql"), "utf8"),
+    "",
+    "-- Escala de criticidad del evento de ejemplo, con el parámetro nuevo de compromisos.",
+    crit,
+  ].join("\n"),
+);
+console.log("✓ supabase/actualizar-etapa-1.sql actualizado");

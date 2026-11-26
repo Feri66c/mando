@@ -34,7 +34,7 @@ npm test           # pruebas de unidad (sin credenciales)
 npm run test:db    # permisos por evento y rol contra un PostgreSQL desechable (sin credenciales)
 npm run e2e        # navegador; con E2E_PASSWORD prueba el ingreso de los tres roles
 npm run db:reset   # con la CLI de Supabase en local: aplica migraciones y seed
-npm run db:bundle  # regenera supabase/instalar-todo.sql (migraciones + seed en un solo archivo)
+npm run db:bundle  # regenera supabase/instalar-todo.sql (todo) y supabase/actualizar-etapa-1.sql (solo lo nuevo)
 npm run check      # lint + tipos + unidad + permisos + compilación
 ```
 
