@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { inviteMember, type PanelState } from "@/app/actions/panel";
+import { VISIBILITIES } from "@mando/core/command";
 import { buttonGhost, buttonPrimary, inputClass } from "@/components/operacion/ui";
 
 const initial: PanelState = { ok: false, error: null };
@@ -10,9 +11,13 @@ const label = "block text-sm font-medium";
 export function InviteForm({
   eventId,
   cargos,
+  areas = [],
+  team = [],
 }: {
   eventId: string;
   cargos: { cargo: string; nivel: number | null; descripcion: string }[];
+  areas?: string[];
+  team?: { profileId: string; fullName: string; title: string | null }[];
 }) {
   const [state, action, pending] = useActionState(inviteMember, initial);
   const formRef = useRef<HTMLFormElement>(null);
@@ -55,6 +60,48 @@ export function InviteForm({
         </label>
         <input id="inv-cargo-propio" name="cargo_propio" maxLength={80} autoComplete="off" placeholder="Road manager" className={inputClass} />
       </div>
+      <fieldset className="space-y-4 border-t border-line pt-4">
+        <legend className="font-mono text-xs uppercase tracking-[0.14em] text-ink-muted">Cadena de mando · no aplica al cliente</legend>
+        <div className="space-y-1.5">
+          <label htmlFor="inv-area" className={label}>
+            Área <span className="font-normal text-ink-muted">(opcional)</span>
+          </label>
+          <input id="inv-area" name="area" list="inv-area-lista" maxLength={60} autoComplete="off" placeholder="Escribe o elige un área" className={inputClass} />
+          <datalist id="inv-area-lista">
+            {areas.map((a) => (
+              <option key={a} value={a} />
+            ))}
+          </datalist>
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="inv-jefe" className={label}>
+            Reporta a
+          </label>
+          <select id="inv-jefe" name="reporta_a" defaultValue="" className={inputClass}>
+            <option value="">Mando central</option>
+            {team.map((m) => (
+              <option key={m.profileId} value={m.profileId}>
+                {m.fullName}
+                {m.title ? ` · ${m.title}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="inv-ve" className={label}>
+            Qué ve
+          </label>
+          <select id="inv-ve" name="visibilidad" defaultValue="" className={inputClass}>
+            <option value="">Según su cargo: productores todo, coordinación su área, técnicos lo suyo</option>
+            {VISIBILITIES.map((v) => (
+              <option key={v.clave} value={v.clave}>
+                {v.nombre}
+              </option>
+            ))}
+          </select>
+          <p className="text-sm text-ink-muted">Nadie por debajo del productor de campo ve presupuesto ni datos de casting.</p>
+        </div>
+      </fieldset>
       {state.error && (
         <p role="alert" className="border border-critical/40 bg-critical/10 px-3 py-2 text-sm">
           {state.error}

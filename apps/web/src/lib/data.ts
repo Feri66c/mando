@@ -3,7 +3,12 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import {
+  fetchAccessList,
   fetchAdminOrgs,
+  fetchAreas,
+  fetchBrands,
+  fetchCommandChain,
+  fetchEmergencyChanges,
   fetchAlerts,
   fetchBudget,
   fetchPeopleBoard,
@@ -243,4 +248,31 @@ export async function getClientNotices(eventId: string) {
 
 export async function getPlanningDeadline(eventId: string) {
   return fetchPlanningDeadline(await requireClient(), eventId);
+}
+
+// ---- Cadena de mando, marcas y cambios de emergencia ----
+
+export const getCommandChain = cache(async function getCommandChain(eventId: string) {
+  return fetchCommandChain(await requireClient(), eventId);
+});
+
+export async function getAreas(eventId: string) {
+  return fetchAreas(await requireClient(), eventId);
+}
+
+/** Marcas del evento. Si algo falla (p. ej. la base aún no tiene la tabla), el evento se ve igual, sin logos. */
+export const getBrands = cache(async function getBrands(eventId: string) {
+  try {
+    return await fetchBrands(await requireClient(), eventId);
+  } catch {
+    return [];
+  }
+});
+
+export async function getEmergencyChanges(eventId: string) {
+  return fetchEmergencyChanges(await requireClient(), eventId);
+}
+
+export async function getAccessList(eventId: string) {
+  return fetchAccessList(await requireClient(), eventId);
 }

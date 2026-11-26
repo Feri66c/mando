@@ -68,7 +68,7 @@ export default async function RequirementsPage({ params }: { params: Promise<{ i
                       </p>
                       <p className="mt-1 text-xs text-ink-muted">
                         {r.mandatory ? "No negociable · " : ""}
-                        {r.ownerName ? `A cargo de ${r.ownerName}` : "Sin responsable"}
+                        {r.ownerName ? `A cargo de ${r.ownerName}` : "Responsable: quien lo suba"}
                       </p>
                       {r.note && <p className="mt-1 text-sm text-ink-muted">{r.note}</p>}
                       {r.fileUrl && (

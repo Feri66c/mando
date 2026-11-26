@@ -145,11 +145,16 @@ describe("Invitar: solo el productor general reparte el mando", () => {
     });
   });
 
-  it("el productor de campo, el cliente y un ajeno no pueden invitar", async () => {
+  it("el cliente y un ajeno no pueden invitar; el productor de campo solo a sus submandos (decisión 59)", async () => {
     await scenario(async ({ asUser }) => {
-      for (const who of [USERS.producer, USERS.viewer, USERS.outsider]) {
+      for (const who of [USERS.viewer, USERS.outsider]) {
         expect(await errorOf(asUser(who), INVITE, [EVENT, "x@ejemplo.com", "X", "Promotor", "producer", 4])).toMatch(/Solo el productor general/);
       }
+      const producer = asUser(USERS.producer);
+      expect(await errorOf(producer, INVITE, [EVENT, "par@ejemplo.com", "Par", "Productor de campo", "producer", 2])).toMatch(/Solo el productor general/);
+      expect(await errorOf(producer, INVITE, [EVENT, "cliente2@ejemplo.com", "Cliente", "Cliente", "viewer", null])).toMatch(/Solo el productor general/);
+      expect(await errorOf(producer, INVITE, [EVENT, "jefe@ejemplo.com", "Jefe", "Productor general", "backend", 1])).toMatch(/Solo el productor general/);
+      expect(await errorOf(producer, INVITE, [EVENT, "x@ejemplo.com", "X", "Promotor", "producer", 4])).toBeNull();
       expect(await errorOf(asUser(USERS.backend), INVITE, [FOREIGN_EVENT, "x@ejemplo.com", "X", "Promotor", "producer", 4])).toMatch(/Solo el productor general/);
     });
   });

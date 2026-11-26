@@ -187,7 +187,7 @@ export function RequirementPlanForm({
             Quién lo sube
           </label>
           <select id={`resp-${requirementId}`} name="owner" defaultValue={ownerId ?? ""} aria-label={`Quién sube ${title}`} className={`${inputClass} mt-1`}>
-            <option value="">Sin asignar</option>
+            <option value="">Quien lo suba queda como responsable</option>
             {team.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}

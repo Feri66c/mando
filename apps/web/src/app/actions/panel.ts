@@ -6,6 +6,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isVisibility } from "@mando/core/command";
 import { DEFAULT_CARGOS, getTemplate, parseTemplate, validateTemplate } from "@mando/core/event-types";
 import { withDocuments } from "@mando/core/requirements";
 import { DEFAULT_TIMEZONE, zonedDateTimeToIso } from "@mando/core/time";
@@ -92,6 +93,10 @@ export async function inviteMember(_prev: PanelState, formData: FormData): Promi
       p_title: title,
       p_role: chosen.rol,
       p_level: chosen.nivel,
+      // Cadena de mando (decisión 59): área, a quién reporta y qué ve. El cliente no lleva nada de esto.
+      p_area: chosen.rol === "viewer" ? null : text(formData, "area") || null,
+      p_reports_to: chosen.rol !== "viewer" && UUID.test(text(formData, "reporta_a")) ? text(formData, "reporta_a") : null,
+      p_visibility: chosen.rol !== "viewer" && isVisibility(text(formData, "visibilidad")) ? text(formData, "visibilidad") : null,
     });
     if (error) throw error;
     const joined = (data as { joined?: boolean } | null)?.joined === true;

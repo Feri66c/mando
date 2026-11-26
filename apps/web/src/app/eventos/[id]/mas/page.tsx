@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { signOut } from "@/app/actions/auth";
 import { PageTitle, buttonGhost } from "@/components/operacion/ui";
 import { ROLE_DESCRIPTION, ROLE_LABEL } from "@mando/core/labels";
+import { seesAll, visibilityLabel } from "@mando/core/command";
 import { getEventContext } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Más" };
@@ -24,6 +25,7 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
   ];
   const team = [
     ...(isBackend ? [{ href: `${base}/backend`, label: "Backend", hint: "Instrucciones al productor, avisos al cliente, plazo y lo que espera tu revisión." }] : []),
+    { href: `${base}/mando`, label: "Cadena de mando", hint: "Mando central y submandos: quién reporta a quién, qué ve cada uno, lista de ingreso y cambios de emergencia." },
     { href: `${base}/cierre`, label: "Estrellas y cierre", hint: "Cómo va el evento, los no negociables y el informe para guardar en PDF." },
     { href: `${base}/aprendizajes`, label: isTeam ? "Aprendizajes" : "Ficha de satisfacción", hint: isTeam ? "Lo que te llevas de este evento, en seis puntos." : "Cuéntanos qué impresión te deja el evento." },
     { href: `${base}/planificacion`, label: "Planificación", hint: "Los 5 elementos: legal, personal, técnico, presupuesto y aprobaciones. Desbloquean el timeline." },
@@ -44,7 +46,20 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
     ...(isTeam ? [{ href: `${base}/momentos`, label: "Momentos críticos", hint: "Prueba de sonido, montaje, puertas: prometido contra entregado." }] : []),
     { href: "/eventos", label: "Mis eventos", hint: "Cambiar de evento." },
   ];
-  const links = isTeam ? team : express;
+  // Submando (decisión 60): ve su mando y lo que le toca. Lo demás no aparece, y la base tampoco se lo entrega.
+  const full = isTeam && seesAll(event.role, event.visibility);
+  const submando = [
+    { href: `${base}/mando`, label: "Mi mando", hint: "A quién reportas, tu gente y los cambios de emergencia." },
+    { href: `${base}/locacion`, label: "Locación", hint: "Punto de encuentro, mapa, transporte y antecedentes del lugar." },
+    { href: `${base}/tecnico`, label: "Lista técnica", hint: "Los equipos y documentos técnicos del evento." },
+    { href: `${base}/expediente`, label: "Mis documentos", hint: "Los documentos que te toca subir." },
+    { href: `${base}/evidencias`, label: "Evidencias", hint: "Tus fotos, audios y videos, y los de tus actividades." },
+    { href: `${base}/momentos`, label: "Momentos críticos", hint: "Prueba de sonido, montaje, puertas: prometido contra entregado." },
+    { href: `${base}/bitacora`, label: "Bitácora", hint: "Lo que pasó en tu mando. No se edita ni se borra." },
+    { href: `${base}/aprendizajes`, label: "Aprendizajes", hint: "Lo que te llevas de este evento, en seis puntos." },
+    { href: "/eventos", label: "Mis eventos", hint: "Cambiar de evento." },
+  ];
+  const links = !isTeam ? express : full ? team : submando;
   return (
     <>
       <PageTitle>Más</PageTitle>
@@ -60,8 +75,9 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
       </ul>
       <div className="mt-6 rounded-card border border-line p-4 text-sm">
         <p className="font-semibold">
-          {user.fullName} · {ROLE_LABEL[event.role]}
+          {user.fullName} · {event.title ?? ROLE_LABEL[event.role]}
         </p>
+        {isTeam && <p className="mt-1 font-mono text-xs uppercase tracking-wider text-gold-300">Ves: {visibilityLabel(event.role === "backend" ? "completa" : event.visibility)}</p>}
         <p className="mt-1 text-ink-muted">{ROLE_DESCRIPTION[event.role]}</p>
         <form action={signOut} className="mt-3">
           <button type="submit" className={buttonGhost}>

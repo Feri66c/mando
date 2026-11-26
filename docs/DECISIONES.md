@@ -296,3 +296,25 @@ Fecha: 26 de noviembre de 2026. «No estamos trabajando para un evento, estamos 
 - **Exportación segura:** lo que empieza con `=`, `+`, `-` o `@` se exporta como texto, para que Excel no lo ejecute como fórmula.
 - **Excel directo:** por ahora la lista entra y sale en CSV, que Excel abre y guarda. Leer archivos `.xlsx` queda para después.
 - **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261210000017_banco_de_talentos.sql` en el SQL Editor, después de la migración 16.
+
+# Decisiones del centro de mando · Entrega 3
+
+Fecha: 26 de noviembre de 2026. «Mando es poder»: un mando central, sus submandos y lo que ve cada uno.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 59 | Cadena de mando | Cada persona del equipo tiene un área, un mando al que reporta y una visibilidad. El backend arma toda la cadena; el productor de campo suma y ordena a sus submandos (coordinación y técnicos), que quedan bajo su mando. La pantalla «Cadena de mando» muestra el árbol y cuánta gente tiene conectada cada mando, contando a toda la que cuelga de él. El mando al que alguien reporta tiene igual o mayor jerarquía y no se pueden cerrar círculos. Cada cambio queda en la bitácora. |
+| 60 | Visibilidad por persona | Hay tres alcances: **Todo el evento**, **Solo su área** y **Solo lo suyo**. Si nadie dice otra cosa: productores, todo; coordinación, su área; técnicos y proveedores, lo suyo. Un submando ve las actividades de su área, las que tiene a su cargo y los hitos del evento; de alertas, evidencias, bitácora y cambios, solo lo de esas actividades y lo que hizo él. Nunca ve presupuesto, casting, banco de talentos, citados, avisos al cliente ni documentos de otros. Lo decide la base de datos, no la pantalla, y tampoco puede marcar ni pedir cambios sobre actividades que no ve. Los productores (niveles 1 y 2) siempre ven todo. |
+| 61 | Marcas del evento | El backend carga las marcas del evento: del cliente, de la agencia y de la productora, con su logo oficial (PNG, JPG o WebP, hasta 2 MB) o solo el nombre. Aparecen junto al nombre del evento para todo el equipo y para el cliente. MANDO no trae logos de terceros: los sube quien tiene derecho a usarlos. |
+| 62 | Modalidad: tercerización | El evento se marca como directo con el cliente, de agencia o **tercerizado**, con el nombre de la agencia. La etiqueta se ve junto al nombre del evento. |
+| 63 | Cambios de emergencia | Un cambio cerca del evento (persona, proveedor, horario, locación u otro) se registra con una línea y su detalle. El servidor lo clasifica con la hora del evento: con tiempo, **48 horas**, **24 horas** o **último minuto**, y levanta una alerta cada vez más alta. No se edita ni se borra y queda en la bitácora. Lo reportan producción y coordinación. |
+| 64 | Staff de mando y lista de ingreso | La misma pantalla resume el Staff de mando (mandos y personas en campo) y exporta la **lista de ingreso** para el local: «MANDO · nombre del evento · Participantes», numerada, con nombre, documento, cargo y estado del documento; completa o por cargo. El responsable de un documento del expediente es quien lo sube, salvo que se haya asignado antes a otra persona. |
+
+## Supuestos
+
+- **Último minuto** es a 2 horas o menos del inicio, o con el evento en marcha. Entre 2 y 24 horas es «24 horas»; entre 24 y 48, «48 horas». Si Fer prefiere otros cortes, se cambian en la función `report_emergency_change`.
+- **Lista técnica y locación** las sigue viendo todo el equipo: un técnico las necesita para trabajar.
+- **Archivos:** antes cualquier persona del equipo podía abrir cualquier archivo del evento si conocía su ruta. Ahora un submando abre solo las evidencias que ve, los documentos que le tocan y los logos.
+- **Miembros que ya estaban** conservan visibilidad completa: nada cambia para ellos hasta que el backend lo decida.
+- **Pendiente:** reasignar el responsable buscando a la persona por su documento (hoy se elige por nombre), el estado de EPP por persona en la lista de ingreso y el filtro de la lista por área.
+- **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261211000018_cadena_de_mando.sql` en el SQL Editor, después de las migraciones 16 y 17.

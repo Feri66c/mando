@@ -2,6 +2,7 @@ import type { DocState, ElementStatus } from "./planning";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CriticalityConfig } from "./criticality";
 import type { Talent } from "./talents";
+import { isVisibility, type AccessRow, type BrandKind, type ChainMember, type EmergencyKind, type EmergencyWindow, type Visibility } from "./command";
 import {
   isEventRole,
   type AlertStatus,
@@ -40,6 +41,11 @@ export type MyEvent = {
   welcomedAt: string | null;
   /** Cuándo aceptó su cargo. Quien ya tomó el mando, ya aceptó. */
   acceptedAt: string | null;
+  /** Qué ve dentro del evento (decisión 60): todo, solo su área o solo lo suyo. El cliente no tiene. */
+  visibility: Visibility | null;
+  /** Directo, de agencia o tercerizado (decisión 62), y el nombre de la agencia si la hay. */
+  modality: string;
+  agencyName: string | null;
 };
 
 export type RouteItem = {
@@ -82,11 +88,13 @@ type EventRow = {
   status: EventStatus;
   kind: string | null;
   tier: string | null;
+  modality: string | null;
+  agency_name: string | null;
 };
 
-const EVENT_COLUMNS = "id, name, event_type, client_name, venue_name, timezone, starts_at, ends_at, status, kind, tier";
+const EVENT_COLUMNS = "id, name, event_type, client_name, venue_name, timezone, starts_at, ends_at, status, kind, tier, modality, agency_name";
 
-function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: number | null, welcomedAt: string | null, acceptedAt: string | null = null): MyEvent {
+function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: number | null, welcomedAt: string | null, acceptedAt: string | null = null, visibility: string | null = null): MyEvent {
   return {
     id: e.id,
     name: e.name,
@@ -104,6 +112,9 @@ function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: nu
     level,
     welcomedAt,
     acceptedAt: acceptedAt ?? welcomedAt,
+    visibility: role === "viewer" ? null : visibility && isVisibility(visibility) ? visibility : "completa",
+    modality: e.modality ?? "directo",
+    agencyName: e.agency_name,
   };
 }
 
@@ -111,7 +122,7 @@ function toMyEvent(e: EventRow, role: EventRole, title: string | null, level: nu
 export async function fetchMyEvents(client: SupabaseClient, userId: string): Promise<MyEvent[]> {
   const { data, error } = await client
     .from("event_members")
-    .select(`role, title, level, welcomed_at, accepted_at, events (${EVENT_COLUMNS})`)
+    .select(`role, title, level, welcomed_at, accepted_at, visibility, events (${EVENT_COLUMNS})`)
     .eq("profile_id", userId);
   if (error) throw new Error(`No se pudieron leer tus eventos: ${error.message}`);
 
@@ -119,7 +130,7 @@ export async function fetchMyEvents(client: SupabaseClient, userId: string): Pro
     .map((row) => {
       const event = (Array.isArray(row.events) ? row.events[0] : row.events) as EventRow | null;
       if (!event || !isEventRole(row.role)) return null;
-      return toMyEvent(event, row.role, row.title as string | null, row.level as number | null, row.welcomed_at as string | null, row.accepted_at as string | null);
+      return toMyEvent(event, row.role, row.title as string | null, row.level as number | null, row.welcomed_at as string | null, row.accepted_at as string | null, row.visibility as string | null);
     })
     .filter((e): e is MyEvent => e !== null)
     .sort((a, b) => (a.startsAt ?? "9999").localeCompare(b.startsAt ?? "9999"));
@@ -989,5 +1000,97 @@ export async function fetchTalentBank(client: SupabaseClient, eventId: string): 
     consent: Boolean(r.consent),
     events: Number(r.events ?? 0),
     inCasting: Boolean(r.in_casting),
+  }));
+}
+
+// ---- Cadena de mando, marcas y cambios de emergencia (decisiones 59 a 64) ----
+
+/** La cadena de mando tal como la base deja verla: todo el equipo, o solo el mando y los submandos propios. */
+export async function fetchCommandChain(client: SupabaseClient, eventId: string): Promise<ChainMember[]> {
+  const { data, error } = await client.rpc("command_chain", { p_event: eventId });
+  if (error) throw new Error(`No se pudo leer la cadena de mando: ${error.message}`);
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    profileId: r.profile_id as string,
+    fullName: (r.full_name as string | null) ?? "Sin nombre",
+    title: r.title as string | null,
+    role: r.role as string,
+    level: r.level as number | null,
+    areaId: r.area_id as string | null,
+    areaName: r.area_name as string | null,
+    reportsTo: r.reports_to as string | null,
+    reportsToName: r.reports_to_name as string | null,
+    visibility: isVisibility(String(r.visibility)) ? (r.visibility as Visibility) : "completa",
+    subordinates: Number(r.subordinates ?? 0),
+    active: r.active === true,
+  }));
+}
+
+export type EventArea = { id: string; name: string };
+
+export async function fetchAreas(client: SupabaseClient, eventId: string): Promise<EventArea[]> {
+  const { data, error } = await client.from("areas").select("id, name").eq("event_id", eventId).order("sort_order", { ascending: true });
+  if (error) throw new Error(`No se pudieron leer las áreas: ${error.message}`);
+  return (data ?? []).map((r) => ({ id: r.id as string, name: r.name as string }));
+}
+
+export type EventBrand = { id: string; kind: BrandKind; name: string; logoUrl: string | null };
+
+/** Marcas del evento con el enlace firmado de su logo (los archivos son privados). */
+export async function fetchBrands(client: SupabaseClient, eventId: string): Promise<EventBrand[]> {
+  const { data, error } = await client.from("event_brands").select("id, kind, name, file_path").eq("event_id", eventId).order("sort_order", { ascending: true });
+  if (error) throw new Error(`No se pudieron leer las marcas: ${error.message}`);
+  const rows = data ?? [];
+  const paths = rows.map((r) => r.file_path as string | null).filter((p): p is string => Boolean(p));
+  const urls = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await client.storage.from("evidences").createSignedUrls(paths, 60 * 60);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  return rows.map((r) => ({
+    id: r.id as string,
+    kind: r.kind as BrandKind,
+    name: r.name as string,
+    logoUrl: r.file_path ? (urls.get(r.file_path as string) ?? null) : null,
+  }));
+}
+
+export type EmergencyChange = {
+  id: string;
+  kind: EmergencyKind;
+  window: EmergencyWindow;
+  title: string;
+  detail: string | null;
+  createdAt: string;
+  createdByName: string | null;
+};
+
+export async function fetchEmergencyChanges(client: SupabaseClient, eventId: string): Promise<EmergencyChange[]> {
+  const { data, error } = await client
+    .from("emergency_changes")
+    .select("id, kind, time_window, title, detail, created_at, profiles!emergency_changes_created_by_fkey (full_name)")
+    .eq("event_id", eventId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`No se pudieron leer los cambios de emergencia: ${error.message}`);
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    kind: r.kind as EmergencyKind,
+    window: r.time_window as EmergencyWindow,
+    title: r.title as string,
+    detail: r.detail as string | null,
+    createdAt: r.created_at as string,
+    createdByName: (first(r.profiles) as { full_name: string | null } | null)?.full_name ?? null,
+  }));
+}
+
+/** Lista de ingreso para el local. Falla si la persona no es de producción: lleva documentos. */
+export async function fetchAccessList(client: SupabaseClient, eventId: string): Promise<AccessRow[]> {
+  const { data, error } = await client.rpc("access_list", { p_event: eventId });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    fullName: r.full_name as string,
+    docType: r.doc_type as string | null,
+    docNumber: r.doc_number as string | null,
+    role: r.role as string,
+    docState: r.doc_state as string,
   }));
 }
