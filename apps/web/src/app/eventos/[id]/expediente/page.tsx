@@ -80,7 +80,7 @@ export default async function RequirementsPage({ params }: { params: Promise<{ i
                   </div>
                   <div className="mt-3 flex flex-wrap items-start gap-2">
                     {r.status !== "not_applicable" && <RequirementUpload eventId={id} requirementId={r.id} title={r.title} done={r.status === "done"} />}
-                    {canDecide && r.status !== "done" && <RequirementStatusButton requirementId={r.id} title={r.title} status={r.status} mandatory={r.mandatory} />}
+                    {canDecide && r.status !== "done" && <RequirementStatusButton key={r.status} requirementId={r.id} title={r.title} status={r.status} mandatory={r.mandatory} />}
                     {canDecide && r.status === "pending" && reminder && (
                       <a
                         href={whatsappLink(reminder)}

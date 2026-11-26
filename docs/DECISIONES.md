@@ -151,3 +151,23 @@ Fecha: 26 de noviembre de 2026. Pedido de Fer: un recuadro para que la productor
 - **Fotos:** van al cubo privado, en `<evento>/aprobaciones/`, con su huella. Las ve todo miembro del evento, porque el cliente tiene que verlas.
 - **Eventos anteriores:** nacen sin grupos pedidos, así que nada se bloquea; se prenden desde la pantalla.
 - **Minuto a minuto referencial desde el brief:** hoy cada tipo de evento ya crea su hoja de ruta de referencia desde la plantilla. Que una IA lea el brief y proponga guion y minuto a minuto necesita un servicio de IA conectado en el servidor; queda pendiente hasta conectar los servicios.
+
+# Decisiones de la planificación: los 5 elementos
+
+Fecha: 26 de noviembre de 2026. Fer definió el flujo completo (planificación, apertura, desarrollo, cierre) y lo confirmó.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 30 | Los 5 elementos y el candado | Legal, Personal, Técnico, Presupuesto y Aprobaciones del cliente (`config/planificacion.json`). Los eventos nuevos nacen con el timeline bloqueado: la hoja de ruta no se abre y la base no deja marcar el inicio de una pieza clave hasta que los cinco estén completos. La pantalla «Planificación» muestra el avance y qué falta. |
+| 31 | Base de personas | Cada persona se registra una vez por organización (nombre, rol, DNI, vencimiento, foto y copia del DNI). Si el DNI ya existe, se actualiza esa ficha. En cada evento se elige con un check. Un DNI que vence antes del día del evento, o una ficha sin foto, deja Legal incompleto. |
+| 32 | Lista técnica | Cada tipo de evento trae su lista sugerida (`config/tecnica.json`). Los obligatorios se confirman para desbloquear; el resto se completa hasta 24 o 2 horas antes y la pantalla marca el plazo vencido. |
+| 33 | Presupuesto | El productor general carga el monto global y el cliente lo aprueba. Si el monto cambia, hay que aprobarlo otra vez. El desglose lo ve el productor de campo solo si se le habilita. MANDO avisa cuando una partida está por debajo del costo de referencia (`config/costos-referencia.json`). |
+
+## Supuestos
+
+- **Qué completa cada elemento:** Legal, los documentos no negociables del expediente subidos o marcados «no aplica», y todo el personal con foto y DNI vigente. Personal, al menos una persona elegida. Técnico, los obligatorios confirmados. Presupuesto, aprobado por el cliente. Aprobaciones, la regla de la decisión 29.
+- **Datos personales:** el DNI, su copia y el teléfono solo los ven el administrador de la organización y los niveles 1 y 2. Coordinación y técnicos ven nombre, rol y foto. El cliente no ve al personal (el casting que aprueba va por Aprobaciones). Las copias van al cubo privado, en `personas/<organización>/dni/`.
+- **Montos:** los ven el cliente y los niveles 1 y 2. Coordinación y técnicos no. La bitácora registra que hubo presupuesto y aprobación, sin montos.
+- **Costos de referencia:** los valores de `config/costos-referencia.json` son iniciales y de ejemplo. El productor general debe ajustarlos a su mercado.
+- **Eventos anteriores:** no tienen candado; solo cuenta la regla de aprobaciones. Sí pueden usar personal, técnico y presupuesto.
+- **Pendiente:** aviso automático cuando vence el plazo de 24 o 2 horas (hoy lo marca la pantalla), y el código de ingreso por WhatsApp o SMS, que necesita un servicio de mensajería.

@@ -1,3 +1,4 @@
+import type { DocState, ElementStatus } from "./planning";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CriticalityConfig } from "./criticality";
 import {
@@ -705,4 +706,113 @@ export async function fetchApprovalGroups(client: SupabaseClient, eventId: strin
   const { data, error } = await client.from("events").select("approval_groups").eq("id", eventId).maybeSingle();
   if (error) throw new Error(`No se pudieron leer las aprobaciones: ${error.message}`);
   return Array.isArray(data?.approval_groups) ? data.approval_groups.map(String) : [];
+}
+
+// ---- Planificación: los 5 elementos ----
+
+
+export type Planning = { gate: boolean; elements: ElementStatus[] };
+
+export async function fetchPlanning(client: SupabaseClient, eventId: string): Promise<Planning> {
+  const { data, error } = await client.rpc("planning_status", { p_event: eventId });
+  if (error) throw new Error(`No se pudo leer la planificación: ${error.message}`);
+  const raw = (data ?? {}) as { gate?: boolean; elements?: ElementStatus[] };
+  return { gate: Boolean(raw.gate), elements: Array.isArray(raw.elements) ? raw.elements : [] };
+}
+
+export type CrewPerson = {
+  id: string;
+  fullName: string;
+  defaultRole: string | null;
+  role: string | null;
+  assigned: boolean;
+  photoUrl: string | null;
+  docState: DocState;
+  docNumber: string | null;
+  docExpiresOn: string | null;
+  docUrl: string | null;
+  phone: string | null;
+};
+
+/** Personal del evento y, para los niveles 1 y 2, toda la base de personas de la organización. */
+export async function fetchPeopleBoard(client: SupabaseClient, eventId: string): Promise<CrewPerson[]> {
+  const { data, error } = await client.rpc("event_people_board", { p_event: eventId });
+  if (error) throw new Error(`No se pudo leer el personal: ${error.message}`);
+  const rows = (data ?? []) as Record<string, unknown>[];
+  const paths = rows.flatMap((r) => [r.photo_path, r.doc_path]).filter((p): p is string => typeof p === "string" && p.length > 0);
+  const urls = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await client.storage.from("evidences").createSignedUrls(paths, 60 * 60);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  return rows.map((r) => ({
+    id: r.person_id as string,
+    fullName: r.full_name as string,
+    defaultRole: (r.default_role as string | null) ?? null,
+    role: (r.role as string | null) ?? null,
+    assigned: Boolean(r.assigned),
+    photoUrl: r.photo_path ? (urls.get(r.photo_path as string) ?? null) : null,
+    docState: r.doc_state as DocState,
+    docNumber: (r.doc_number as string | null) ?? null,
+    docExpiresOn: (r.doc_expires_on as string | null) ?? null,
+    docUrl: r.doc_path ? (urls.get(r.doc_path as string) ?? null) : null,
+    phone: (r.phone as string | null) ?? null,
+  }));
+}
+
+export type TechItem = {
+  id: string;
+  category: string;
+  title: string;
+  detail: string | null;
+  quantity: number;
+  mandatory: boolean;
+  dueHours: number | null;
+  status: "pending" | "confirmed" | "not_applicable";
+};
+
+export async function fetchTechItems(client: SupabaseClient, eventId: string): Promise<TechItem[]> {
+  const { data, error } = await client
+    .from("event_tech_items")
+    .select("id, category, title, detail, quantity, mandatory, due_hours, status")
+    .eq("event_id", eventId)
+    .order("sort_order", { ascending: true });
+  if (error) throw new Error(`No se pudo leer la lista técnica: ${error.message}`);
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    category: r.category as string,
+    title: r.title as string,
+    detail: (r.detail as string | null) ?? null,
+    quantity: Number(r.quantity),
+    mandatory: Boolean(r.mandatory),
+    dueHours: (r.due_hours as number | null) ?? null,
+    status: r.status as TechItem["status"],
+  }));
+}
+
+export type Budget = {
+  total: number;
+  currency: string;
+  breakdownVisible: boolean;
+  status: "sent" | "approved" | "changes_requested";
+  decisionNote: string | null;
+  decidedAt: string | null;
+  lines: { id: string; title: string; conceptKey: string | null; quantity: number; unitCost: number }[];
+};
+
+/** El presupuesto tal como la base deja verlo: null si no hay o si a esta persona no le toca ver montos. */
+export async function fetchBudget(client: SupabaseClient, eventId: string): Promise<Budget | null> {
+  const { data, error } = await client.from("event_budgets").select("total, currency, breakdown_visible, status, decision_note, decided_at").eq("event_id", eventId).maybeSingle();
+  if (error) throw new Error(`No se pudo leer el presupuesto: ${error.message}`);
+  if (!data) return null;
+  const { data: lines } = await client.from("event_budget_lines").select("id, title, concept_key, quantity, unit_cost").eq("event_id", eventId).order("created_at", { ascending: true });
+  return {
+    total: Number(data.total),
+    currency: data.currency as string,
+    breakdownVisible: Boolean(data.breakdown_visible),
+    status: data.status as Budget["status"],
+    decisionNote: (data.decision_note as string | null) ?? null,
+    decidedAt: (data.decided_at as string | null) ?? null,
+    lines: (lines ?? []).map((l) => ({ id: l.id as string, title: l.title as string, conceptKey: (l.concept_key as string | null) ?? null, quantity: Number(l.quantity), unitCost: Number(l.unit_cost) })),
+  };
 }

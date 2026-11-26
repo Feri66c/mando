@@ -16,6 +16,7 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
   const base = `/eventos/${id}`;
   const links = [
     { href: `${base}/cierre`, label: "Estrellas y cierre", hint: "Cómo va el evento, los no negociables y el informe para guardar en PDF." },
+    { href: `${base}/planificacion`, label: "Planificación", hint: "Los 5 elementos: legal, personal, técnico, presupuesto y aprobaciones. Desbloquean el timeline." },
     { href: `${base}/aprobaciones`, label: "Aprobaciones", hint: "Casting, uniforme, utilería y referencias: el cliente aprueba antes de empezar." },
     ...(isTeam
       ? [

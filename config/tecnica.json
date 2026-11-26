@@ -1,0 +1,30 @@
+{
+  "_nota": "Lista técnica sugerida por tipo de evento (decisión 32). «obligatorio» bloquea el timeline hasta confirmarse. «plazo_horas» (24 o 2) es hasta cuántas horas antes del evento se puede completar lo que no es obligatorio.",
+  "categorias": [
+    { "clave": "escenario", "nombre": "Escenario y estructuras" },
+    { "clave": "luces", "nombre": "Luces" },
+    { "clave": "sonido", "nombre": "Sonido" },
+    { "clave": "microfonos", "nombre": "Micrófonos" },
+    { "clave": "video", "nombre": "Video y pantallas" },
+    { "clave": "energia", "nombre": "Energía" },
+    { "clave": "otros", "nombre": "Otros" }
+  ],
+  "sugeridos": [
+    { "categoria": "escenario", "titulo": "Módulo o stand armado", "obligatorio": true, "tipos": ["sampling", "centro-comercial", "feria"] },
+    { "categoria": "escenario", "titulo": "Escenario con medidas confirmadas", "obligatorio": true, "tipos": ["fiesta-corporativa", "concierto"] },
+    { "categoria": "escenario", "titulo": "Set o escenografía", "obligatorio": true, "tipos": ["podcast"] },
+    { "categoria": "sonido", "titulo": "Equipo de sonido con modelo confirmado", "obligatorio": true, "tipos": ["centro-comercial", "fiesta-corporativa", "feria", "concierto"] },
+    { "categoria": "sonido", "titulo": "Parlante portátil", "obligatorio": false, "plazo_horas": 24, "tipos": ["sampling"] },
+    { "categoria": "sonido", "titulo": "Interfaz o grabadora de audio", "obligatorio": true, "tipos": ["podcast"] },
+    { "categoria": "microfonos", "titulo": "Micrófonos (cantidad y modelo)", "obligatorio": true, "tipos": ["fiesta-corporativa", "concierto", "podcast"] },
+    { "categoria": "microfonos", "titulo": "Micrófono para animación", "obligatorio": false, "plazo_horas": 24, "tipos": ["sampling", "centro-comercial", "feria"] },
+    { "categoria": "luces", "titulo": "Luces (rider confirmado)", "obligatorio": true, "tipos": ["fiesta-corporativa", "concierto"] },
+    { "categoria": "luces", "titulo": "Iluminación del set", "obligatorio": true, "tipos": ["podcast"] },
+    { "categoria": "luces", "titulo": "Iluminación del módulo", "obligatorio": false, "plazo_horas": 24, "tipos": ["centro-comercial", "feria"] },
+    { "categoria": "video", "titulo": "Cámaras y tarjetas", "obligatorio": true, "tipos": ["podcast"] },
+    { "categoria": "video", "titulo": "Pantalla y contenidos probados", "obligatorio": false, "plazo_horas": 2, "tipos": ["centro-comercial", "fiesta-corporativa", "feria", "concierto"] },
+    { "categoria": "energia", "titulo": "Punto de energía confirmado", "obligatorio": true, "tipos": ["centro-comercial", "fiesta-corporativa", "feria", "concierto", "podcast"] },
+    { "categoria": "energia", "titulo": "Grupo electrógeno o respaldo", "obligatorio": false, "plazo_horas": 24, "tipos": ["concierto", "feria"] },
+    { "categoria": "otros", "titulo": "Extensiones, cinta y repuestos", "obligatorio": false, "plazo_horas": 2, "tipos": "todos" }
+  ]
+}

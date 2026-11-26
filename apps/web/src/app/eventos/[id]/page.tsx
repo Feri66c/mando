@@ -3,10 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertCard, EvidenceGrid, LogList } from "@/components/operacion/blocks";
 import { Card, Empty, SectionTitle, StatusChip, buttonPrimary, buttonSecondary } from "@/components/operacion/ui";
-import { approvalGate } from "@mando/core/approvals";
+import { PLANNING_ELEMENTS, planningProgress } from "@mando/core/planning";
 import { nowAndNext } from "@mando/core/route";
 import { formatEventRange, formatTime } from "@mando/core/time";
-import { getAlerts, getApprovalGroups, getApprovals, getEventContext, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
+import { getAlerts, getEventContext, getPlanning, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Hoy" };
 
@@ -36,15 +36,16 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
   const ctx = await getEventContext(id);
   if (!ctx) notFound();
   const { event, criticality, isTeam } = ctx;
-  const [items, alerts, log, evidences, approvalGroups, approvals] = await Promise.all([
+  const [items, alerts, log, evidences, planning] = await Promise.all([
     getRouteItems(id),
     getAlerts(id),
     getLog(id, isTeam ? 6 : 12),
     isTeam ? Promise.resolve([]) : getEvidences(id),
-    getApprovalGroups(id),
-    getApprovals(id),
+    getPlanning(id),
   ]);
-  const gate = approvalGate(approvalGroups, approvals);
+  // Eventos con candado: los 5 elementos. Eventos anteriores: solo las aprobaciones del cliente.
+  const pendingElements = PLANNING_ELEMENTS.filter((e) => (planning.gate || e.clave === "aprobaciones") && !planning.elements.find((s) => s.key === e.clave)?.ready);
+  const progress = planningProgress(planning.elements);
   const { current, next } = nowAndNext(items, new Date());
   const base = `/eventos/${id}`;
   const active = alerts.filter((a) => a.status !== "resolved");
@@ -58,12 +59,20 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
         <NowCard label="Sigue" item={next} timeZone={event.timezone} />
       </div>
 
-      {!gate.ready && event.status !== "closed" && (
-        <Link href={`${base}/aprobaciones`} className="mt-3 block rounded-card border border-gold-300/50 bg-surface-100 px-4 py-3 text-sm">
+      {pendingElements.length > 0 && event.status !== "closed" && (
+        <Link href={`${base}/${planning.gate ? "planificacion" : "aprobaciones"}`} className="mt-3 block rounded-card border border-gold-300/50 bg-surface-100 px-4 py-3 text-sm">
           <span className="block font-semibold text-gold-300">
-            {isTeam ? "Falta la aprobación del cliente para empezar" : "Tienes elementos por aprobar"}
+            {planning.gate
+              ? `Planificación: ${progress.ready} de ${progress.total}. El timeline sigue bloqueado`
+              : isTeam
+                ? "Falta la aprobación del cliente para empezar"
+                : "Tienes elementos por aprobar"}
           </span>
-          <span className="block text-ink-muted">{gate.missing.join(" · ")}</span>
+          <span className="block text-ink-muted">
+            {pendingElements
+              .map((e) => (planning.gate ? `${e.nombre}: ` : "") + (planning.elements.find((s) => s.key === e.clave)?.missing ?? []).join(", "))
+              .join(" · ")}
+          </span>
         </Link>
       )}
 

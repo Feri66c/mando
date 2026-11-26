@@ -171,7 +171,7 @@ describe("Sin todo aprobado no se empieza", () => {
       const producer = asUser(USERS.producer);
       await asUser(USERS.backend)("select public.set_approval_groups($1, $2)", [EVENT, ["casting", "uniforme"]]);
       expect(await errorOf(producer, START, [PUERTAS])).toMatch(
-        /No se puede empezar «Apertura de puertas»: falta la aprobación del cliente \(Casting: falta subirlo; Uniforme: falta subirlo\)/,
+        /No se puede empezar «Apertura de puertas»: falta completar la planificación \(Casting: falta subirlo; Uniforme: falta subirlo\)/,
       );
       await producer(START, [SOUND]); // no es pieza clave: la preproducción sigue
 

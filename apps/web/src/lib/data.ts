@@ -5,6 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import {
   fetchAdminOrgs,
   fetchAlerts,
+  fetchBudget,
+  fetchPeopleBoard,
+  fetchPlanning,
+  fetchTechItems,
   fetchApprovalGroups,
   fetchApprovals,
   fetchClosing,
@@ -34,7 +38,7 @@ import { MERIT_CONFIG, scoreEvent } from "@mando/core/merits";
 
 // Capa de acceso a datos de la web: las consultas viven en @mando/core/data (las comparte la app móvil);
 // aquí solo se obtiene el cliente con la sesión de la cookie y se manda a ingresar si no hay sesión.
-export type { Alert, Approval, Closing, EventLocation, Requirement, Commitment, Criterion, Guest, CurrentUser, Evidence, Invitation, LogEntry, Moment, MomentCheck, MyEvent, RouteItem, TeamMember } from "@mando/core/data";
+export type { Alert, Approval, Budget, CrewPerson, Planning, TechItem, Closing, EventLocation, Requirement, Commitment, Criterion, Guest, CurrentUser, Evidence, Invitation, LogEntry, Moment, MomentCheck, MyEvent, RouteItem, TeamMember } from "@mando/core/data";
 
 /** Devuelve el cliente o manda a la pantalla de ingreso si falta conectar Supabase. */
 async function requireClient() {
@@ -168,3 +172,27 @@ export const getApprovals = cache(async function getApprovals(eventId: string) {
 export const getApprovalGroups = cache(async function getApprovalGroups(eventId: string) {
   return fetchApprovalGroups(await requireClient(), eventId);
 });
+
+// ---- Planificación ----
+
+export const getPlanning = cache(async function getPlanning(eventId: string) {
+  return fetchPlanning(await requireClient(), eventId);
+});
+
+export async function getPeopleBoard(eventId: string) {
+  return fetchPeopleBoard(await requireClient(), eventId);
+}
+
+export async function getTechItems(eventId: string) {
+  return fetchTechItems(await requireClient(), eventId);
+}
+
+export async function getBudget(eventId: string) {
+  return fetchBudget(await requireClient(), eventId);
+}
+
+/** Organización dueña del evento: las fotos y copias de DNI se guardan por organización. */
+export async function getEventOrganization(eventId: string): Promise<string | null> {
+  const { data } = await (await requireClient()).from("events").select("organization_id").eq("id", eventId).maybeSingle();
+  return (data?.organization_id as string | undefined) ?? null;
+}

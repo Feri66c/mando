@@ -36,3 +36,8 @@ export function requirementPath(eventId: string, fileId: string, fileName: strin
 export function approvalPath(eventId: string, fileId: string, fileName: string): string {
   return `${eventId}/aprobaciones/${fileId}.${safeExtension(fileName)}`;
 }
+
+/** Ruta de la foto o de la copia del DNI de una persona: personas/<organización>/<foto|dni>/<id>.<extensión>. */
+export function personFilePath(organizationId: string, kind: "foto" | "dni", fileId: string, fileName: string): string {
+  return `personas/${organizationId}/${kind}/${fileId}.${safeExtension(fileName)}`;
+}

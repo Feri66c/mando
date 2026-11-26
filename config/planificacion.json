@@ -1,0 +1,14 @@
+{
+  "_nota": "Los 5 elementos de la planificación (decisión 30). Con los cinco completos se desbloquea el timeline. Los nombres y textos se cambian aquí.",
+  "elementos": [
+    { "clave": "legal", "nombre": "Legal", "descripcion": "Lo que echa a andar el evento: permisos, contratos, seguros y la identidad del equipo.", "ruta": "expediente" },
+    { "clave": "personal", "nombre": "Personal", "descripcion": "La gente del evento: anfitrionas, host, técnicos, transporte.", "ruta": "personal" },
+    { "clave": "tecnico", "nombre": "Técnico", "descripcion": "Escenario, luces, sonido y micrófonos, con su checklist.", "ruta": "tecnico" },
+    { "clave": "presupuesto", "nombre": "Presupuesto", "descripcion": "El monto aprobado por el cliente.", "ruta": "presupuesto" },
+    { "clave": "aprobaciones", "nombre": "Aprobaciones del cliente", "descripcion": "Casting, uniforme, utilería y referencias.", "ruta": "aprobaciones" }
+  ],
+  "roles_sugeridos": [
+    "Coordinador de campo", "Anfitriona", "Promotora", "Modelo", "Host", "Invitado", "Director de foto", "Coproductor",
+    "Sonidista", "Luminotécnico", "Camarógrafo", "Montajista", "Conductor de transporte", "Seguridad"
+  ]
+}

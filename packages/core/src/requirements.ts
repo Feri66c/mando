@@ -2,6 +2,7 @@
 // La lista vive en datos (config/expediente.json) y se copia al evento al crearlo.
 import config from "../../../config/expediente.json";
 import { approvalGroup, approvalGroupsFor } from "./approvals";
+import { techItemsFor } from "./planning";
 import type { EventTemplate } from "./event-types";
 
 export type RequirementCategory = "seguridad" | "permisos" | "proveedores" | "logistica" | "administracion" | "eventualidades";
@@ -34,9 +35,12 @@ export function documentsFor(kind: string): DocumentSpec[] {
 /** La plantilla que se guarda en el evento: la del tipo más su lista de documentos y sus grupos de aprobación. */
 export function withDocuments<T extends Pick<EventTemplate, "clave">>(
   template: T,
-): T & { documentos: Omit<DocumentSpec, "tipos">[]; aprobaciones: { clave: string; prefijo: string }[] } {
+): T & { documentos: Omit<DocumentSpec, "tipos">[]; aprobaciones: { clave: string; prefijo: string }[]; tecnica: ReturnType<typeof techItemsFor>; planificacion: true } {
   return {
     ...template,
+    // Los 5 elementos: el evento nace con el timeline bloqueado hasta completarlos (config/planificacion.json).
+    planificacion: true,
+    tecnica: techItemsFor(template.clave),
     // Grupos que el cliente aprueba antes de empezar (config/aprobaciones.json).
     aprobaciones: approvalGroupsFor(template.clave).map((clave) => ({ clave, prefijo: approvalGroup(clave)?.prefijo ?? "X" })),
     documentos: documentsFor(template.clave).map(({ clave, titulo, categoria, plazo_dias, no_negociable }) => ({
