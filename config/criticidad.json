@@ -16,7 +16,9 @@
       "nombre": "Atención",
       "descripcion": "Retraso o pendiente sin responsable.",
       "color": "#c9a227",
-      "notifica": ["producer"],
+      "notifica": [
+        "producer"
+      ],
       "visible_para_cliente": false
     },
     {
@@ -25,7 +27,10 @@
       "nombre": "Crítico",
       "descripcion": "Lo entregado no coincide con lo prometido, o un retraso arrastra otras actividades.",
       "color": "#b3402e",
-      "notifica": ["producer", "backend"],
+      "notifica": [
+        "producer",
+        "backend"
+      ],
       "visible_para_cliente": false
     },
     {
@@ -34,7 +39,11 @@
       "nombre": "Red Flag",
       "descripcion": "Compromete el evento. Escala al cliente.",
       "color": "#061428",
-      "notifica": ["producer", "backend", "viewer"],
+      "notifica": [
+        "producer",
+        "backend",
+        "viewer"
+      ],
       "visible_para_cliente": true
     }
   ],
@@ -43,37 +52,50 @@
       "clave": "actividad_sin_responsable",
       "nivel": 2,
       "cuando": "Una actividad está a menos de `minutos_antes` de empezar y no tiene responsable.",
-      "parametros": { "minutos_antes": 120 }
+      "parametros": {
+        "minutos_antes": 120
+      }
     },
     {
       "clave": "actividad_retrasada",
       "nivel": 2,
       "cuando": "Pasó la hora de inicio vigente más `tolerancia_min` y la actividad no ha empezado.",
-      "parametros": { "tolerancia_min": 10 }
+      "parametros": {
+        "tolerancia_min": 10
+      }
     },
     {
       "clave": "retraso_con_arrastre",
       "nivel": 3,
       "cuando": "Un retraso o un cambio mueve `min_dependientes` o más actividades, o suma `min_minutos` o más.",
-      "parametros": { "min_dependientes": 2, "min_minutos": 30 }
+      "parametros": {
+        "min_dependientes": 2,
+        "min_minutos": 30
+      }
     },
     {
       "clave": "compromiso_no_coincide",
       "nivel": 3,
       "cuando": "En un momento crítico, lo encontrado no coincide con lo prometido. Si es parcial, usa `nivel_parcial`.",
-      "parametros": { "nivel_parcial": 2 }
+      "parametros": {
+        "nivel_parcial": 2
+      }
     },
     {
       "clave": "hito_comprometido",
       "nivel": 4,
       "cuando": "El plan vigente de un hito (apertura de puertas, inicio de show) se aleja `min_minutos` o más del plan publicado.",
-      "parametros": { "min_minutos": 30 }
+      "parametros": {
+        "min_minutos": 30
+      }
     },
     {
       "clave": "permiso_sin_aprobar",
       "nivel": 3,
       "cuando": "Un permiso obligatorio no está aprobado y faltan `dias_antes` días o menos para el evento.",
-      "parametros": { "dias_antes": 3 }
+      "parametros": {
+        "dias_antes": 3
+      }
     },
     {
       "clave": "permiso_sin_aprobar_dia_del_evento",
@@ -85,7 +107,29 @@
       "clave": "momento_critico_sin_resolver",
       "nivel": 3,
       "cuando": "Un momento crítico lleva abierto más de `minutos` sin resolución.",
-      "parametros": { "minutos": 30 }
+      "parametros": {
+        "minutos": 30
+      }
+    },
+    {
+      "clave": "documento_por_vencer",
+      "nivel": 2,
+      "cuando": "A un documento pendiente del expediente le faltan `dias_antes` días o menos para su plazo.",
+      "parametros": {
+        "dias_antes": 2
+      }
+    },
+    {
+      "clave": "documento_vencido",
+      "nivel": 3,
+      "cuando": "Un documento pendiente del expediente ya pasó su plazo.",
+      "parametros": {}
+    },
+    {
+      "clave": "documento_no_negociable_vencido",
+      "nivel": 4,
+      "cuando": "Un documento no negociable sigue pendiente después de su plazo y el evento ya llegó a su hora clave.",
+      "parametros": {}
     }
   ]
 }

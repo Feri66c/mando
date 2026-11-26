@@ -8,6 +8,8 @@ import {
   fetchClosing,
   fetchCriteria,
   fetchGuests,
+  fetchLocation,
+  fetchRequirements,
   fetchMyRating,
   fetchScoreInputs,
   fetchCriticality,
@@ -30,7 +32,7 @@ import { MERIT_CONFIG, scoreEvent } from "@mando/core/merits";
 
 // Capa de acceso a datos de la web: las consultas viven en @mando/core/data (las comparte la app móvil);
 // aquí solo se obtiene el cliente con la sesión de la cookie y se manda a ingresar si no hay sesión.
-export type { Alert, Closing, Commitment, Criterion, Guest, CurrentUser, Evidence, Invitation, LogEntry, Moment, MomentCheck, MyEvent, RouteItem, TeamMember } from "@mando/core/data";
+export type { Alert, Closing, EventLocation, Requirement, Commitment, Criterion, Guest, CurrentUser, Evidence, Invitation, LogEntry, Moment, MomentCheck, MyEvent, RouteItem, TeamMember } from "@mando/core/data";
 
 /** Devuelve el cliente o manda a la pantalla de ingreso si falta conectar Supabase. */
 async function requireClient() {
@@ -143,4 +145,14 @@ export async function getMyRating(eventId: string, userId: string) {
 
 export async function getGuests(eventId: string) {
   return fetchGuests(await requireClient(), eventId);
+}
+
+// ---- Expediente y locación ----
+
+export async function getRequirements(eventId: string) {
+  return fetchRequirements(await requireClient(), eventId);
+}
+
+export async function getLocation(eventId: string) {
+  return fetchLocation(await requireClient(), eventId);
 }

@@ -16,6 +16,12 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
   const base = `/eventos/${id}`;
   const links = [
     { href: `${base}/cierre`, label: "Estrellas y cierre", hint: "Cómo va el evento, los no negociables y el informe para guardar en PDF." },
+    ...(isTeam
+      ? [
+          { href: `${base}/expediente`, label: "Expediente", hint: "Documentos por subir: seguros, permisos, contratos, facturas. Con plazo y aviso." },
+          { href: `${base}/locacion`, label: "Locación", hint: "Punto de encuentro, mapa, transporte y antecedentes del lugar." },
+        ]
+      : []),
     ...(isTeam ? [{ href: `${base}/citados`, label: "Citados", hint: "Hosts e invitados: recordatorio por WhatsApp o correo y hora de llegada." }] : []),
     { href: `${base}/bitacora`, label: "Bitácora", hint: "Todo lo que pasó, minuto a minuto. No se edita ni se borra." },
     { href: `${base}/evidencias`, label: "Evidencias", hint: "Fotos, audios, videos y documentos con hora del servidor." },

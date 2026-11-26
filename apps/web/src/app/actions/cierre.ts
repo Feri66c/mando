@@ -82,3 +82,73 @@ export async function updateGuestAction(_prev: CierreState, fd: FormData): Promi
 export async function noteReminderAction(guestId: string): Promise<void> {
   await run("update_guest", { p_guest: guestId, p_action: "reminded" });
 }
+
+// ---------------------------------------------------------------- Expediente y locación
+
+/** El archivo ya se subió desde el teléfono al cubo privado; aquí solo se registra. */
+export async function completeRequirementAction(input: {
+  requirementId: string;
+  filePath: string | null;
+  fileName: string | null;
+  sha256: string | null;
+  note: string;
+}): Promise<CierreState> {
+  return run(
+    "complete_requirement",
+    { p_requirement: input.requirementId, p_file_path: input.filePath, p_file_name: input.fileName, p_sha256: input.sha256, p_note: input.note.trim() || null },
+    "Guardado en el expediente.",
+  );
+}
+
+export async function setRequirementStatusAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  const status = text(fd, "status") === "pending" ? "pending" : "not_applicable";
+  return run("set_requirement_status", { p_requirement: text(fd, "requirement_id"), p_status: status, p_note: text(fd, "note") || null });
+}
+
+export async function planRequirementAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  const date = text(fd, "fecha");
+  const dueAt = date ? zonedDateTimeToIso(date, "18:00", text(fd, "timezone") || null) : null;
+  return run(
+    "plan_requirement",
+    { p_requirement: text(fd, "requirement_id"), p_owner: text(fd, "owner") || null, p_due_at: dueAt },
+    "Responsable y plazo guardados.",
+  );
+}
+
+export async function addRequirementAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  const title = text(fd, "titulo");
+  if (!title) return { ok: false, error: "Escribe el nombre del documento." };
+  const date = text(fd, "fecha");
+  return run(
+    "add_requirement",
+    {
+      p_event: text(fd, "event_id"),
+      p_title: title,
+      p_category: text(fd, "categoria") || "administracion",
+      p_due_at: date ? zonedDateTimeToIso(date, "18:00", text(fd, "timezone") || null) : null,
+      p_mandatory: fd.get("no_negociable") === "si",
+    },
+    `«${title}» quedó en el expediente.`,
+  );
+}
+
+export async function setLocationAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run(
+    "set_location",
+    {
+      p_event: text(fd, "event_id"),
+      p_data: {
+        meeting_point: text(fd, "punto"),
+        map_url: text(fd, "mapa"),
+        coordinator: text(fd, "coordina"),
+        coordinator_phone: text(fd, "telefono"),
+        transport_plate: text(fd, "placa"),
+        transport_detail: text(fd, "transporte"),
+        antecedents: fd.getAll("antecedente").map((a) => String(a).trim()).filter(Boolean),
+        killer_zones: text(fd, "zonas_killer"),
+        blind_spots: text(fd, "puntos_ciegos"),
+      },
+    },
+    "Locación guardada. Ya la ve todo el equipo.",
+  );
+}

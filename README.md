@@ -36,6 +36,8 @@ Supuestos tomados para arrancar: ver [`docs/DECISIONES.md`](docs/DECISIONES.md).
 
 - `/eventos/<evento>/cierre`: estrellas del evento (reglas en `config/meritos.json`), no negociables, hitos estrella, valoración del equipo, enlace de publicación y cierre. Es también el informe que se guarda en PDF.
 - `/eventos/<evento>/citados`: hosts e invitados con su hora de citación, recordatorio por WhatsApp o correo y marca de llegada.
+- `/eventos/<evento>/expediente`: documentos por subir según el tipo de evento (`config/expediente.json`), con plazo, responsable y recordatorio.
+- `/eventos/<evento>/locacion`: punto de encuentro, mapa, transporte y antecedentes del lugar.
 - Pruebas: `tests/db/meritos.test.ts` y `apps/web/tests/e2e/z-cierre.spec.ts` (corre al final porque cierra el evento de ejemplo). Decisiones 22 a 24.
 
 ## Comandos

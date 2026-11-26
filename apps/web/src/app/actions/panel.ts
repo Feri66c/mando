@@ -7,6 +7,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_CARGOS, getTemplate, parseTemplate, validateTemplate } from "@mando/core/event-types";
+import { withDocuments } from "@mando/core/requirements";
 import { DEFAULT_TIMEZONE, zonedDateTimeToIso } from "@mando/core/time";
 import { DEFAULT_CRITICALITY } from "@mando/core/default-config";
 
@@ -54,7 +55,7 @@ export async function createEvent(_prev: PanelState, formData: FormData): Promis
       p_venue: text(formData, "lugar"),
       p_timezone: DEFAULT_TIMEZONE,
       p_key_time: keyTime,
-      p_template: template,
+      p_template: withDocuments(template), // la plantilla viaja con su lista de documentos del expediente
       p_criticality: DEFAULT_CRITICALITY,
       p_brief: text(formData, "brief") || null,
     });

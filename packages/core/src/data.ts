@@ -558,3 +558,97 @@ export async function fetchGuests(client: SupabaseClient, eventId: string): Prom
     arrivedAt: (g.arrived_at as string | null) ?? null,
   }));
 }
+
+// ---- Expediente y locación ----
+
+export type Requirement = {
+  id: string;
+  key: string | null;
+  category: string;
+  title: string;
+  mandatory: boolean;
+  dueAt: string | null;
+  status: "pending" | "done" | "not_applicable";
+  ownerId: string | null;
+  ownerName: string | null;
+  fileName: string | null;
+  fileUrl: string | null;
+  note: string | null;
+  doneAt: string | null;
+};
+
+/** Documentos del expediente, con enlace firmado de corta duración para los que ya tienen archivo. */
+export async function fetchRequirements(client: SupabaseClient, eventId: string): Promise<Requirement[]> {
+  const { data, error } = await client
+    .from("event_requirements")
+    .select("id, key, category, title, mandatory, due_at, status, owner_id, file_path, file_name, note, done_at, owner:profiles!event_requirements_owner_id_fkey (full_name)")
+    .eq("event_id", eventId)
+    .order("sort_order", { ascending: true });
+  if (error) throw new Error(`No se pudo leer el expediente: ${error.message}`);
+  const rows = data ?? [];
+  const paths = rows.map((r) => r.file_path as string | null).filter((p): p is string => Boolean(p));
+  const urls = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await client.storage.from("evidences").createSignedUrls(paths, 60 * 60);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  return rows.map((r) => ({
+    id: r.id as string,
+    key: (r.key as string | null) ?? null,
+    category: r.category as string,
+    title: r.title as string,
+    mandatory: Boolean(r.mandatory),
+    dueAt: (r.due_at as string | null) ?? null,
+    status: r.status as Requirement["status"],
+    ownerId: (r.owner_id as string | null) ?? null,
+    ownerName: (first(r.owner) as { full_name: string | null } | null)?.full_name ?? null,
+    fileName: (r.file_name as string | null) ?? null,
+    fileUrl: r.file_path ? (urls.get(r.file_path as string) ?? null) : null,
+    note: (r.note as string | null) ?? null,
+    doneAt: (r.done_at as string | null) ?? null,
+  }));
+}
+
+export type EventLocation = {
+  meetingPoint: string | null;
+  mapUrl: string | null;
+  coordinator: string | null;
+  coordinatorPhone: string | null;
+  transportPlate: string | null;
+  transportDetail: string | null;
+  antecedents: string[];
+  killerZones: string | null;
+  blindSpots: string | null;
+  updatedAt: string | null;
+};
+
+export const EMPTY_LOCATION: EventLocation = {
+  meetingPoint: null,
+  mapUrl: null,
+  coordinator: null,
+  coordinatorPhone: null,
+  transportPlate: null,
+  transportDetail: null,
+  antecedents: [],
+  killerZones: null,
+  blindSpots: null,
+  updatedAt: null,
+};
+
+export async function fetchLocation(client: SupabaseClient, eventId: string): Promise<EventLocation> {
+  const { data, error } = await client.from("event_locations").select("*").eq("event_id", eventId).maybeSingle();
+  if (error) throw new Error(`No se pudo leer la locación: ${error.message}`);
+  if (!data) return EMPTY_LOCATION;
+  return {
+    meetingPoint: data.meeting_point ?? null,
+    mapUrl: data.map_url ?? null,
+    coordinator: data.coordinator ?? null,
+    coordinatorPhone: data.coordinator_phone ?? null,
+    transportPlate: data.transport_plate ?? null,
+    transportDetail: data.transport_detail ?? null,
+    antecedents: Array.isArray(data.antecedents) ? data.antecedents.map(String) : [],
+    killerZones: data.killer_zones ?? null,
+    blindSpots: data.blind_spots ?? null,
+    updatedAt: data.updated_at ?? null,
+  };
+}

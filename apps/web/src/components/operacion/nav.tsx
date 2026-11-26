@@ -17,7 +17,7 @@ export function BottomNav({ eventId, openAlerts }: { eventId: string; openAlerts
   const base = `/eventos/${eventId}`;
   const active = (path: string) => {
     if (path === "") return pathname === base || pathname === `${base}/`;
-    if (path === "/mas") return ["/mas", "/bitacora", "/momentos", "/evidencias", "/cierre", "/citados"].some((p) => pathname.startsWith(base + p));
+    if (path === "/mas") return ["/mas", "/bitacora", "/momentos", "/evidencias", "/cierre", "/citados", "/expediente", "/locacion"].some((p) => pathname.startsWith(base + p));
     if (path === "/hoja-de-ruta") return pathname.startsWith(base + path) || pathname.startsWith(`${base}/actividad`);
     return pathname.startsWith(base + path);
   };

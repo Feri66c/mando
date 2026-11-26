@@ -26,3 +26,8 @@ export async function sha256Hex(data: ArrayBuffer): Promise<string> {
 }
 
 export const MAX_EVIDENCE_BYTES = 50 * 1024 * 1024;
+
+/** Ruta de un archivo del expediente dentro del cubo privado: <evento>/expediente/<id>.<extensión>. */
+export function requirementPath(eventId: string, fileId: string, fileName: string): string {
+  return `${eventId}/expediente/${fileId}.${safeExtension(fileName)}`;
+}

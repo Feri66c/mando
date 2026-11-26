@@ -117,3 +117,21 @@ Fecha: 26 de noviembre de 2026. Fer aprobó la lógica de méritos y pidió suma
 - **Informe en PDF:** la pantalla «Estrellas y cierre» es el informe. El botón «Guardar como PDF» abre la impresión del teléfono o la computadora, con fondo blanco y sin botones. Un PDF generado en el servidor y enviado por correo queda para cuando haya servicio de correo.
 - **Recordatorios a citados:** igual que las invitaciones, MANDO arma el mensaje y la persona lo manda desde su WhatsApp o su correo; MANDO anota que se mandó. El envío automático queda para cuando haya servicio de correo y de WhatsApp.
 - **Insignias y rangos por persona:** siguen para la Etapa 5.
+
+# Decisiones del expediente y la locación
+
+Fecha: 26 de noviembre de 2026. Pedido de Fer: toda la documentación del evento en un solo lugar, con pendientes y recordatorios.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 25 | Expediente | Cada tipo de evento trae su lista de documentos (`config/expediente.json`) en seis grupos: seguridad, permisos, proveedores, logística, administración y cobranza, eventualidades. Al crear el evento todos nacen pendientes, con plazo contado desde la hora clave. La productora marca «no aplica» lo que ese evento no necesita, asigna responsable y sube el archivo o escribe el dato. El EPP (equipos de protección personal, confirmado por Fer) va en seguridad y es no negociable. |
+| 26 | Recordatorios del expediente | Una alerta por documento que va subiendo: Atención cuando quedan 2 días, Crítico cuando vence, Red Flag si es no negociable y el evento ya llegó a su hora clave. Se resuelve sola al subir el documento o marcarlo «no aplica». Reglas en `config/criticidad.json`. |
+| 27 | Locación | Punto de encuentro con enlace de mapa, quién coordina, placa y datos del transporte, antecedentes del lugar, zonas killer y puntos ciegos. La cargan los niveles 1 y 2 y la ve todo el equipo. |
+
+## Supuestos
+
+- **El cliente no ve el expediente ni la locación:** tienen contratos, facturas, teléfonos y placas. Sí ve la Red Flag de un no negociable sin documento.
+- **Quién hace qué:** cualquiera del equipo sube un documento. «No aplica», responsable, plazo y documentos nuevos los deciden los niveles 1 y 2. Un no negociable marcado «no aplica» exige la razón.
+- **Archivos:** van al mismo cubo privado, en `<evento>/expediente/`, con su huella SHA-256. Se pueden subir también con el evento cerrado, porque facturas y cobranza llegan después.
+- **Recordatorio a la persona:** el botón «Recordar por WhatsApp» arma el mensaje («Tatiana, falta subir… te quedan 2 días. Recuerda que es un requisito no negociable»). El aviso automático al teléfono llega con la app móvil; el reenvío automático de facturas por correo, cuando haya servicio de correo.
+- **Eventos anteriores:** no reciben la lista sola; se les agregan documentos a mano desde la pantalla.
