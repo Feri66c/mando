@@ -53,6 +53,8 @@ export type RouteItem = {
   actualEnd: string | null;
   status: ItemStatus;
   isMilestone: boolean;
+  /** Lo que la productora estima que toma, en minutos (decisión 34). */
+  estimatedMinutes: number | null;
   visibleToViewer: boolean;
   ownerName: string | null;
   providerName: string | null;
@@ -125,7 +127,7 @@ export async function fetchRouteItems(client: SupabaseClient, eventId: string): 
     .from("route_items")
     .select(
       `id, title, area_id, planned_start, planned_end, current_start, current_end, actual_start, actual_end,
-       status, is_milestone, visible_to_viewer,
+       status, is_milestone, visible_to_viewer, estimated_minutes,
        areas (name, sort_order), owner:profiles!route_items_owner_id_fkey (full_name), providers (name, phone)`,
     )
     .eq("event_id", eventId)
@@ -158,6 +160,7 @@ function toRouteItem(r: any): RouteItem {
     actualEnd: r.actual_end ?? null,
     status: r.status,
     isMilestone: Boolean(r.is_milestone),
+    estimatedMinutes: r.estimated_minutes ?? null,
     visibleToViewer: Boolean(r.visible_to_viewer),
     ownerName: owner?.full_name ?? null,
     providerName: provider?.name ?? null,

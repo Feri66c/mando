@@ -139,3 +139,42 @@ body {
     print-color-adjust: exact;
   }
 }
+
+/* Control grande de tiempos (decisión 34): pista gruesa y un mando que se agarra con el pulgar. */
+.mando-dial {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 44px;
+  background: transparent;
+  touch-action: pan-y;
+}
+.mando-dial::-webkit-slider-runnable-track {
+  height: 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gold-300) 22%, transparent);
+}
+.mando-dial::-moz-range-track {
+  height: 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gold-300) 22%, transparent);
+}
+.mando-dial::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 44px;
+  height: 44px;
+  margin-top: -15px;
+  border-radius: 14px;
+  background: var(--gold-300);
+  border: 3px solid var(--navy-950, #0b1220);
+  box-shadow: 0 0 0 2px var(--gold-300);
+}
+.mando-dial::-moz-range-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: var(--gold-300);
+  border: 3px solid var(--navy-950, #0b1220);
+}
+.mando-dial:disabled {
+  opacity: 0.5;
+}

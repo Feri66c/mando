@@ -140,3 +140,10 @@ export async function decideBudgetAction(_prev: CierreState, fd: FormData): Prom
   if (!approve && !note) return { ok: false, error: "Cuenta qué hay que cambiar." };
   return run("decide_budget", { p_event: text(fd, "event_id"), p_approve: approve, p_note: note || null }, approve ? "Presupuesto aprobado." : "Cambio pedido.");
 }
+
+// ---- Tiempos del timeline ----
+
+/** La productora suelta el control grande: se guarda cuánto estima que toma la actividad. */
+export async function setEstimateAction(itemId: string, minutes: number): Promise<CierreState> {
+  return run("set_estimate", { p_item: itemId, p_minutes: Math.round(minutes) });
+}

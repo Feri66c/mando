@@ -1,0 +1,9 @@
+{
+  "_nota": "Control de tiempos del timeline (decisión 34). pasos_minutos: los valores que recorre el control grande. margenes: el margen mínimo que MANDO recomienda antes de un hito, según lo que dura la actividad anterior (hasta_minutos null = cualquier duración mayor).",
+  "pasos_minutos": [5, 10, 15, 20, 30, 45, 60, 90, 120, 150, 180, 240, 300, 360, 480],
+  "margenes": [
+    { "hasta_minutos": 60, "margen_minutos": 30 },
+    { "hasta_minutos": 240, "margen_minutos": 50 },
+    { "hasta_minutos": null, "margen_minutos": 120 }
+  ]
+}

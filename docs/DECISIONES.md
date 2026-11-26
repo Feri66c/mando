@@ -171,3 +171,18 @@ Fecha: 26 de noviembre de 2026. Fer definió el flujo completo (planificación, 
 - **Costos de referencia:** los valores de `config/costos-referencia.json` son iniciales y de ejemplo. El productor general debe ajustarlos a su mercado.
 - **Eventos anteriores:** no tienen candado; solo cuenta la regla de aprobaciones. Sí pueden usar personal, técnico y presupuesto.
 - **Pendiente:** aviso automático cuando vence el plazo de 24 o 2 horas (hoy lo marca la pantalla), y el código de ingreso por WhatsApp o SMS, que necesita un servicio de mensajería.
+
+# Decisiones del timeline: tiempos, inconsistencias y márgenes
+
+Fecha: 26 de noviembre de 2026.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 34 | Control de tiempos | En «Tiempos», el productor general o el de campo arrastra un control grande por actividad para decir cuánto toma (de 5 minutos a 8 horas, `config/timeline.json`). Se guarda al soltar. La estimación no mueve la hoja de ruta: el plan solo cambia con una solicitud de cambio, como siempre. |
+| 35 | Avisos y márgenes | MANDO compara cada estimación con el plan y avisa: cuando una actividad no entra antes de la hora del evento («Pusiste 4 h para Montaje y el evento empieza en 3 h»), cuando pide más de lo que le da la hoja de ruta, y cuando antes de un hito no queda el margen recomendado (30 min, 50 min o 2 h según lo que dura la actividad). |
+
+## Supuestos
+
+- **Tiempo sugerido:** hoy es la duración que trae la plantilla del tipo de evento. Que una IA lo estime leyendo el brief necesita un servicio de IA conectado; queda pendiente.
+- **Quién ve qué:** los niveles 3 y 4 ven los tiempos sin poder cambiarlos. El cliente no ve esta pantalla. Cada estimación queda en la bitácora, sin mostrarse al cliente.
+- **Los avisos no bloquean:** orientan a la productora. Lo que sí bloquea es la planificación incompleta (decisión 30).

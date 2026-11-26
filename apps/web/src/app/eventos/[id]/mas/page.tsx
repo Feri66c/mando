@@ -20,6 +20,7 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
     { href: `${base}/aprobaciones`, label: "Aprobaciones", hint: "Casting, uniforme, utilería y referencias: el cliente aprueba antes de empezar." },
     ...(isTeam
       ? [
+          { href: `${base}/tiempos`, label: "Tiempos", hint: "Estima cuánto toma cada actividad. MANDO avisa lo que no cuadra y recomienda márgenes." },
           { href: `${base}/expediente`, label: "Expediente", hint: "Documentos por subir: seguros, permisos, contratos, facturas. Con plazo y aviso." },
           { href: `${base}/locacion`, label: "Locación", hint: "Punto de encuentro, mapa, transporte y antecedentes del lugar." },
         ]

@@ -45,6 +45,11 @@ export default async function RoutePage({ params }: { params: Promise<{ id: stri
       <p className="mt-1 text-sm text-ink-muted">
         {isTeam ? "Toca una actividad para marcarla, pedir un cambio o subir evidencias." : "Plan vigente del evento, en vivo."}
       </p>
+      {isTeam && event.level !== null && event.level <= 2 && items.length > 0 && (
+        <Link href={`/eventos/${id}/tiempos`} className="mt-3 inline-flex min-h-11 items-center rounded-full border border-gold-300/60 px-5 text-sm font-semibold text-gold-300">
+          Ajustar tiempos
+        </Link>
+      )}
       {items.length === 0 ? (
         <div className="mt-4">
           <Empty>Aún no hay actividades publicadas.</Empty>
