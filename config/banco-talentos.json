@@ -1,0 +1,13 @@
+{
+  "_nota": "Banco de talentos (decisión 55). Las categorías se cambian aquí; la productora puede escribir otras con «Agregar otra». Las columnas dicen qué encabezados de una lista (CSV) se reconocen.",
+  "categorias": ["anfitriona", "promotora", "modelo", "host", "animador", "locutor", "personaje", "actor"],
+  "columnas": {
+    "nombre": ["nombre completo", "nombres y apellidos", "nombre y apellido", "nombre", "nombres"],
+    "apellido": ["apellidos", "apellido"],
+    "documento": ["documento", "dni", "numero de documento", "nro documento", "n documento", "pasaporte", "carnet de extranjeria", "ce"],
+    "tipo": ["tipo de documento", "tipo documento", "tipo"],
+    "telefono": ["telefono", "celular", "whatsapp", "movil"],
+    "categorias": ["categoria", "categorias", "banco", "perfil"]
+  },
+  "limite_importacion": 500
+}

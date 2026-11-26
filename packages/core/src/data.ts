@@ -1,6 +1,7 @@
 import type { DocState, ElementStatus } from "./planning";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CriticalityConfig } from "./criticality";
+import type { Talent } from "./talents";
 import {
   isEventRole,
   type AlertStatus,
@@ -959,4 +960,34 @@ export async function fetchRoleCatalog(client: SupabaseClient, organizationId: s
     const p = (Array.isArray(r.proposer) ? r.proposer[0] : r.proposer) as { full_name: string | null } | null;
     return { id: r.id as string, name: r.name as string, status: r.status as CatalogRole["status"], proposedByName: p?.full_name ?? null };
   });
+}
+
+
+// ---- Banco de talentos (decisiones 55 a 58) ----
+
+/** El banco de la organización, con datos personales: solo responde a quienes manejan la base (niveles 1 y 2). */
+export async function fetchTalentBank(client: SupabaseClient, eventId: string): Promise<Talent[]> {
+  const { data, error } = await client.rpc("talent_bank", { p_event: eventId });
+  if (error) throw new Error(`No se pudo leer el banco de talentos: ${error.message}`);
+  const rows = (data ?? []) as Record<string, unknown>[];
+  const paths = rows.map((r) => r.photo_path).filter((p): p is string => typeof p === "string" && p.length > 0);
+  const urls = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await client.storage.from("evidences").createSignedUrls(paths, 60 * 60);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  return rows.map((r) => ({
+    id: r.person_id as string,
+    fullName: r.full_name as string,
+    docType: (r.doc_type as string | null) ?? null,
+    docNumber: (r.doc_number as string | null) ?? null,
+    phone: (r.phone as string | null) ?? null,
+    photoUrl: r.photo_path ? (urls.get(r.photo_path as string) ?? null) : null,
+    categories: Array.isArray(r.categories) ? r.categories.map(String) : [],
+    profile: cleanProfile(r.profile),
+    defaultRole: (r.default_role as string | null) ?? null,
+    consent: Boolean(r.consent),
+    events: Number(r.events ?? 0),
+    inCasting: Boolean(r.in_casting),
+  }));
 }

@@ -28,6 +28,9 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
     { href: `${base}/aprendizajes`, label: isTeam ? "Aprendizajes" : "Ficha de satisfacción", hint: isTeam ? "Lo que te llevas de este evento, en seis puntos." : "Cuéntanos qué impresión te deja el evento." },
     { href: `${base}/planificacion`, label: "Planificación", hint: "Los 5 elementos: legal, personal, técnico, presupuesto y aprobaciones. Desbloquean el timeline." },
     { href: `${base}/aprobaciones`, label: "Aprobaciones", hint: "Casting, uniforme, utilería y referencias: el cliente aprueba antes de empezar." },
+    ...(isTeam && event.level !== null && event.level <= 2
+      ? [{ href: `${base}/talentos`, label: "Banco de talentos", hint: "Tu gente guardada por documento, con foto y mini ficha. Del banco al casting con un toque." }]
+      : []),
     ...(isTeam
       ? [
           { href: `${base}/tiempos`, label: "Tiempos", hint: "Estima cuánto toma cada actividad. MANDO avisa lo que no cuadra y recomienda márgenes." },

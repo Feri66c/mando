@@ -8,6 +8,7 @@ import {
   fetchBudget,
   fetchPeopleBoard,
   fetchRoleCatalog,
+  fetchTalentBank,
   fetchPlanning,
   fetchTechItems,
   fetchApprovalGroups,
@@ -197,6 +198,10 @@ export async function getRoleCatalog(organizationId: string) {
   } catch {
     return [];
   }
+}
+
+export async function getTalentBank(eventId: string) {
+  return fetchTalentBank(await requireClient(), eventId);
 }
 
 export async function getTechItems(eventId: string) {

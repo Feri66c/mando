@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AddApprovalForm, ApprovalDecision, ApprovalGroupsForm, ApprovalTeamActions, CastingTeamActions } from "@/components/operacion/aprobaciones";
 import { CastingSemaforo, FichaView } from "@/components/operacion/mando";
@@ -157,6 +158,11 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ id: 
               </ul>
             )}
             {canUpload && <AddApprovalForm eventId={id} group={g.clave} groupName={g.nombre} />}
+            {g.clave === "casting" && canChoose && (
+              <Link href={`/eventos/${id}/talentos`} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-gold-300 underline underline-offset-4">
+                Elegir del banco de talentos
+              </Link>
+            )}
           </section>
         );
       })}

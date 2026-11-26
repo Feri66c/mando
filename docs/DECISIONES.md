@@ -277,3 +277,22 @@ Fecha: 26 de noviembre de 2026. Fer dictó 23 cambios mirando la app en vivo («
 - **Listas largas:** solo las primeras tarjetas de cada lista llevan la luz en movimiento, para no cansar al teléfono.
 - **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261209000016_casting_ficha_documento_cargos.sql` en el SQL Editor.
 - **Pendiente en las siguientes entregas:** banco de talentos con importación de CSV, cadena de mando con visibilidad por jerarquía, logos de marca y agencia, minuto a minuto exportable y cierre con People Experience.
+
+# Decisiones del centro de mando · Entrega 2
+
+Fecha: 26 de noviembre de 2026. «No estamos trabajando para un evento, estamos almacenando.»
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 55 | Banco de talentos | La base de personas de la organización es ahora un banco de talentos que sirve para todos los eventos. Cada persona se reconoce por tipo y número de documento: al volver a escribirlo, vuelve con su foto y su mini ficha, y lo nuevo se suma a lo que ya había. Se ordena por categorías (anfitriona, promotora, modelo, host, animador, locutor, personaje, actor) y la productora puede agregar otras. Tiene buscador por nombre, documento, talla o habilidad. Las categorías viven en `config/banco-talentos.json`. |
+| 56 | Del banco al casting | Cada persona del banco tiene el botón «Sumar al casting»: entra al casting del evento con su foto y su ficha, lista para el semáforo del cliente. Una persona entra una sola vez por evento. |
+| 57 | Ingresar e exportar listas | «Ingresar CSV» recibe la lista de una castinera. Lo mínimo es nombre y apellido; edad, talla, documento, celular y categoría entran si la columna se llama así. Antes de ingresar, MANDO muestra cuántas personas entran y qué filas no, con el motivo. Volver a subir la misma lista no duplica a nadie. Límite: 500 personas por lista. «Exportar a Excel (CSV)» baja todo el banco. |
+| 58 | Autorización de datos | El banco guarda datos personales (documento, foto, tono de piel). Para registrar a alguien nuevo o ingresar una lista hay que confirmar que la persona autorizó guardar sus datos; queda anotado quién lo confirmó y cuándo. |
+
+## Supuestos
+
+- **Quién ve el banco:** solo el productor general y el productor de campo (niveles 1 y 2). El cliente ve la foto y la mini ficha de quienes están en el casting de su evento, nunca el documento ni el celular. Lo decide la base de datos, no solo la pantalla.
+- **Sin documento:** una persona importada sin documento se reconoce por su nombre exacto. Conviene completar el documento después.
+- **Exportación segura:** lo que empieza con `=`, `+`, `-` o `@` se exporta como texto, para que Excel no lo ejecute como fórmula.
+- **Excel directo:** por ahora la lista entra y sale en CSV, que Excel abre y guarda. Leer archivos `.xlsx` queda para después.
+- **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261210000017_banco_de_talentos.sql` en el SQL Editor, después de la migración 16.
