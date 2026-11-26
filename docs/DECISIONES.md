@@ -244,3 +244,16 @@ Fecha: 26 de noviembre de 2026. Fer revisó la demo pantalla por pantalla, dict�
 - **Casting con fotos numeradas por cargo:** queda en la demo; en la app sigue el flujo actual de aprobaciones.
 - **«Entrevistado»:** sigue apagado fuera de los eventos tipo podcast.
 - **App de teléfono (Expo):** todavía no tiene estos cambios.
+
+# Decisión de la puesta en vivo
+
+Fecha: 26 de noviembre de 2026. Al entrar por primera vez a MANDO en vivo, «Mis eventos» falló con «permission denied for table event_members».
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 49 | Permisos explícitos en la base de datos | Los proyectos nuevos de Supabase ya no dan acceso a las tablas por defecto. La instalación ahora otorga el acceso de forma explícita a las personas con sesión iniciada. Las reglas por evento y por rol (RLS) no cambiaron y siguen decidiendo qué ve cada quien. Quien no inició sesión no recibe acceso a ninguna tabla, y las funciones internas siguen cerradas. |
+
+## Supuestos
+
+- **Por qué no se vio antes:** la base de pruebas daba esos permisos por su cuenta, igual que los proyectos antiguos de Supabase.
+- **Proyectos ya instalados:** basta con ejecutar una vez `supabase/migrations/20261208000015_permisos_explicitos.sql` en el SQL Editor. No hace falta volver a publicar la app.
