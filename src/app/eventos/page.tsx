@@ -3,8 +3,8 @@ import Link from "next/link";
 import { AppHeader } from "@/components/brand";
 import { EventStatusText, RolePill } from "@/components/pills";
 import { getCurrentUser, getMyEvents } from "@/lib/data";
-import { ROLE_DESCRIPTION } from "@/lib/labels";
-import { formatEventRange, zoneLabel } from "@/lib/time";
+import { ROLE_DESCRIPTION } from "@/lib/core/labels";
+import { formatEventRange, zoneLabel } from "@/lib/core/time";
 
 export const metadata: Metadata = { title: "Mis eventos" };
 

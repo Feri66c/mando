@@ -36,3 +36,35 @@ export const ITEM_STATUS_LABEL: Record<ItemStatus, string> = {
 export function isEventRole(value: unknown): value is EventRole {
   return value === "viewer" || value === "producer" || value === "backend";
 }
+
+export type AlertStatus = "open" | "acknowledged" | "resolved";
+export type MomentStatus = "scheduled" | "open" | "resolved" | "escalated";
+export type CommitmentOutcome = "met" | "partial" | "unmet";
+export type EvidenceKind = "photo" | "audio" | "video" | "document" | "note";
+
+export const ALERT_STATUS_LABEL: Record<AlertStatus, string> = {
+  open: "Abierta",
+  acknowledged: "Reconocida",
+  resolved: "Resuelta",
+};
+
+export const MOMENT_STATUS_LABEL: Record<MomentStatus, string> = {
+  scheduled: "Programado",
+  open: "Abierto",
+  resolved: "Resuelto",
+  escalated: "Escalado",
+};
+
+export const COMMITMENT_OUTCOME_LABEL: Record<CommitmentOutcome, string> = {
+  met: "Cumplido",
+  partial: "Parcial",
+  unmet: "Incumplido",
+};
+
+export const EVIDENCE_KIND_LABEL: Record<EvidenceKind, string> = {
+  photo: "Foto",
+  audio: "Audio",
+  video: "Video",
+  document: "Documento",
+  note: "Nota",
+};

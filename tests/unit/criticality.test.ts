@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { levelName, validateCriticalityConfig, type CriticalityConfig } from "@/lib/criticality";
+import { levelName, validateCriticalityConfig, type CriticalityConfig } from "@/lib/core/criticality";
 
 const config = JSON.parse(readFileSync("config/criticidad.json", "utf8")) as CriticalityConfig;
 

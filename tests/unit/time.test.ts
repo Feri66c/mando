@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatEventRange, formatTime, zoneLabel } from "@/lib/time";
+import { formatDate, formatEventRange, formatTime, zoneLabel } from "@/lib/core/time";
 
 // Regla 10: se guarda en UTC y se muestra en la zona del evento.
 describe("horas en la zona del evento", () => {
@@ -33,5 +33,26 @@ describe("horas en la zona del evento", () => {
 
   it("sin fecha dice que está por definir", () => {
     expect(formatEventRange(null, null, "America/Lima")).toBe("Fecha por definir");
+  });
+});
+
+describe("hora escrita en la zona del evento → UTC", () => {
+  it("19:30 en Lima el día de la prueba de sonido", async () => {
+    const { wallTimeToIso } = await import("@/lib/core/time");
+    expect(wallTimeToIso("19:30", "2026-12-12T19:00:00Z", "America/Lima")).toBe("2026-12-13T00:30:00.000Z");
+  });
+  it("después de medianoche se entiende como el día siguiente", async () => {
+    const { wallTimeToIso } = await import("@/lib/core/time");
+    // Desmontaje 23:30 Lima (04:30Z del 13) movido a 00:30 → 05:30Z del 13
+    expect(wallTimeToIso("00:30", "2026-12-13T04:30:00Z", "America/Lima")).toBe("2026-12-13T05:30:00.000Z");
+  });
+  it("en Madrid usa su propia diferencia horaria", async () => {
+    const { wallTimeToIso } = await import("@/lib/core/time");
+    expect(wallTimeToIso("20:00", "2026-12-12T10:00:00Z", "Europe/Madrid")).toBe("2026-12-12T19:00:00.000Z");
+  });
+  it("rechaza horas inválidas", async () => {
+    const { wallTimeToIso } = await import("@/lib/core/time");
+    expect(wallTimeToIso("25:00", "2026-12-12T10:00:00Z", "America/Lima")).toBeNull();
+    expect(wallTimeToIso("hola", "2026-12-12T10:00:00Z", "America/Lima")).toBeNull();
   });
 });

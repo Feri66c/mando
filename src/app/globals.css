@@ -56,3 +56,35 @@ body {
   outline: 2px solid var(--gold-500);
   outline-offset: 2px;
 }
+
+/* ---------------------------------------------------------------------------
+   Tema oscuro de operación (prompt maestro, sección 5). Se activa con la clase
+   .tema-operacion en las pantallas del evento. Redefine los mismos tokens, así que
+   las clases de Tailwind (bg-surface-100, text-ink, border-line...) cambian solas.
+   Contrastes verificados: texto #f7f9fc y #b9d3ea sobre #061428 y #0d2443 superan AA.
+   --------------------------------------------------------------------------- */
+.tema-operacion {
+  --surface-000: #061428;   /* fondo: navy-950 */
+  --surface-100: #0d2443;   /* tarjetas: un tono más claro */
+  --surface-200: #15325a;   /* tarjeta destacada, botones secundarios */
+  --ink: #f7f9fc;
+  --ink-muted: #b9d3ea;
+  --line: #1e3a5c;
+  --radius-md: 22px;        /* tarjetas de 20 a 24 px */
+  --radius-sm: 999px;       /* chips y botones en forma de píldora */
+  background: var(--surface-000);
+  color: var(--ink);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-surface-200: var(--surface-200, #e3eef7);
+}
+
+/* Barra inferior flotante y botón «+»: respetan la zona segura del iPhone. */
+.barra-inferior {
+  bottom: max(12px, env(safe-area-inset-bottom));
+}
+.boton-mas {
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + 76px);
+}

@@ -1,7 +1,18 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { isEventRole, type EventRole, type EventStatus, type ItemStatus } from "@/lib/labels";
+import type { CriticalityConfig } from "@/lib/core/criticality";
+import {
+  isEventRole,
+  type AlertStatus,
+  type CommitmentOutcome,
+  type EventRole,
+  type EventStatus,
+  type EvidenceKind,
+  type ItemStatus,
+  type MomentStatus,
+} from "@/lib/core/labels";
 
 // Capa de acceso a datos. Todo pasa por el cliente con la sesión del usuario:
 // la base de datos decide qué filas devuelve (seguridad por fila), no esta capa.
@@ -25,12 +36,21 @@ export type MyEvent = {
 export type RouteItem = {
   id: string;
   title: string;
+  areaId: string | null;
   areaName: string | null;
+  areaOrder: number;
+  plannedStart: string;
+  plannedEnd: string;
   currentStart: string;
   currentEnd: string;
+  actualStart: string | null;
+  actualEnd: string | null;
   status: ItemStatus;
   isMilestone: boolean;
   visibleToViewer: boolean;
+  ownerName: string | null;
+  providerName: string | null;
+  providerPhone: string | null;
 };
 
 /** Devuelve el cliente o manda a la pantalla de configuración si falta conectar Supabase. */
@@ -111,22 +131,256 @@ export async function getRouteItems(eventId: string): Promise<RouteItem[]> {
   const supabase = await requireClient();
   const { data, error } = await supabase
     .from("route_items")
-    .select("id, title, current_start, current_end, status, is_milestone, visible_to_viewer, areas (name)")
+    .select(
+      `id, title, area_id, planned_start, planned_end, current_start, current_end, actual_start, actual_end,
+       status, is_milestone, visible_to_viewer,
+       areas (name, sort_order), owner:profiles!route_items_owner_id_fkey (full_name), providers (name, phone)`,
+    )
     .eq("event_id", eventId)
     .order("current_start", { ascending: true })
     .order("sort_order", { ascending: true });
   if (error) throw new Error(`No se pudo leer la hoja de ruta: ${error.message}`);
-  return (data ?? []).map((r) => {
-    const area = (Array.isArray(r.areas) ? r.areas[0] : r.areas) as { name: string } | null;
-    return {
-      id: r.id as string,
-      title: r.title as string,
-      areaName: area?.name ?? null,
-      currentStart: r.current_start as string,
-      currentEnd: r.current_end as string,
-      status: r.status as ItemStatus,
-      isMilestone: Boolean(r.is_milestone),
-      visibleToViewer: Boolean(r.visible_to_viewer),
-    };
-  });
+  return (data ?? []).map(toRouteItem);
+}
+
+export async function getRouteItem(eventId: string, itemId: string): Promise<RouteItem | null> {
+  const items = await getRouteItems(eventId);
+  return items.find((i) => i.id === itemId) ?? null;
+}
+
+function first<T>(value: T | T[] | null | undefined): T | null {
+  return (Array.isArray(value) ? value[0] : value) ?? null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toRouteItem(r: any): RouteItem {
+  const area = first(r.areas) as { name: string; sort_order: number } | null;
+  const owner = first(r.owner) as { full_name: string | null } | null;
+  const provider = first(r.providers) as { name: string; phone: string | null } | null;
+  return {
+    id: r.id,
+    title: r.title,
+    areaId: r.area_id ?? null,
+    areaName: area?.name ?? null,
+    areaOrder: area?.sort_order ?? 999,
+    plannedStart: r.planned_start,
+    plannedEnd: r.planned_end,
+    currentStart: r.current_start,
+    currentEnd: r.current_end,
+    actualStart: r.actual_start ?? null,
+    actualEnd: r.actual_end ?? null,
+    status: r.status,
+    isMilestone: Boolean(r.is_milestone),
+    visibleToViewer: Boolean(r.visible_to_viewer),
+    ownerName: owner?.full_name ?? null,
+    providerName: provider?.name ?? null,
+    providerPhone: provider?.phone ?? null,
+  };
+}
+
+/** Evento + rol + escala de criticidad. Devuelve null si la persona no es miembro. Una vez por pedido. */
+export const getEventContext = cache(async function getEventContext(eventId: string) {
+  const user = await getCurrentUser();
+  const event = await getMyEvent(eventId, user.id);
+  if (!event) return null;
+  const supabase = await requireClient();
+  const { data } = await supabase.from("events").select("criticality_config").eq("id", eventId).maybeSingle();
+  const criticality = (data?.criticality_config ?? null) as CriticalityConfig | null;
+  return { user, event, criticality, isTeam: event.role !== "viewer" };
+});
+
+export type LogEntry = {
+  id: number;
+  at: string;
+  kind: string;
+  level: number | null;
+  summary: string;
+  visibleToViewer: boolean;
+  actorName: string | null;
+};
+
+/** Bitácora, de la más reciente a la más antigua. */
+export async function getLog(eventId: string, limit = 100): Promise<LogEntry[]> {
+  const supabase = await requireClient();
+  const { data, error } = await supabase
+    .from("log_entries")
+    .select("id, at, kind, level, summary, visible_to_viewer, actor:profiles!log_entries_actor_id_fkey (full_name)")
+    .eq("event_id", eventId)
+    .order("id", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`No se pudo leer la bitácora: ${error.message}`);
+  return (data ?? []).map((r) => ({
+    id: Number(r.id),
+    at: r.at as string,
+    kind: r.kind as string,
+    level: (r.level as number | null) ?? null,
+    summary: r.summary as string,
+    visibleToViewer: Boolean(r.visible_to_viewer),
+    actorName: (first(r.actor) as { full_name: string | null } | null)?.full_name ?? null,
+  }));
+}
+
+export type Alert = {
+  id: string;
+  level: number;
+  ruleKey: string | null;
+  title: string;
+  detail: string | null;
+  status: AlertStatus;
+  visibleToViewer: boolean;
+  raisedAt: string;
+  resolvedAt: string | null;
+  entityType: string | null;
+  entityId: string | null;
+};
+
+export const getAlerts = cache(async function getAlerts(eventId: string): Promise<Alert[]> {
+  const supabase = await requireClient();
+  const { data, error } = await supabase
+    .from("alerts")
+    .select("id, level, rule_key, title, detail, status, visible_to_viewer, raised_at, resolved_at, entity_type, entity_id")
+    .eq("event_id", eventId)
+    .order("raised_at", { ascending: false });
+  if (error) throw new Error(`No se pudieron leer las alertas: ${error.message}`);
+  const order: Record<AlertStatus, number> = { open: 0, acknowledged: 1, resolved: 2 };
+  return (data ?? [])
+    .map((a) => ({
+      id: a.id as string,
+      level: a.level as number,
+      ruleKey: (a.rule_key as string | null) ?? null,
+      title: a.title as string,
+      detail: (a.detail as string | null) ?? null,
+      status: a.status as AlertStatus,
+      visibleToViewer: Boolean(a.visible_to_viewer),
+      raisedAt: a.raised_at as string,
+      resolvedAt: (a.resolved_at as string | null) ?? null,
+      entityType: (a.entity_type as string | null) ?? null,
+      entityId: (a.entity_id as string | null) ?? null,
+    }))
+    .sort((a, b) => order[a.status] - order[b.status] || b.level - a.level || b.raisedAt.localeCompare(a.raisedAt));
+});
+
+export type Moment = {
+  id: string;
+  title: string;
+  status: MomentStatus;
+  level: number;
+  templateKey: string | null;
+  routeItemId: string | null;
+  routeItemTitle: string | null;
+  openedAt: string | null;
+  resolvedAt: string | null;
+  resolution: string | null;
+};
+
+export type MomentCheck = { id: string; question: string; answer: string | null; answeredAt: string | null };
+export type Commitment = {
+  id: string;
+  label: string;
+  promised: string;
+  found: string | null;
+  outcome: CommitmentOutcome | null;
+  checkedAt: string | null;
+};
+
+const MOMENT_COLUMNS =
+  "id, title, status, level, template_key, route_item_id, opened_at, resolved_at, resolution, route_items (title)";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function toMoment(m: any): Moment {
+  return {
+    id: m.id,
+    title: m.title,
+    status: m.status,
+    level: m.level,
+    templateKey: m.template_key ?? null,
+    routeItemId: m.route_item_id ?? null,
+    routeItemTitle: (first(m.route_items) as { title: string } | null)?.title ?? null,
+    openedAt: m.opened_at ?? null,
+    resolvedAt: m.resolved_at ?? null,
+    resolution: m.resolution ?? null,
+  };
+}
+
+/** Momentos críticos del evento (solo el equipo los ve; para el cliente la lista llega vacía). */
+export async function getMoments(eventId: string): Promise<Moment[]> {
+  const supabase = await requireClient();
+  const { data, error } = await supabase.from("critical_moments").select(MOMENT_COLUMNS).eq("event_id", eventId);
+  if (error) throw new Error(`No se pudieron leer los momentos críticos: ${error.message}`);
+  const order: Record<MomentStatus, number> = { open: 0, escalated: 0, scheduled: 1, resolved: 2 };
+  return (data ?? []).map(toMoment).sort((a, b) => order[a.status] - order[b.status] || b.level - a.level);
+}
+
+export async function getMomentDetail(eventId: string, momentId: string) {
+  const supabase = await requireClient();
+  const { data, error } = await supabase
+    .from("critical_moments")
+    .select(`${MOMENT_COLUMNS}, moment_checks (id, question, answer_text, answered_at, sort_order),
+             commitments (id, item_label, promised, found, outcome, checked_at)`)
+    .eq("event_id", eventId)
+    .eq("id", momentId)
+    .maybeSingle();
+  if (error) throw new Error(`No se pudo leer el momento crítico: ${error.message}`);
+  if (!data) return null;
+  type CheckRow = { id: string; question: string; answer_text: string | null; answered_at: string | null; sort_order: number };
+  type CommitmentRow = { id: string; item_label: string; promised: string; found: string | null; outcome: CommitmentOutcome | null; checked_at: string | null };
+  const checks = ((data.moment_checks ?? []) as CheckRow[])
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((c) => ({ id: c.id, question: c.question, answer: c.answer_text, answeredAt: c.answered_at }));
+  const commitments = ((data.commitments ?? []) as CommitmentRow[])
+    .sort((a, b) => a.item_label.localeCompare(b.item_label))
+    .map((c) => ({ id: c.id, label: c.item_label, promised: c.promised, found: c.found, outcome: c.outcome, checkedAt: c.checked_at }));
+  return { moment: toMoment(data), checks, commitments };
+}
+
+export type Evidence = {
+  id: string;
+  kind: EvidenceKind;
+  note: string | null;
+  filePath: string | null;
+  url: string | null;
+  sha256: string | null;
+  capturedAt: string;
+  receivedAt: string;
+  visibleToViewer: boolean;
+  routeItemId: string | null;
+  momentId: string | null;
+};
+
+/** Evidencias con enlaces firmados de corta duración (los archivos son privados). */
+export async function getEvidences(
+  eventId: string,
+  filter: { routeItemId?: string; momentId?: string } = {},
+): Promise<Evidence[]> {
+  const supabase = await requireClient();
+  let query = supabase
+    .from("evidences")
+    .select("id, kind, note, file_path, sha256, captured_at, received_at, visible_to_viewer, route_item_id, moment_id")
+    .eq("event_id", eventId)
+    .order("received_at", { ascending: false })
+    .limit(60);
+  if (filter.routeItemId) query = query.eq("route_item_id", filter.routeItemId);
+  if (filter.momentId) query = query.eq("moment_id", filter.momentId);
+  const { data, error } = await query;
+  if (error) throw new Error(`No se pudieron leer las evidencias: ${error.message}`);
+  const rows = data ?? [];
+  const paths = rows.map((r) => r.file_path as string | null).filter((p): p is string => Boolean(p));
+  const urls = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await supabase.storage.from("evidences").createSignedUrls(paths, 60 * 60);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  return rows.map((r) => ({
+    id: r.id as string,
+    kind: r.kind as EvidenceKind,
+    note: (r.note as string | null) ?? null,
+    filePath: (r.file_path as string | null) ?? null,
+    url: r.file_path ? (urls.get(r.file_path as string) ?? null) : null,
+    sha256: (r.sha256 as string | null) ?? null,
+    capturedAt: r.captured_at as string,
+    receivedAt: r.received_at as string,
+    visibleToViewer: Boolean(r.visible_to_viewer),
+    routeItemId: (r.route_item_id as string | null) ?? null,
+    momentId: (r.moment_id as string | null) ?? null,
+  }));
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EVENT_STATUS_LABEL, ITEM_STATUS_LABEL, ROLE_LABEL, isEventRole } from "@/lib/labels";
+import { EVENT_STATUS_LABEL, ITEM_STATUS_LABEL, ROLE_LABEL, isEventRole } from "@/lib/core/labels";
 
 describe("textos visibles", () => {
   it("los tres roles tienen nombre en español", () => {

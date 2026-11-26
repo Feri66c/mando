@@ -1,4 +1,4 @@
-import { EVENT_STATUS_LABEL, ITEM_STATUS_LABEL, ROLE_LABEL, type EventRole, type EventStatus, type ItemStatus } from "@/lib/labels";
+import { EVENT_STATUS_LABEL, ITEM_STATUS_LABEL, ROLE_LABEL, type EventRole, type EventStatus, type ItemStatus } from "@/lib/core/labels";
 
 // Regla 8: todo estado lleva su palabra; el color solo acompaña.
 

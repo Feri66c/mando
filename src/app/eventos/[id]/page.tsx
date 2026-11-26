@@ -1,85 +1,106 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppHeader } from "@/components/brand";
-import { EventStatusText, ItemStatusText, RolePill } from "@/components/pills";
-import { getCurrentUser, getMyEvent, getRouteItems } from "@/lib/data";
-import { ROLE_LABEL } from "@/lib/labels";
-import { formatEventRange, formatTime, zoneLabel } from "@/lib/time";
+import { AlertCard, EvidenceGrid, LogList } from "@/components/operacion/blocks";
+import { Card, Empty, SectionTitle, StatusChip, buttonPrimary, buttonSecondary } from "@/components/operacion/ui";
+import { nowAndNext } from "@/lib/core/route";
+import { formatEventRange, formatTime } from "@/lib/core/time";
+import { getAlerts, getEventContext, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
 
-export const metadata: Metadata = { title: "Evento" };
+export const metadata: Metadata = { title: "Hoy" };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function NowCard({ label, item, timeZone }: { label: string; item: RouteItem | null; timeZone: string }) {
+  return (
+    <Card>
+      <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-muted">{label}</p>
+      {item ? (
+        <>
+          <p className="mt-1 font-display text-xl font-semibold leading-snug">{item.title}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="font-mono text-base">
+              {formatTime(item.currentStart, timeZone)} – {formatTime(item.currentEnd, timeZone)}
+            </span>
+            <StatusChip status={item.status} />
+          </div>
+        </>
+      ) : (
+        <p className="mt-1 text-ink-muted">Nada por ahora.</p>
+      )}
+    </Card>
+  );
+}
 
-export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function TodayPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!UUID.test(id)) notFound();
-  const user = await getCurrentUser();
-  const event = await getMyEvent(id, user.id);
-  if (!event) notFound(); // no es miembro: para la base de datos, el evento no existe
-  const items = await getRouteItems(event.id);
-  const isTeam = event.role !== "viewer";
+  const ctx = await getEventContext(id);
+  if (!ctx) notFound();
+  const { event, criticality, isTeam } = ctx;
+  const [items, alerts, log, evidences] = await Promise.all([
+    getRouteItems(id),
+    getAlerts(id),
+    getLog(id, isTeam ? 6 : 12),
+    isTeam ? Promise.resolve([]) : getEvidences(id),
+  ]);
+  const { current, next } = nowAndNext(items, new Date());
+  const base = `/eventos/${id}`;
+  const active = alerts.filter((a) => a.status !== "resolved");
 
   return (
     <>
-      <AppHeader label={ROLE_LABEL[event.role].toUpperCase()} userName={user.fullName} />
-      <main className="mx-auto max-w-3xl px-4 py-6">
-        <Link href="/eventos" className="text-sm font-medium text-navy-600 hover:underline">
-          ← Mis eventos
-        </Link>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <EventStatusText status={event.status} />
-          <RolePill role={event.role} />
-        </div>
-        <h1 className="mt-2 font-display text-2xl font-semibold leading-tight">{event.name}</h1>
-        <p className="mt-1 font-mono text-sm text-navy-600">
-          {formatEventRange(event.startsAt, event.endsAt, event.timezone)}
-        </p>
-        <p className="mt-1 text-sm text-ink-muted">{[event.venueName, event.clientName].filter(Boolean).join(" · ")}</p>
+      <h1 className="sr-only">Hoy</h1>
+      <p className="font-mono text-xs text-ink-muted">{formatEventRange(event.startsAt, event.endsAt, event.timezone)}</p>
+      <div className="mt-3 grid gap-3">
+        <NowCard label="Ahora" item={current} timeZone={event.timezone} />
+        <NowCard label="Sigue" item={next} timeZone={event.timezone} />
+      </div>
 
-        <section className="mt-8" aria-labelledby="ruta">
-          <div className="flex items-baseline justify-between">
-            <h2 id="ruta" className="font-display text-lg font-semibold">
-              Hoja de ruta
-            </h2>
-            <span className="font-mono text-xs text-ink-muted">hora de {zoneLabel(event.timezone)}</span>
+      {isTeam && (
+        <>
+          <Link href={`${base}/en-vivo`} className={`${buttonPrimary} mt-4 w-full`}>
+            Abrir Modo En Vivo
+          </Link>
+          <SectionTitle>Acciones rápidas</SectionTitle>
+          <div className="grid grid-cols-2 gap-2">
+            <Link href={`${base}/evidencias#evidencia`} className={buttonSecondary}>
+              Evidencia
+            </Link>
+            <Link href={current ? `${base}/actividad/${current.id}#cambio` : `${base}/hoja-de-ruta`} className={buttonSecondary}>
+              Cambio
+            </Link>
+            <Link href={`${base}/alertas#reportar`} className={buttonSecondary}>
+              Alerta
+            </Link>
+            <Link href={`${base}/momentos#nuevo`} className={buttonSecondary}>
+              Momento crítico
+            </Link>
           </div>
-          {items.length === 0 ? (
-            <p className="mt-3 text-sm text-ink-muted">Aún no hay actividades publicadas.</p>
-          ) : (
-            <ol className="mt-3 divide-y divide-line overflow-hidden rounded-card border border-line bg-surface-100">
-              {items.map((item) => (
-                <li key={item.id} className="flex gap-4 p-4">
-                  <div className="w-14 shrink-0 font-mono text-sm leading-6 text-navy-600">
-                    {formatTime(item.currentStart, event.timezone)}
-                    <div className="text-xs text-ink-muted">{formatTime(item.currentEnd, event.timezone)}</div>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium leading-6">
-                      {item.title}
-                      {item.isMilestone && (
-                        <span className="ml-2 rounded-chip bg-navy-800 px-1.5 py-0.5 align-middle text-[11px] font-semibold uppercase tracking-wide text-ink-inverse">
-                          Hito
-                        </span>
-                      )}
-                    </p>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <ItemStatusText status={item.status} />
-                      {item.areaName && <span className="text-xs text-ink-muted">{item.areaName}</span>}
-                      {isTeam && !item.visibleToViewer && (
-                        <span className="text-xs font-medium text-critical">Oculto al cliente</span>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          )}
-          <p className="mt-4 text-xs text-ink-muted">
-            Vista de solo lectura. La hoja de ruta en vivo, los cambios y la bitácora llegan en la Fase 1.
-          </p>
-        </section>
-      </main>
+        </>
+      )}
+
+      <SectionTitle href={`${base}/alertas`} linkLabel="Ver alertas">
+        {isTeam ? "Alertas activas" : "Alertas"}
+      </SectionTitle>
+      {active.length === 0 ? (
+        <Empty>{isTeam ? "Sin alertas activas." : "Sin alertas. Todo marcha según lo previsto."}</Empty>
+      ) : (
+        <ul className="grid gap-2">
+          {active.slice(0, 3).map((a) => (
+            <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} />
+          ))}
+        </ul>
+      )}
+
+      <SectionTitle href={`${base}/bitacora`} linkLabel="Bitácora completa">
+        {isTeam ? "Bitácora" : "Minuto a minuto"}
+      </SectionTitle>
+      <LogList entries={log} timeZone={event.timezone} config={criticality} />
+
+      {!isTeam && evidences.length > 0 && (
+        <>
+          <SectionTitle href={`${base}/evidencias`}>Evidencias</SectionTitle>
+          <EvidenceGrid items={evidences.slice(0, 4)} timeZone={event.timezone} isTeam={false} />
+        </>
+      )}
     </>
   );
 }
