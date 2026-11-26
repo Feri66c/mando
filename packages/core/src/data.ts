@@ -819,3 +819,24 @@ export async function fetchBudget(client: SupabaseClient, eventId: string): Prom
     lines: (lines ?? []).map((l) => ({ id: l.id as string, title: l.title as string, conceptKey: (l.concept_key as string | null) ?? null, quantity: Number(l.quantity), unitCost: Number(l.unit_cost) })),
   };
 }
+
+// ---- Encuesta de cierre (decisión 36) ----
+
+export type MyFeedback = { kind: "learnings" | "satisfaction"; stars: number | null; items: string[]; extra: string | null };
+
+export async function fetchMyFeedback(client: SupabaseClient, eventId: string, userId: string): Promise<MyFeedback | null> {
+  const { data, error } = await client.from("event_feedback").select("kind, stars, items, extra").eq("event_id", eventId).eq("profile_id", userId).maybeSingle();
+  if (error) throw new Error(`No se pudo leer tu encuesta: ${error.message}`);
+  if (!data) return null;
+  return { kind: data.kind as MyFeedback["kind"], stars: (data.stars as number | null) ?? null, items: (data.items as string[] | null) ?? [], extra: (data.extra as string | null) ?? null };
+}
+
+export type FeedbackRow = MyFeedback & { name: string; title: string | null };
+
+/** Lo que dejó cada persona. Solo devuelve filas a los niveles 1 y 2. */
+export async function fetchFeedbackBoard(client: SupabaseClient, eventId: string): Promise<FeedbackRow[]> {
+  const { data, error } = await client.rpc("event_feedback_board", { p_event: eventId });
+  if (error) throw new Error(`No se pudo leer la encuesta de cierre: ${error.message}`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return ((data ?? []) as any[]).map((r) => ({ name: r.name, title: r.title ?? null, kind: r.kind, stars: r.stars ?? null, items: r.items ?? [], extra: r.extra ?? null }));
+}

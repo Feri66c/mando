@@ -17,6 +17,8 @@ import {
   fetchLocation,
   fetchRequirements,
   fetchMyRating,
+  fetchMyFeedback,
+  fetchFeedbackBoard,
   fetchScoreInputs,
   fetchCriticality,
   fetchEventTemplate,
@@ -195,4 +197,12 @@ export async function getBudget(eventId: string) {
 export async function getEventOrganization(eventId: string): Promise<string | null> {
   const { data } = await (await requireClient()).from("events").select("organization_id").eq("id", eventId).maybeSingle();
   return (data?.organization_id as string | undefined) ?? null;
+}
+
+export async function getMyFeedback(eventId: string, userId: string) {
+  return fetchMyFeedback(await requireClient(), eventId, userId);
+}
+
+export async function getFeedbackBoard(eventId: string) {
+  return fetchFeedbackBoard(await requireClient(), eventId);
 }

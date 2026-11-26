@@ -59,7 +59,12 @@ writeFileSync(
     "",
     "-- Planificación: los 5 elementos.",
     readFileSync(join(root, "supabase/migrations/20261202000009_planificacion.sql"), "utf8"),
+    "",
+    "-- Tiempos del timeline.",
     readFileSync(join(root, "supabase/migrations/20261203000010_tiempos_del_timeline.sql"), "utf8"),
+    "",
+    "-- Aprendizajes y ficha de satisfacción.",
+    readFileSync(join(root, "supabase/migrations/20261204000011_aprendizajes_y_satisfaccion.sql"), "utf8"),
   ].join("\n"),
 );
 console.log("✓ supabase/actualizar-etapa-2.sql actualizado");

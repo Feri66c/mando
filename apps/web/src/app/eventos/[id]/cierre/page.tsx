@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CloseEventForm, CriterionButtons, PrintButton, PublishUrlForm, RatingForm } from "@/components/operacion/cierre";
 import { CriteriaBars, ScoreCard } from "@/components/operacion/merits";
@@ -109,6 +110,25 @@ export default async function ClosingPage({ params }: { params: Promise<{ id: st
           </div>
         ))}
       </dl>
+
+      <div className="no-imprimir">
+        <SectionTitle>{isTeam ? "Aprendizajes" : "Tu impresión"}</SectionTitle>
+        <Card>
+          <p className="text-sm text-ink-muted">
+            {isTeam ? "Antes de pasar al siguiente evento, deja lo que aprendiste en este." : "Cuéntanos cómo te fue con este evento. Toma un minuto."}
+          </p>
+          <Link href={`/eventos/${id}/aprendizajes`} className="mt-3 inline-flex min-h-11 items-center rounded-full bg-gold-300 px-5 font-semibold text-navy-950">
+            {isTeam ? "Dejar mis aprendizajes" : "Llenar mi ficha de satisfacción"}
+          </Link>
+        </Card>
+        <SectionTitle>Repositorio del evento</SectionTitle>
+        <Card>
+          <p className="text-sm text-ink-muted">Fotos, notas de voz y videos del evento, con su hora y su huella.</p>
+          <Link href={`/eventos/${id}/evidencias`} className="mt-3 inline-flex min-h-11 items-center rounded-full border border-gold-300/60 px-5 text-sm font-semibold text-gold-300">
+            Ver las {summary.evidences} evidencias
+          </Link>
+        </Card>
+      </div>
 
       {canRate && (
         <div className="no-imprimir">

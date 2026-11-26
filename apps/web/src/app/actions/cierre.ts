@@ -5,6 +5,7 @@
 
 import { refresh } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { cleanLearnings } from "@mando/core/learnings";
 import { zonedDateTimeToIso } from "@mando/core/time";
 
 export type CierreState = { ok: boolean; error: string | null; message?: string | null };
@@ -193,4 +194,19 @@ export async function decideApprovalAction(_prev: CierreState, fd: FormData): Pr
 
 export async function setApprovalGroupsAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
   return run("set_approval_groups", { p_event: text(fd, "event_id"), p_groups: fd.getAll("grupo").map(String) }, "Guardado.");
+}
+
+// ---- Encuesta de cierre ----
+
+export async function saveLearningsAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  const items = cleanLearnings(fd.getAll("aprendizaje").map(String));
+  const extra = text(fd, "extra");
+  if (items.length === 0 && !extra) return { ok: false, error: "Escribe al menos un aprendizaje." };
+  return run("save_learnings", { p_event: text(fd, "event_id"), p_items: items, p_extra: extra || null }, "Gracias. Tus aprendizajes quedaron guardados.");
+}
+
+export async function saveSatisfactionAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  const stars = Number(text(fd, "stars"));
+  if (!Number.isInteger(stars) || stars < 1 || stars > 5) return { ok: false, error: "Elige de 1 a 5." };
+  return run("save_satisfaction", { p_event: text(fd, "event_id"), p_stars: stars, p_comment: text(fd, "comment") || null }, "Gracias. Tu ficha quedó guardada.");
 }

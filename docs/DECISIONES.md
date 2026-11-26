@@ -186,3 +186,18 @@ Fecha: 26 de noviembre de 2026.
 - **Tiempo sugerido:** hoy es la duración que trae la plantilla del tipo de evento. Que una IA lo estime leyendo el brief necesita un servicio de IA conectado; queda pendiente.
 - **Quién ve qué:** los niveles 3 y 4 ven los tiempos sin poder cambiarlos. El cliente no ve esta pantalla. Cada estimación queda en la bitácora, sin mostrarse al cliente.
 - **Los avisos no bloquean:** orientan a la productora. Lo que sí bloquea es la planificación incompleta (decisión 30).
+
+# Decisiones del cierre: aprendizajes y ficha de satisfacción
+
+Fecha: 26 de noviembre de 2026.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 36 | Encuesta de cierre | Cada persona del equipo deja hasta 6 aprendizajes y responde «¿Algo más que agregar?» (`config/aprendizajes.json`). El cliente llena su ficha de satisfacción: de 1 a 5 y su impresión. Se puede llenar y corregir también después del cierre. |
+| 37 | Closeout y repositorio | El informe de cierre ya lo arma MANDO solo con lo que pasó en el evento y el cliente lo ve y lo guarda en PDF. Desde el informe se entra al repositorio del evento (fotos, voz y video con hora y huella) y a la encuesta. |
+
+## Supuestos
+
+- **Quién lee:** cada persona ve lo suyo. El productor general y el productor de campo leen todos los aprendizajes y la ficha del cliente. El cliente no ve los aprendizajes del equipo.
+- **Bitácora:** registra que alguien compartió sus aprendizajes o que el cliente dejó su ficha, nunca el contenido.
+- **Pendiente, necesita servicios externos:** cortos de video hechos por IA, publicación directa en YouTube y TikTok, tiempos estimados por IA a partir del brief y el código de ingreso por WhatsApp o SMS.

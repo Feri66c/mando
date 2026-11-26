@@ -41,6 +41,7 @@ Supuestos tomados para arrancar: ver [`docs/DECISIONES.md`](docs/DECISIONES.md).
 - `/eventos/<evento>/aprobaciones`: casting, uniforme, utilería y referencias que el cliente aprueba (`config/aprobaciones.json`). Sin todo aprobado no se marca el inicio. Decisiones 28 y 29.
 - `/eventos/<evento>/planificacion`: los 5 elementos que desbloquean el timeline (`config/planificacion.json`), con `/personal` (base de personas con foto y DNI), `/tecnico` (`config/tecnica.json`) y `/presupuesto` (`config/costos-referencia.json`). Decisiones 30 a 33.
 - `/eventos/<evento>/tiempos`: control grande para estimar cuánto toma cada actividad, con avisos de inconsistencias y márgenes (`config/timeline.json`). Decisiones 34 y 35.
+- `/eventos/<evento>/aprendizajes`: encuesta de cierre. El equipo deja 6 aprendizajes y el cliente su ficha de satisfacción (`config/aprendizajes.json`). Decisiones 36 y 37.
 - Pruebas: `tests/db/meritos.test.ts` y `apps/web/tests/e2e/z-cierre.spec.ts` (corre al final porque cierra el evento de ejemplo). Decisiones 22 a 24.
 
 ## Comandos

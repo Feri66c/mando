@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import {
   addGuestAction,
   closeEventAction,
+  saveLearningsAction,
+  saveSatisfactionAction,
   markCriterionAction,
   noteReminderAction,
   rateProductionAction,
@@ -291,6 +293,74 @@ export function GuestActions({
           </button>
         )}
       </div>
+      <Feedback state={state} />
+    </form>
+  );
+}
+
+// --------------------------------------------------------------------------- Encuesta de cierre
+
+export function LearningsForm({ eventId, count, hints, lastQuestion, current }: { eventId: string; count: number; hints: readonly string[]; lastQuestion: string; current: { items: string[]; extra: string | null } | null }) {
+  const [state, action, pending] = useActionState(saveLearningsAction, INITIAL);
+  return (
+    <form action={action}>
+      <input type="hidden" name="event_id" value={eventId} />
+      <ol className="grid gap-3">
+        {Array.from({ length: count }, (_, i) => (
+          <li key={i} className="flex items-start gap-3">
+            <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-surface-200 font-mono text-lg font-semibold text-gold-300">
+              {i + 1}
+            </span>
+            <input
+              name="aprendizaje"
+              maxLength={300}
+              defaultValue={current?.items[i] ?? ""}
+              placeholder={hints[i] ?? ""}
+              aria-label={`Aprendizaje ${i + 1}`}
+              className={inputClass}
+            />
+          </li>
+        ))}
+      </ol>
+      <label htmlFor="aprendizajes-extra" className="mt-4 block text-sm font-medium">
+        {lastQuestion}
+      </label>
+      <textarea id="aprendizajes-extra" name="extra" rows={3} maxLength={1000} defaultValue={current?.extra ?? ""} className={`${inputClass} mt-1.5 py-2`} />
+      <button type="submit" disabled={pending} className={`${buttonPrimary} mt-4`}>
+        {pending ? "Guardando…" : current ? "Actualizar mis aprendizajes" : "Guardar mis aprendizajes"}
+      </button>
+      <Feedback state={state} />
+    </form>
+  );
+}
+
+export function SatisfactionForm({ eventId, question, current }: { eventId: string; question: string; current: { stars: number | null; extra: string | null } | null }) {
+  const [state, action, pending] = useActionState(saveSatisfactionAction, INITIAL);
+  return (
+    <form action={action}>
+      <input type="hidden" name="event_id" value={eventId} />
+      <fieldset>
+        <legend className="text-sm font-medium">¿Qué tan satisfecho quedaste?</legend>
+        <div className="mt-2 flex gap-2">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <label key={n} className="cursor-pointer">
+              <input type="radio" name="stars" value={n} defaultChecked={current?.stars === n} required className="peer sr-only" />
+              <span className="grid size-12 place-items-center rounded-full bg-surface-200 font-mono text-lg font-semibold peer-checked:bg-gold-500 peer-checked:text-navy-950 peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-ice-300">
+                {n}
+              </span>
+              <span className="sr-only">{n === 1 ? "1 de 5" : `${n} de 5`}</span>
+            </label>
+          ))}
+        </div>
+        <p className="mt-1.5 text-xs text-ink-muted">1 es nada satisfecho y 5 es muy satisfecho.</p>
+      </fieldset>
+      <label htmlFor="satisfaccion-comentario" className="mt-3 block text-sm font-medium">
+        {question}
+      </label>
+      <textarea id="satisfaccion-comentario" name="comment" rows={3} maxLength={1000} defaultValue={current?.extra ?? ""} className={`${inputClass} mt-1.5 py-2`} />
+      <button type="submit" disabled={pending} className={`${buttonPrimary} mt-4`}>
+        {pending ? "Guardando…" : current ? "Actualizar mi ficha" : "Enviar mi ficha"}
+      </button>
       <Feedback state={state} />
     </form>
   );
