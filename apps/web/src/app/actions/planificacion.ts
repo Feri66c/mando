@@ -5,6 +5,7 @@
 
 import { refresh } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { cleanDocNumber, docProblem, docType } from "@mando/core/casting";
 import type { CierreState } from "./cierre";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
@@ -12,7 +13,7 @@ const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 function friendly(error: unknown): string {
   const message = error instanceof Error ? error.message : String((error as { message?: string })?.message ?? error);
   if (/row-level security|permission denied/i.test(message)) return "No tienes permiso para hacer eso en este evento.";
-  if (/people_organization_id_doc_number_key/.test(message)) return "Ese DNI ya está registrado en otra ficha.";
+  if (/people_org(anization_id)?_doc/.test(message)) return "Ese documento ya está registrado en otra ficha.";
   if (/fetch failed|network/i.test(message)) return "Sin conexión con el servidor. Revisa la señal e intenta de nuevo.";
   return message || "Algo falló. Intenta de nuevo.";
 }
@@ -39,6 +40,7 @@ export async function savePersonAction(input: {
   eventId: string;
   personId: string | null;
   fullName: string;
+  docType: string;
   docNumber: string;
   docExpiresOn: string;
   phone: string;
@@ -46,8 +48,12 @@ export async function savePersonAction(input: {
   photoPath: string | null;
   docPath: string | null;
   assign: boolean;
+  /** El cargo no estaba en la lista: se propone al backend para el catálogo. */
+  proposeRole?: boolean;
 }): Promise<CierreState> {
   if (!input.fullName.trim()) return { ok: false, error: "Escribe el nombre completo." };
+  const problem = docProblem(input.docType, input.docNumber);
+  if (problem) return { ok: false, error: problem };
   if (input.assign && !input.role.trim()) return { ok: false, error: "Indica qué hace esta persona en el evento." };
   try {
     const supabase = await createClient();
@@ -56,7 +62,8 @@ export async function savePersonAction(input: {
       p_event: input.eventId,
       p_person: input.personId,
       p_full_name: input.fullName,
-      p_doc_number: input.docNumber || null,
+      p_doc_type: docType(input.docType).clave,
+      p_doc_number: cleanDocNumber(input.docType, input.docNumber) || null,
       p_doc_expires_on: /^\d{4}-\d{2}-\d{2}$/.test(input.docExpiresOn) ? input.docExpiresOn : null,
       p_phone: input.phone || null,
       p_default_role: input.role || null,
@@ -68,11 +75,20 @@ export async function savePersonAction(input: {
       const { error: assignError } = await supabase.rpc("assign_person", { p_event: input.eventId, p_person: data as string, p_role: input.role });
       if (assignError) throw assignError;
     }
+    // Proponer el cargo nunca frena el registro: si falla, la persona igual queda con su cargo escrito.
+    if (input.proposeRole && input.role.trim()) await supabase.rpc("propose_role", { p_event: input.eventId, p_name: input.role });
   } catch (e) {
     return { ok: false, error: friendly(e) };
   }
   refresh();
-  return { ok: true, error: null, message: input.personId ? "Ficha actualizada." : "Registrada. Ya está en tu base de personas." };
+  const name = input.fullName.trim();
+  return {
+    ok: true,
+    error: null,
+    message: input.personId
+      ? "Ficha actualizada."
+      : `${name} ya está en tu base de personas${input.proposeRole ? `. El cargo «${input.role.trim()}» quedó propuesto al backend` : ""}.`,
+  };
 }
 
 export async function assignPersonAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
@@ -191,4 +207,11 @@ export async function decideBudgetAction(_prev: CierreState, fd: FormData): Prom
 /** La productora suelta el control grande: se guarda cuánto estima que toma la actividad. */
 export async function setEstimateAction(itemId: string, minutes: number): Promise<CierreState> {
   return run("set_estimate", { p_item: itemId, p_minutes: Math.round(minutes) });
+}
+
+// ---- Catálogo de cargos ----
+
+export async function reviewRoleAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  const approve = text(fd, "decision") === "approve";
+  return run("review_role", { p_role: text(fd, "role_id"), p_approve: approve }, approve ? "Aprobado. Ya está en el catálogo de todos." : "No aprobado.");
 }

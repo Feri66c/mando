@@ -1,0 +1,190 @@
+{
+  "_nota": "Mini ficha del casting (decisión 51). Cada campo se muestra junto a la foto y se llena al subir. Los campos y sus opciones se cambian aquí. «privado» no lo ve el cliente.",
+  "campos": [
+    {
+      "clave": "edad",
+      "nombre": "Edad",
+      "tipo": "numero",
+      "unidad": "años",
+      "min": 16,
+      "max": 90
+    },
+    {
+      "clave": "talla",
+      "nombre": "Talla",
+      "tipo": "opciones",
+      "opciones": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ]
+    },
+    {
+      "clave": "estatura",
+      "nombre": "Estatura",
+      "tipo": "numero",
+      "unidad": "cm",
+      "min": 120,
+      "max": 220
+    },
+    {
+      "clave": "contextura",
+      "nombre": "Contextura",
+      "tipo": "opciones",
+      "opciones": [
+        "Delgada",
+        "Media",
+        "Atlética",
+        "Robusta"
+      ]
+    },
+    {
+      "clave": "tono_de_piel",
+      "nombre": "Tono de piel",
+      "tipo": "opciones",
+      "opciones": [
+        "Claro",
+        "Trigueño",
+        "Canela",
+        "Moreno"
+      ]
+    },
+    {
+      "clave": "color_de_ojos",
+      "nombre": "Color de ojos",
+      "tipo": "opciones",
+      "opciones": [
+        "Negros",
+        "Marrones",
+        "Miel",
+        "Verdes",
+        "Azules"
+      ]
+    },
+    {
+      "clave": "nacionalidad",
+      "nombre": "Nacionalidad",
+      "tipo": "opciones",
+      "opciones": [
+        "Peruana",
+        "Venezolana",
+        "Colombiana",
+        "Argentina",
+        "Chilena",
+        "Ecuatoriana"
+      ]
+    },
+    {
+      "clave": "disponibilidad",
+      "nombre": "Disponibilidad",
+      "tipo": "opciones",
+      "opciones": [
+        "Todo el día",
+        "Mañana",
+        "Tarde",
+        "Noche",
+        "Fines de semana"
+      ]
+    },
+    {
+      "clave": "habilidad",
+      "nombre": "Habilidad",
+      "tipo": "opciones",
+      "opciones": [
+        "Canto",
+        "Baile",
+        "Actuación",
+        "Animación",
+        "Locución",
+        "Malabares",
+        "Instrumento"
+      ]
+    },
+    {
+      "clave": "hobby",
+      "nombre": "Hobby",
+      "tipo": "texto"
+    },
+    {
+      "clave": "idiomas",
+      "nombre": "Idiomas",
+      "tipo": "opciones",
+      "opciones": [
+        "Español",
+        "Inglés",
+        "Portugués",
+        "Quechua"
+      ]
+    },
+    {
+      "clave": "experiencia",
+      "nombre": "Experiencia",
+      "tipo": "opciones",
+      "opciones": [
+        "Primera vez",
+        "1 a 2 años",
+        "3 a 5 años",
+        "Más de 5 años"
+      ]
+    },
+    {
+      "clave": "distrito",
+      "nombre": "Distrito",
+      "tipo": "texto"
+    },
+    {
+      "clave": "talla_de_calzado",
+      "nombre": "Calzado",
+      "tipo": "numero",
+      "min": 30,
+      "max": 48
+    },
+    {
+      "clave": "alergias",
+      "nombre": "Alergias",
+      "tipo": "opciones",
+      "opciones": [
+        "No",
+        "Sí"
+      ]
+    },
+    {
+      "clave": "tatuajes_visibles",
+      "nombre": "Tatuajes visibles",
+      "tipo": "opciones",
+      "opciones": [
+        "No",
+        "Sí"
+      ]
+    }
+  ],
+  "documentos": [
+    {
+      "clave": "dni",
+      "nombre": "DNI",
+      "largo_min": 8,
+      "largo_max": 8,
+      "solo_numeros": true,
+      "ayuda": "8 números exactos"
+    },
+    {
+      "clave": "ce",
+      "nombre": "Carnet de extranjería",
+      "largo_min": 9,
+      "largo_max": 12,
+      "solo_numeros": false,
+      "ayuda": "De 9 a 12 letras o números"
+    },
+    {
+      "clave": "pasaporte",
+      "nombre": "Pasaporte",
+      "largo_min": 6,
+      "largo_max": 12,
+      "solo_numeros": false,
+      "ayuda": "De 6 a 12 letras o números"
+    }
+  ]
+}

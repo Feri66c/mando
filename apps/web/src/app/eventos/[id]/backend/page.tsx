@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BudgetExtraDecision, ClientNoticeForm, DeadlineForm, InstructionForm, TechNaReview } from "@/components/operacion/ajustes";
+import { BudgetExtraDecision, ClientNoticeForm, DeadlineForm, InstructionForm, RoleReview, TechNaReview } from "@/components/operacion/ajustes";
 import { LogList } from "@/components/operacion/blocks";
 import { Semaforo } from "@/components/operacion/semaforo";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
 import { BUDGET_EXTRA_LABEL, NOTICE_LABEL } from "@mando/core/data";
 import { formatTime } from "@mando/core/time";
-import { getBriefDoubts, getBudget, getClientNotices, getEventContext, getLog, getPlanning, getPlanningDeadline, getTechItems } from "@/lib/data";
+import { getBriefDoubts, getBudget, getClientNotices, getEventContext, getEventOrganization, getLog, getPlanning, getPlanningDeadline, getRoleCatalog, getTechItems } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Backend" };
 
@@ -33,10 +33,12 @@ export default async function BackendPage({ params }: { params: Promise<{ id: st
     getPlanningDeadline(id),
     getLog(id, 8),
   ]);
+  const organizationId = await getEventOrganization(id);
+  const rolesPending = (organizationId ? await getRoleCatalog(organizationId) : []).filter((r) => r.status === "pending");
   const naPending = tech.filter((t) => t.naRequested);
   const extrasPending = (budget?.extras ?? []).filter((x) => x.status === "requested");
   const doubtsOpen = doubts.filter((d) => d.status === "open");
-  const waiting = naPending.length + extrasPending.length + doubtsOpen.length;
+  const waiting = naPending.length + extrasPending.length + doubtsOpen.length + rolesPending.length;
 
   return (
     <>
@@ -65,6 +67,16 @@ export default async function BackendPage({ params }: { params: Promise<{ id: st
                 <p className="mt-1 font-semibold">{BUDGET_EXTRA_LABEL[x.kind]}</p>
                 {x.note && <p className="text-sm text-ink-muted">«{x.note}»</p>}
                 {!closed && <BudgetExtraDecision extraId={x.id} label={BUDGET_EXTRA_LABEL[x.kind]} />}
+              </Card>
+            </li>
+          ))}
+          {rolesPending.map((r) => (
+            <li key={r.id}>
+              <Card>
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-gold-300">Cargo propuesto</p>
+                <p className="mt-1 font-semibold">{r.name}</p>
+                <p className="text-sm text-ink-muted">{r.proposedByName ? `Lo propone ${r.proposedByName}. ` : ""}Si lo apruebas, queda en la lista de cargos de todos.</p>
+                <RoleReview roleId={r.id} name={r.name} />
               </Card>
             </li>
           ))}

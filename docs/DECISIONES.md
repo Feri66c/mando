@@ -257,3 +257,23 @@ Fecha: 26 de noviembre de 2026. Al entrar por primera vez a MANDO en vivo, «Mis
 
 - **Por qué no se vio antes:** la base de pruebas daba esos permisos por su cuenta, igual que los proyectos antiguos de Supabase.
 - **Proyectos ya instalados:** basta con ejecutar una vez `supabase/migrations/20261208000015_permisos_explicitos.sql` en el SQL Editor. No hace falta volver a publicar la app.
+
+# Decisiones del centro de mando · Entrega 1
+
+Fecha: 26 de noviembre de 2026. Fer dictó 23 cambios mirando la app en vivo («Mando es poder»). Se construyen en cuatro entregas. Esta es la primera.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 50 | Semáforo de casting | Cada persona del casting recibe un veredicto: **Aprobado** (verde), **Backup** (ámbar) o **No admitido** (rojo). La luz prendida late y siempre lleva su nombre escrito. Decide el cliente, o el backend en su nombre; la productora lo ve al instante. Nadie se retira del casting: los botones «Reemplazar» y «Retirar» se cambian por «Actualizar foto» y «Editar ficha», y la persona queda guardada con su veredicto. El casting queda completo cuando nadie espera revisión y hay al menos una persona aprobada. |
+| 51 | Mini ficha junto a la foto | Cada persona del casting lleva su mini ficha: edad, talla, estatura, contextura, tono de piel, color de ojos, nacionalidad, disponibilidad, habilidad, hobby, idiomas, experiencia, distrito, calzado, alergias y tatuajes visibles. Se llena al subir y se ve al lado de la foto, también para el cliente que aprueba. Los campos y sus opciones viven en `config/ficha-casting.json`. |
+| 52 | Tipo de documento | La ficha de personal pide tipo y número: **DNI** (8 números exactos, no deja escribir más ni letras), **carnet de extranjería** (9 a 12 letras o números) o **pasaporte** (6 a 12). La persona se reconoce por tipo y número: volver a escribir el mismo documento trae su ficha. |
+| 53 | Cargos con «Agregar otro» | La lista de cargos es más larga y va en orden alfabético. Su última opción siempre es «Agregar otro cargo». El cargo escrito se usa de inmediato en la ficha y queda **propuesto**: el backend lo aprueba en su pantalla y pasa al catálogo de toda la organización. Toda lista de la mini ficha también termina en «Agregar otro». |
+| 54 | Continuidad y MANDO vivo | Después de «Registrar y sumar al evento» la pantalla ya no vuelve a cero: confirma, ofrece «Siguiente persona» y pregunta «¿A dónde quieres ir?» con las partes de la planificación. Lo mismo al subir al casting. Las tarjetas llevan una luz que recorre su filo, el botón principal respira y los semáforos laten. Quien pide menos movimiento en su teléfono ve todo quieto. |
+
+## Supuestos
+
+- **Quién da el veredicto:** el cliente, igual que las demás aprobaciones; el backend puede marcarlo en su nombre. La productora sube y corrige, pero no decide.
+- **Datos personales:** el documento y el teléfono siguen visibles solo para los niveles 1 y 2. El cliente ve foto y mini ficha de su propio evento, nunca el documento.
+- **Listas largas:** solo las primeras tarjetas de cada lista llevan la luz en movimiento, para no cansar al teléfono.
+- **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261209000016_casting_ficha_documento_cargos.sql` en el SQL Editor.
+- **Pendiente en las siguientes entregas:** banco de talentos con importación de CSV, cadena de mando con visibilidad por jerarquía, logos de marca y agencia, minuto a minuto exportable y cierre con People Experience.

@@ -670,17 +670,19 @@ export type Approval = {
   detail: string | null;
   fileUrl: string | null;
   version: number;
-  status: "pending" | "approved" | "changes_requested";
+  status: "pending" | "approved" | "changes_requested" | "backup" | "rejected";
   decisionNote: string | null;
   decidedAt: string | null;
   decidedByName: string | null;
+  /** Mini ficha (decisión 51): edad, talla, habilidad... según config/ficha-casting.json. */
+  profile: Record<string, string>;
 };
 
 /** Elementos que el cliente aprueba, con enlace firmado de corta duración para la foto. */
 export async function fetchApprovals(client: SupabaseClient, eventId: string): Promise<Approval[]> {
   const { data, error } = await client
     .from("event_approvals")
-    .select("id, group_key, code, name, detail, file_path, version, status, decision_note, decided_at, decider:profiles!event_approvals_decided_by_fkey (full_name)")
+    .select("id, group_key, code, name, detail, file_path, version, status, decision_note, decided_at, profile, decider:profiles!event_approvals_decided_by_fkey (full_name)")
     .eq("event_id", eventId)
     .is("removed_at", null)
     .order("code", { ascending: true });
@@ -704,7 +706,13 @@ export async function fetchApprovals(client: SupabaseClient, eventId: string): P
     decisionNote: (r.decision_note as string | null) ?? null,
     decidedAt: (r.decided_at as string | null) ?? null,
     decidedByName: (first(r.decider) as { full_name: string | null } | null)?.full_name ?? null,
+    profile: cleanProfile(r.profile),
   }));
+}
+
+function cleanProfile(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  return Object.fromEntries(Object.entries(raw as Record<string, unknown>).filter(([, v]) => v !== null && v !== "").map(([k, v]) => [k, String(v)]));
 }
 
 /** Grupos que este evento pide aprobar antes de empezar. */
@@ -738,6 +746,7 @@ export type CrewPerson = {
   docExpiresOn: string | null;
   docUrl: string | null;
   phone: string | null;
+  docType: string | null;
 };
 
 /** Personal del evento y, para los niveles 1 y 2, toda la base de personas de la organización. */
@@ -763,6 +772,7 @@ export async function fetchPeopleBoard(client: SupabaseClient, eventId: string):
     docExpiresOn: (r.doc_expires_on as string | null) ?? null,
     docUrl: r.doc_path ? (urls.get(r.doc_path as string) ?? null) : null,
     phone: (r.phone as string | null) ?? null,
+    docType: (r.doc_type as string | null) ?? null,
   }));
 }
 
@@ -930,4 +940,23 @@ export async function fetchClientNotices(client: SupabaseClient, eventId: string
 export async function fetchPlanningDeadline(client: SupabaseClient, eventId: string): Promise<number> {
   const { data } = await client.from("events").select("planning_deadline_hours").eq("id", eventId).maybeSingle();
   return Number(data?.planning_deadline_hours ?? 5);
+}
+
+
+// ---- Catálogo de cargos (decisión 53) ----
+
+export type CatalogRole = { id: string; name: string; status: "pending" | "approved" | "rejected"; proposedByName: string | null };
+
+/** Cargos que la organización sumó al catálogo: los aprobados y los que esperan al backend. */
+export async function fetchRoleCatalog(client: SupabaseClient, organizationId: string): Promise<CatalogRole[]> {
+  const { data, error } = await client
+    .from("role_catalog")
+    .select("id, name, status, proposer:profiles!role_catalog_proposed_by_fkey (full_name)")
+    .eq("organization_id", organizationId)
+    .order("name", { ascending: true });
+  if (error) throw new Error(`No se pudo leer el catálogo de cargos: ${error.message}`);
+  return (data ?? []).map((r) => {
+    const p = (Array.isArray(r.proposer) ? r.proposer[0] : r.proposer) as { full_name: string | null } | null;
+    return { id: r.id as string, name: r.name as string, status: r.status as CatalogRole["status"], proposedByName: p?.full_name ?? null };
+  });
 }

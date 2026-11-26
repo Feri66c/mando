@@ -1,14 +1,76 @@
 {
   "_nota": "Los 5 elementos de la planificación (decisión 30). Con los cinco completos se desbloquea el timeline. Los nombres y textos se cambian aquí.",
   "elementos": [
-    { "clave": "legal", "nombre": "Legal", "descripcion": "Lo que echa a andar el evento: permisos, contratos, seguros y la identidad del equipo.", "ruta": "expediente" },
-    { "clave": "personal", "nombre": "Personal", "descripcion": "La gente del evento: anfitrionas, host, técnicos, transporte.", "ruta": "personal" },
-    { "clave": "tecnico", "nombre": "Técnico", "descripcion": "Escenario, luces, sonido y micrófonos, con su checklist.", "ruta": "tecnico" },
-    { "clave": "presupuesto", "nombre": "Presupuesto", "descripcion": "El monto aprobado por el cliente.", "ruta": "presupuesto" },
-    { "clave": "aprobaciones", "nombre": "Aprobaciones del cliente", "descripcion": "Casting, uniforme, utilería y referencias.", "ruta": "aprobaciones" }
+    {
+      "clave": "legal",
+      "nombre": "Legal",
+      "descripcion": "Lo que echa a andar el evento: permisos, contratos, seguros y la identidad del equipo.",
+      "ruta": "expediente"
+    },
+    {
+      "clave": "personal",
+      "nombre": "Personal",
+      "descripcion": "La gente del evento: anfitrionas, host, técnicos, transporte.",
+      "ruta": "personal"
+    },
+    {
+      "clave": "tecnico",
+      "nombre": "Técnico",
+      "descripcion": "Escenario, luces, sonido y micrófonos, con su checklist.",
+      "ruta": "tecnico"
+    },
+    {
+      "clave": "presupuesto",
+      "nombre": "Presupuesto",
+      "descripcion": "El monto aprobado por el cliente.",
+      "ruta": "presupuesto"
+    },
+    {
+      "clave": "aprobaciones",
+      "nombre": "Aprobaciones del cliente",
+      "descripcion": "Casting, uniforme, utilería y referencias.",
+      "ruta": "aprobaciones"
+    }
   ],
   "roles_sugeridos": [
-    "Coordinador de campo", "Anfitriona", "Promotora", "Modelo", "Host", "Invitado", "Director de foto", "Coproductor",
-    "Sonidista", "Luminotécnico", "Camarógrafo", "Montajista", "Conductor de transporte", "Seguridad"
-  ]
+    "Aguatero",
+    "Anfitriona",
+    "Animador",
+    "Asistente de producción",
+    "Camarógrafo",
+    "Catering",
+    "Conductor de transporte",
+    "Coordinador de campo",
+    "Coproductor",
+    "Director de arte",
+    "Director de foto",
+    "Director de sonido",
+    "DJ",
+    "Editor",
+    "Electricista",
+    "Fotógrafo",
+    "Host",
+    "Invitado",
+    "Locutor",
+    "Luminotécnico",
+    "Maquillador",
+    "Modelo",
+    "Montajista",
+    "Operador de pantallas",
+    "Personaje",
+    "Prevencionista de riesgos",
+    "Primer asistente",
+    "Productor de campo",
+    "Productor ejecutivo",
+    "Productor general",
+    "Promotora",
+    "Segundo asistente",
+    "Seguridad",
+    "Sonidista",
+    "Supervisor",
+    "Utilero",
+    "Vestuarista",
+    "Videoregistro"
+  ],
+  "_nota_roles": "Cargos base, en orden alfabético (decisión 53). Los que proponen las productoras y aprueba el backend viven en la tabla role_catalog."
 }

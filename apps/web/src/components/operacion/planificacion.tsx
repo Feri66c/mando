@@ -13,7 +13,9 @@ import {
   setTechItemAction,
 } from "@/app/actions/planificacion";
 import { MAX_EVIDENCE_BYTES, personFilePath } from "@mando/core/evidence";
+import { DOC_TYPES, cleanDocNumber, docType } from "@mando/core/casting";
 import { getBrowserClient } from "@/lib/supabase/browser";
+import { NextSteps, SelectWithAdd } from "./mando";
 import { buttonGhost, buttonPrimary, buttonSecondary, inputClass } from "./ui";
 
 const INITIAL: CierreState = { ok: false, error: null };
@@ -53,79 +55,130 @@ async function uploadPersonFile(organizationId: string, kind: "foto" | "dni", fi
   return path;
 }
 
-export type PersonValues = { id: string; fullName: string; docNumber: string; docExpiresOn: string; phone: string; role: string };
+export type PersonValues = { id: string; fullName: string; docType: string; docNumber: string; docExpiresOn: string; phone: string; role: string };
 
-/** Ficha de una persona: nombre, rol, DNI con su vigencia, foto y copia del DNI. Sirve para registrar y para corregir. */
+/**
+ * Ficha de una persona: nombre, cargo, documento con su vigencia, foto y copia del documento.
+ * Sirve para registrar y para corregir. Al registrar no vuelve a cero: ofrece «Siguiente» y a dónde ir.
+ */
 export function PersonForm({ eventId, organizationId, roles, person }: { eventId: string; organizationId: string; roles: readonly string[]; person?: PersonValues }) {
   const photoRef = useRef<HTMLInputElement>(null);
   const docRef = useRef<HTMLInputElement>(null);
-  const formRef = useRef<HTMLFormElement>(null);
   const [state, setState] = useState<Working>(INITIAL);
+  const [round, setRound] = useState(0);
+  const [type, setType] = useState(docType(person?.docType).clave);
+  const [number, setNumber] = useState(person?.docNumber ?? "");
   const busy = Boolean(state.working);
   const uid = person?.id ?? "nueva";
+  const doc = docType(type);
+  const short = number.length > 0 && number.length < doc.largo_min;
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     try {
       const photo = photoRef.current?.files?.[0];
-      const doc = docRef.current?.files?.[0];
-      if (photo || doc) setState({ ...INITIAL, working: "Subiendo…" });
+      const copy = docRef.current?.files?.[0];
+      if (photo || copy) setState({ ...INITIAL, working: "Subiendo…" });
       const photoPath = photo ? await uploadPersonFile(organizationId, "foto", photo) : null;
-      const docPath = doc ? await uploadPersonFile(organizationId, "dni", doc) : null;
+      const docPath = copy ? await uploadPersonFile(organizationId, "dni", copy) : null;
       setState({ ...INITIAL, working: "Guardando…" });
-      const result = await savePersonAction({
-        eventId,
-        personId: person?.id ?? null,
-        fullName: String(fd.get("nombre") ?? ""),
-        docNumber: String(fd.get("dni") ?? ""),
-        docExpiresOn: String(fd.get("vence") ?? ""),
-        phone: String(fd.get("telefono") ?? ""),
-        role: String(fd.get("rol") ?? ""),
-        photoPath,
-        docPath,
-        assign: !person,
-      });
-      setState(result);
-      if (result.ok && !person) formRef.current?.reset();
+      setState(
+        await savePersonAction({
+          eventId,
+          personId: person?.id ?? null,
+          fullName: String(fd.get("nombre") ?? ""),
+          docType: type,
+          docNumber: number,
+          docExpiresOn: String(fd.get("vence") ?? ""),
+          phone: String(fd.get("telefono") ?? ""),
+          role: String(fd.get("rol") ?? ""),
+          photoPath,
+          docPath,
+          assign: !person,
+          proposeRole: fd.get("rol_nuevo") === "si",
+        }),
+      );
     } catch (err) {
       setState({ ok: false, error: err instanceof Error ? err.message : "No se pudo guardar." });
     }
   }
 
+  function next() {
+    setState(INITIAL);
+    setNumber("");
+    setRound((r) => r + 1);
+  }
+
+  if (!person && state.ok && state.message)
+    return <NextSteps eventId={eventId} message={state.message} nextLabel="Siguiente persona" onNext={next} current="personal" />;
+
   const fileClass = "mt-1.5 block w-full text-sm text-ink-muted file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-surface-200 file:px-4 file:text-sm file:font-semibold file:text-ink";
   return (
-    <form ref={formRef} onSubmit={submit} className="grid gap-3">
+    <form key={round} onSubmit={submit} className="grid gap-3">
       <div>
         <label htmlFor={`p-nombre-${uid}`} className="block text-sm font-medium">
           Nombre completo
         </label>
-        <input id={`p-nombre-${uid}`} name="nombre" required maxLength={120} defaultValue={person?.fullName} autoComplete="off" className={`${inputClass} mt-1.5`} />
+        <input id={`p-nombre-${uid}`} name="nombre" required maxLength={120} defaultValue={person?.fullName} autoComplete="off" autoFocus={!person && round > 0} className={`${inputClass} mt-1.5`} />
       </div>
       <div>
         <label htmlFor={`p-rol-${uid}`} className="block text-sm font-medium">
-          Qué hace
+          Cargo
         </label>
-        <input id={`p-rol-${uid}`} name="rol" list="roles-sugeridos" maxLength={60} defaultValue={person?.role} placeholder="Anfitriona, host, sonidista…" className={`${inputClass} mt-1.5`} />
-        <datalist id="roles-sugeridos">
-          {roles.map((r) => (
-            <option key={r} value={r} />
-          ))}
-        </datalist>
+        <div className="mt-1.5">
+          <SelectWithAdd id={`p-rol-${uid}`} name="rol" options={roles} defaultValue={person?.role ?? ""} placeholder="Elige el cargo" addLabel="Agregar otro cargo" required={!person} ariaLabel="Cargo" />
+        </div>
+        <p className="mt-1 text-xs text-ink-muted">Si no está en la lista, agrégalo. El backend lo aprueba y queda para todos.</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label htmlFor={`p-dni-${uid}`} className="block text-sm font-medium">
-            DNI
+          <label htmlFor={`p-tipo-${uid}`} className="block text-sm font-medium">
+            Documento
           </label>
-          <input id={`p-dni-${uid}`} name="dni" inputMode="numeric" maxLength={15} defaultValue={person?.docNumber} className={`${inputClass} mt-1.5 font-mono`} />
+          <select
+            id={`p-tipo-${uid}`}
+            value={type}
+            onChange={(e) => {
+              setType(e.target.value);
+              setNumber(cleanDocNumber(e.target.value, number));
+            }}
+            className={`${inputClass} mt-1.5`}
+          >
+            {DOC_TYPES.map((d) => (
+              <option key={d.clave} value={d.clave}>
+                {d.nombre}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
-          <label htmlFor={`p-vence-${uid}`} className="block text-sm font-medium">
-            Vence el
+          <label htmlFor={`p-dni-${uid}`} className="block text-sm font-medium">
+            Número
           </label>
-          <input id={`p-vence-${uid}`} name="vence" type="date" defaultValue={person?.docExpiresOn} className={`${inputClass} mt-1.5 font-mono`} />
+          <input
+            id={`p-dni-${uid}`}
+            name="dni"
+            value={number}
+            onChange={(e) => setNumber(cleanDocNumber(type, e.target.value))}
+            inputMode={doc.solo_numeros ? "numeric" : "text"}
+            autoCapitalize="characters"
+            autoComplete="off"
+            maxLength={doc.largo_max}
+            aria-describedby={`p-dni-ayuda-${uid}`}
+            aria-invalid={short}
+            className={`${inputClass} mt-1.5 font-mono ${short ? "border-[#ff6f86]" : ""}`}
+          />
         </div>
+        <p id={`p-dni-ayuda-${uid}`} className={`col-span-2 -mt-1.5 font-mono text-xs ${short ? "text-[#ff6f86]" : "text-ink-muted"}`}>
+          {doc.ayuda} · {number.length} de {doc.largo_max}
+        </p>
+      </div>
+      <div>
+        <label htmlFor={`p-vence-${uid}`} className="block text-sm font-medium">
+          Vence el
+        </label>
+        <input id={`p-vence-${uid}`} name="vence" type="date" defaultValue={person?.docExpiresOn} className={`${inputClass} mt-1.5 font-mono`} />
       </div>
       <div>
         <label htmlFor={`p-tel-${uid}`} className="block text-sm font-medium">
@@ -141,11 +194,11 @@ export function PersonForm({ eventId, organizationId, roles, person }: { eventId
       </div>
       <div>
         <label htmlFor={`p-copia-${uid}`} className="block text-sm font-medium">
-          Copia del DNI
+          Copia del {doc.nombre === "DNI" ? "DNI" : doc.nombre.toLowerCase()}
         </label>
         <input ref={docRef} id={`p-copia-${uid}`} type="file" accept="image/*,application/pdf" className={fileClass} />
       </div>
-      <button type="submit" disabled={busy} className={`${person ? buttonSecondary : buttonPrimary} justify-self-start`}>
+      <button type="submit" disabled={busy || short} className={`${person ? buttonSecondary : buttonPrimary} justify-self-start`}>
         {busy ? "Guardando…" : person ? "Guardar ficha" : "Registrar y sumar al evento"}
       </button>
       <Feedback state={state} />

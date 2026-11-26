@@ -406,3 +406,115 @@ body.tema-operacion::after {
   0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 214, 10, 0.5)) brightness(1); }
   50% { filter: drop-shadow(0 0 20px rgba(255, 214, 10, 0.9)) brightness(1.08); }
 }
+
+/* ---------------------------------------------------------------------------
+   MANDO vivo (decisión 54): pulso y recorrido neón.
+   Todo el movimiento vive dentro de prefers-reduced-motion: quien lo apaga ve la misma pantalla, quieta.
+   --------------------------------------------------------------------------- */
+
+@property --giro {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Recorrido: una luz que da la vuelta por el filo de cada tarjeta. */
+.tema-operacion .rounded-card:not(.absolute, .fixed, .sticky) { position: relative; }
+.tema-operacion .rounded-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 1.5px;
+  pointer-events: none;
+  --neon: var(--ice-300, #a9cce8);
+  background: conic-gradient(from var(--giro), transparent 0 74%, color-mix(in srgb, var(--neon) 55%, transparent) 86%, var(--neon) 93%, #fff 96%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0;
+}
+.tema-operacion .rounded-card[class*="border-gold"]::before,
+.tema-operacion .rounded-card.neon-activo::before { --neon: var(--gold-300, #e4c65b); }
+.tema-operacion .rounded-card[class*="8fe0b8"]::before { --neon: #8fe0b8; }
+.tema-operacion .rounded-card[class*="ff6f86"]::before { --neon: #ff6f86; }
+
+/* Semáforo del casting: tres luces con nombre. La prendida brilla y late. */
+.luz-boton {
+  display: flex;
+  min-height: 3.5rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1.5px solid var(--line);
+  background: var(--surface-000, #061428);
+  padding: 0.5rem 0.25rem;
+  color: var(--ink-muted, #9fb2cc);
+  --tono: #8fe0b8;
+  transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+}
+.luz-boton[data-color="ambar"] { --tono: #ffc400; }
+.luz-boton[data-color="rojo"] { --tono: #ff4d6d; }
+button.luz-boton { cursor: pointer; }
+button.luz-boton:hover:not(:disabled),
+button.luz-boton:focus-visible { border-color: var(--tono); color: var(--ink, #f7f9fc); outline: none; }
+button.luz-boton:disabled { opacity: 0.6; }
+.luz-boton[data-on] {
+  border-color: var(--tono);
+  background: color-mix(in srgb, var(--tono) 14%, var(--surface-000, #061428));
+  color: var(--ink, #f7f9fc);
+}
+.luz {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 999px;
+  --tono: #8fe0b8;
+  background: color-mix(in srgb, var(--tono) 22%, #0a1830);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--tono) 55%, transparent);
+}
+.luz[data-color="ambar"] { --tono: #ffc400; }
+.luz[data-color="rojo"] { --tono: #ff4d6d; }
+.luz[data-on] {
+  background: radial-gradient(circle at 35% 30%, #fff 0 12%, var(--tono) 45%);
+  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--tono) 75%, transparent);
+}
+
+/* Campo recién abierto con «Agregar otro». */
+.tema-operacion input.neon-activo { border-color: var(--gold-300, #e4c65b); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .tema-operacion .rounded-card::before { opacity: 0.9; animation: recorrido 7s linear infinite; }
+  /* Listas largas: solo las primeras tarjetas llevan recorrido, para no cansar al teléfono. */
+  .tema-operacion li:nth-child(n + 9) > .rounded-card::before,
+  .tema-operacion li.rounded-card:nth-child(n + 9)::before { animation: none; opacity: 0; }
+  .tema-operacion li:nth-child(even) > .rounded-card::before,
+  .tema-operacion li.rounded-card:nth-child(even)::before { animation-delay: -3.5s; }
+  .tema-operacion .rounded-card.neon-activo::before,
+  .tema-operacion .rounded-card:focus-within::before { animation-duration: 3.2s; opacity: 1; }
+
+  .luz[data-on] { animation: latido-luz 1.6s ease-in-out infinite; }
+  .luz-boton[data-on] { animation: latido-filo 1.6s ease-in-out infinite; }
+
+  /* Botón principal: respira. El resto responde al toque. */
+  .tema-operacion :is(a, button).rounded-full[class*="bg-gold"]:not(:disabled) { animation: latido 2.6s ease-in-out infinite; }
+  .tema-operacion :is(a, button).rounded-full { transition: filter 0.15s, transform 0.1s; }
+  .tema-operacion :is(a, button).rounded-full:active:not(:disabled) { transform: scale(0.97); filter: brightness(1.2); }
+  .tema-operacion :is(a, button).rounded-full.border:hover:not(:disabled) { filter: brightness(1.25); }
+  .tema-operacion input.neon-activo { animation: latido-filo 1.6s ease-in-out infinite; --tono: var(--gold-300, #e4c65b); }
+}
+@keyframes recorrido {
+  to { --giro: 360deg; }
+}
+@keyframes latido {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.14) saturate(1.1); }
+}
+@keyframes latido-luz {
+  0%, 100% { box-shadow: 0 0 8px 1px color-mix(in srgb, var(--tono) 60%, transparent); }
+  50% { box-shadow: 0 0 18px 5px color-mix(in srgb, var(--tono) 95%, transparent); }
+}
+@keyframes latido-filo {
+  0%, 100% { box-shadow: inset 0 0 0 0 color-mix(in srgb, var(--tono) 0%, transparent); }
+  50% { box-shadow: inset 0 0 14px 0 color-mix(in srgb, var(--tono) 45%, transparent); }
+}

@@ -209,7 +209,7 @@ export default async function EventTeamPage({
           <Card>
             <InviteForm
               eventId={id}
-              cargos={cargos.map((c) => ({ cargo: c.cargo, nivel: c.nivel, descripcion: c.nivel ? `Nivel ${c.nivel} · ${LEVEL_LABEL[c.nivel]}` : "Solo mira en vivo" }))}
+              cargos={cargos.map((c) => ({ cargo: c.cargo, nivel: c.nivel, descripcion: c.nivel ? (LEVEL_LABEL[c.nivel] === c.cargo ? `Nivel ${c.nivel}` : `Nivel ${c.nivel} · ${LEVEL_LABEL[c.nivel]}`) : "Solo mira en vivo" }))}
             />
           </Card>
           <p className="mt-3 text-sm text-ink-muted">

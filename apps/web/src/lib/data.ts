@@ -7,6 +7,7 @@ import {
   fetchAlerts,
   fetchBudget,
   fetchPeopleBoard,
+  fetchRoleCatalog,
   fetchPlanning,
   fetchTechItems,
   fetchApprovalGroups,
@@ -187,6 +188,15 @@ export const getPlanning = cache(async function getPlanning(eventId: string) {
 
 export async function getPeopleBoard(eventId: string) {
   return fetchPeopleBoard(await requireClient(), eventId);
+}
+
+/** Cargos del catálogo de la organización: aprobados y por aprobar. Vacío si no le toca verlos. */
+export async function getRoleCatalog(organizationId: string) {
+  try {
+    return await fetchRoleCatalog(await requireClient(), organizationId);
+  } catch {
+    return [];
+  }
 }
 
 export async function getTechItems(eventId: string) {

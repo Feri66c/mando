@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { approvalGate, approvalGroupsFor, validateApprovalConfig } from "@mando/core/approvals";
+import { CASTING_VERDICTS, approvalGate, approvalGroupsFor, validateApprovalConfig } from "@mando/core/approvals";
 import { EVENT_TEMPLATES, getTemplate } from "@mando/core/event-types";
 import { withDocuments } from "@mando/core/requirements";
 
@@ -29,5 +29,15 @@ describe("aprobaciones del cliente (config/aprobaciones.json)", () => {
     expect(gate).toEqual({ ready: false, missing: ["Casting: 1 por aprobar", "Utilería: falta subirlo"] });
     expect(approvalGate(["uniforme"], [{ group: "uniforme", status: "approved" }]).ready).toBe(true);
     expect(approvalGate([], []).ready).toBe(true);
+  });
+
+  it("el casting lleva semáforo: cierra cuando nadie queda por revisar y hay al menos una persona aprobada", () => {
+    const cast = (...status: Parameters<typeof approvalGate>[1][number]["status"][]) => approvalGate(["casting"], status.map((s) => ({ group: "casting", status: s })));
+    expect(cast("approved", "backup", "rejected").ready).toBe(true);
+    expect(cast("approved", "pending").missing).toEqual(["Casting: 1 por aprobar"]);
+    expect(cast("backup", "rejected").missing).toEqual(["Casting: falta al menos una persona aprobada"]);
+    // Fuera del casting, Backup o No admitido no cuentan como aprobado.
+    expect(approvalGate(["uniforme"], [{ group: "uniforme", status: "backup" }]).ready).toBe(false);
+    expect(CASTING_VERDICTS.map((v) => v.nombre)).toEqual(["Aprobado", "Backup", "No admitido"]);
   });
 });

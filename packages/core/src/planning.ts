@@ -8,6 +8,16 @@ export type PlanningElement = { clave: string; nombre: string; descripcion: stri
 export const PLANNING_ELEMENTS: readonly PlanningElement[] = planning.elementos;
 export const SUGGESTED_ROLES: readonly string[] = planning.roles_sugeridos;
 
+/** La lista de cargos que ve la productora: los de base más los que el backend aprobó, en orden alfabético y sin repetidos. */
+export function roleOptions(extra: readonly string[] = []): string[] {
+  const seen = new Map<string, string>();
+  for (const r of [...SUGGESTED_ROLES, ...extra]) {
+    const name = r.trim().replace(/\s+/g, " ");
+    if (name && !seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name);
+  }
+  return [...seen.values()].sort((a, b) => a.localeCompare(b, "es"));
+}
+
 /** Lo que devuelve la base por cada elemento: cuánto va y qué falta. */
 export type ElementStatus = { key: string; ready: boolean; done: number; total: number; missing: string[] };
 

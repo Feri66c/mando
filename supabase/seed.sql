@@ -24,7 +24,7 @@ insert into auth.users (instance_id, id, aud, role, email, encrypted_password, e
    '{"provider":"email","providers":["email"]}', '{"full_name":"Productor de ejemplo"}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a2', 'authenticated', 'authenticated',
    'torre@mando.test', extensions.crypt('MandoPrueba2026', extensions.gen_salt('bf')), now(),
-   '{"provider":"email","providers":["email"]}', '{"full_name":"Torre de control de ejemplo"}', now(), now(), '', '', '', ''),
+   '{"provider":"email","providers":["email"]}', '{"full_name":"Backend de ejemplo"}', now(), now(), '', '', '', ''),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a3', 'authenticated', 'authenticated',
    'cliente@mando.test', extensions.crypt('MandoPrueba2026', extensions.gen_salt('bf')), now(),
    '{"provider":"email","providers":["email"]}', '{"full_name":"Cliente de ejemplo"}', now(), now(), '', '', '', '')
@@ -42,7 +42,7 @@ on conflict do nothing;
 -- Por si los perfiles ya existían (o el trigger no corrió), se aseguran con su nombre.
 insert into profiles (id, full_name) values
   ('00000000-0000-0000-0000-0000000000a1', 'Productor de ejemplo'),
-  ('00000000-0000-0000-0000-0000000000a2', 'Torre de control de ejemplo'),
+  ('00000000-0000-0000-0000-0000000000a2', 'Backend de ejemplo'),
   ('00000000-0000-0000-0000-0000000000a3', 'Cliente de ejemplo')
 on conflict (id) do update set full_name = excluded.full_name;
 
