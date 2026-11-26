@@ -17,6 +17,7 @@ import {
   type ActionState,
   type ChangePreview,
 } from "@/app/actions/operacion";
+import { CHANGE_ORIGINS } from "@mando/core/experience";
 import { COMMITMENT_OUTCOME_LABEL, type CommitmentOutcome } from "@mando/core/labels";
 import { formatShift } from "@mando/core/route";
 import type { MomentTemplate } from "@mando/core/templates";
@@ -214,6 +215,21 @@ export function ChangeForm({
             </div>
           </div>
         )}
+
+        <fieldset>
+          <legend className="mb-1 block text-sm text-ink-muted">¿De dónde viene el cambio?</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {CHANGE_ORIGINS.map((o) => (
+              <label
+                key={o.clave}
+                className="flex min-h-11 cursor-pointer items-center justify-center rounded-full bg-surface-200 px-2 text-center text-[13px] font-semibold leading-tight has-checked:bg-ink has-checked:text-navy-950"
+              >
+                <input type="radio" name="origin" value={o.clave} required className="sr-only" />
+                {o.nombre}
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <label className="block text-sm">
           <span className="mb-1 block text-ink-muted">Motivo (opcional)</span>

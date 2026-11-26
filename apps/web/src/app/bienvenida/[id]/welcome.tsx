@@ -200,7 +200,15 @@ export function Welcome(props: Props) {
                 <span className="bg-surface-200 px-2.5 py-1 font-mono text-xs uppercase tracking-wider">Versión {brief.version}</span>
               </div>
               <p className="mt-3 font-display text-2xl font-semibold leading-tight">{props.eventName}</p>
-              <p className="mt-3 whitespace-pre-line text-lg leading-relaxed">{brief.summary}</p>
+              {brief.synopsis && (
+                <p className="mt-3 border-l-2 border-gold-300 pl-3 text-lg font-medium leading-relaxed">{brief.synopsis}</p>
+              )}
+              <p className={`mt-3 whitespace-pre-line leading-relaxed ${brief.synopsis ? "text-base text-ink-muted" : "text-lg"}`}>{brief.summary}</p>
+              {brief.documentUrl && (
+                <a href={brief.documentUrl} target="_blank" rel="noreferrer" className={`${buttonSecondary} mt-4 w-full`}>
+                  Abrir el documento: {brief.documentName}
+                </a>
+              )}
               <dl className="mt-4 divide-y divide-line text-base">
                 {props.dateText && (
                   <div className="flex gap-4 py-2.5">

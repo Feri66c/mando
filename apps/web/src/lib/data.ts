@@ -42,6 +42,8 @@ import {
   fetchBriefDoubts,
   fetchProfileName,
   fetchRouteItems,
+  fetchRouteVersions,
+  fetchExperience,
   type CurrentUser,
   type MyEvent,
   type RouteItem,
@@ -116,7 +118,7 @@ export async function getMomentDetail(eventId: string, momentId: string) {
 }
 
 /** Evidencias con enlaces firmados de corta duración (los archivos son privados). */
-export async function getEvidences(eventId: string, filter: { routeItemId?: string; momentId?: string } = {}) {
+export async function getEvidences(eventId: string, filter: { routeItemId?: string; momentId?: string; tagged?: boolean } = {}) {
   return fetchEvidences(await requireClient(), eventId, filter);
 }
 
@@ -275,4 +277,17 @@ export async function getEmergencyChanges(eventId: string) {
 
 export async function getAccessList(eventId: string) {
   return fetchAccessList(await requireClient(), eventId);
+}
+
+/** Versiones del minuto a minuto. Quien no ve todo el evento recibe una lista vacía. */
+export async function getRouteVersions(eventId: string) {
+  try {
+    return await fetchRouteVersions(await requireClient(), eventId);
+  } catch {
+    return []; // la base todavía no tiene la tabla: la pantalla sigue funcionando
+  }
+}
+/** Números del evento para People Experience. null si la persona no es de producción. */
+export async function getExperience(eventId: string) {
+  return fetchExperience(await requireClient(), eventId);
 }

@@ -83,6 +83,9 @@ export async function requestChangeAction(_prev: ChangePreview, fd: FormData): P
       p_raw_input: text(fd, "raw_input") || null,
       p_channel: "tap",
     })) as { request_id: string; affected: AffectedItem[] };
+    // De dónde viene el cambio (decisión 65): queda en el pedido y en la versión del minuto a minuto.
+    const origin = text(fd, "origin");
+    if (origin) await rpc("set_change_origin", { p_request: data.request_id, p_origin: origin });
     return { ok: true, error: null, requestId: data.request_id, affected: data.affected };
   } catch (e) {
     return { ok: false, error: friendly(e), ...empty };
@@ -185,6 +188,29 @@ export async function addEvidenceAction(input: {
       p_visible: input.visible ?? true,
     },
     "Evidencia guardada con hora del servidor.",
+  );
+}
+
+/** Momento wow o eventualidad, de un toque (decisión 67). El wow lo ve el cliente; la eventualidad, solo el equipo. */
+export async function markMomentAction(input: {
+  eventId: string;
+  tag: "wow" | "eventualidad";
+  note?: string | null;
+  filePath?: string | null;
+  sha256?: string | null;
+  capturedAt?: string | null;
+}): Promise<ActionState> {
+  return run(
+    "mark_moment",
+    {
+      p_event: input.eventId,
+      p_tag: input.tag,
+      p_note: input.note?.trim() || null,
+      p_file_path: input.filePath ?? null,
+      p_sha256: input.sha256 ?? null,
+      p_captured_at: input.capturedAt ?? null,
+    },
+    input.tag === "wow" ? "Momento wow guardado. Ya lo ve el cliente." : "Eventualidad anotada. Queda para el cierre.",
   );
 }
 

@@ -1,0 +1,26 @@
+{
+  "_nota": "People Experience (decisiones 65 a 69). Cómo se arma el índice de 0 a 100 del cierre. Cada factor pesa lo que dice «peso»; si un factor no tiene datos, no cuenta y su peso se reparte entre los demás. Todo se ajusta aquí, sin tocar código.",
+  "tolerancia_minutos": 10,
+  "factores": [
+    { "clave": "puntualidad", "nombre": "Puntualidad", "peso": 30, "detalle": "Actividades que empezaron a su hora, con la tolerancia indicada." },
+    { "clave": "cumplimiento", "nombre": "Cumplimiento", "peso": 20, "detalle": "Actividades de la hoja de ruta que se terminaron." },
+    { "clave": "estabilidad", "nombre": "Estabilidad del plan", "peso": 15, "detalle": "Cuánto se movió el minuto a minuto. Un cambio pedido por el cliente pesa menos que uno de producción." },
+    { "clave": "anticipacion", "nombre": "Anticipación", "peso": 10, "detalle": "Cambios de emergencia. Mientras más cerca de la hora del evento, más pesan." },
+    { "clave": "respuesta", "nombre": "Respuesta a las alertas", "peso": 10, "detalle": "Alertas que quedaron resueltas." },
+    { "clave": "cliente", "nombre": "Satisfacción del cliente", "peso": 15, "detalle": "Estrellas que dejó el cliente en su ficha de satisfacción." }
+  ],
+  "peso_de_cada_cambio": { "cliente": 0.25, "produccion": 1, "eventualidad": 0.5, "sin_clasificar": 0.75 },
+  "peso_de_cada_emergencia": { "con_tiempo": 0, "48h": 0.3, "24h": 0.6, "ultimo_minuto": 1 },
+  "tope_de_emergencias": 3,
+  "origenes": [
+    { "clave": "cliente", "nombre": "Pedido del cliente" },
+    { "clave": "produccion", "nombre": "Producción" },
+    { "clave": "eventualidad", "nombre": "Eventualidad" }
+  ],
+  "lecturas": [
+    { "desde": 85, "nombre": "Experiencia sobresaliente" },
+    { "desde": 70, "nombre": "Buena experiencia" },
+    { "desde": 50, "nombre": "Experiencia con tropiezos" },
+    { "desde": 0, "nombre": "Experiencia por mejorar" }
+  ]
+}
