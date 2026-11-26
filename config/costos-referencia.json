@@ -1,0 +1,16 @@
+{
+  "_nota": "Costos mínimos de referencia por unidad, en soles (decisión 33). MANDO avisa cuando una partida del presupuesto está por debajo. Son valores iniciales de ejemplo: el productor general debe ajustarlos a su mercado.",
+  "moneda": "PEN",
+  "conceptos": [
+    { "clave": "viaje-urbano", "nombre": "Viaje urbano (taxi o movilidad)", "unidad": "viaje", "minimo": 20 },
+    { "clave": "flete", "nombre": "Flete o camioneta de carga", "unidad": "viaje", "minimo": 150 },
+    { "clave": "anfitriona", "nombre": "Anfitriona o promotora", "unidad": "jornada", "minimo": 120 },
+    { "clave": "modelo", "nombre": "Modelo", "unidad": "jornada", "minimo": 250 },
+    { "clave": "coordinador", "nombre": "Coordinador de campo", "unidad": "jornada", "minimo": 180 },
+    { "clave": "montajista", "nombre": "Montajista", "unidad": "jornada", "minimo": 100 },
+    { "clave": "sonido", "nombre": "Equipo de sonido con operador", "unidad": "día", "minimo": 600 },
+    { "clave": "luces", "nombre": "Luces con operador", "unidad": "día", "minimo": 500 },
+    { "clave": "refrigerio", "nombre": "Refrigerio del equipo", "unidad": "persona", "minimo": 15 },
+    { "clave": "caja-chica", "nombre": "Caja chica", "unidad": "evento", "minimo": 200 }
+  ]
+}

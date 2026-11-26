@@ -1,0 +1,337 @@
+@import "tailwindcss";
+/* Fuentes de marca servidas desde la propia app (sin depender de Google Fonts). */
+@import "@fontsource/chakra-petch/latin-500.css";
+@import "@fontsource/chakra-petch/latin-600.css";
+@import "@fontsource/chakra-petch/latin-700.css";
+@import "@fontsource/chakra-petch/latin-ext-600.css";
+@import "@fontsource/chakra-petch/latin-ext-700.css";
+@import "@fontsource/ibm-plex-sans/400.css";
+@import "@fontsource/ibm-plex-sans/500.css";
+@import "@fontsource/ibm-plex-sans/600.css";
+@import "@fontsource/ibm-plex-mono/600.css";
+@import "@fontsource/ibm-plex-mono/400.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+/* Tokens de marca: copia de brand/tokens.css del paquete. */
+@import "./tokens.css";
+
+:root {
+  /* Los paquetes de fuentes registran los nombres "… Variable". */
+  /* Lenguaje de mando (decisión 38): Chakra Petch en títulos y botones, IBM Plex Sans en texto. */
+  --font-display: "Chakra Petch", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", "Consolas", monospace;
+}
+
+@theme inline {
+  --color-navy-950: var(--navy-950);
+  --color-navy-800: var(--navy-800);
+  --color-navy-600: var(--navy-600);
+  --color-gold-500: var(--gold-500);
+  --color-gold-300: var(--gold-300);
+  --color-ice-500: var(--ice-500);
+  --color-ice-300: var(--ice-300);
+  --color-ice-100: var(--ice-100);
+  --color-surface-000: var(--surface-000);
+  --color-surface-100: var(--surface-100);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-inverse: var(--ink-inverse);
+  --color-line: var(--line);
+  --color-line-dark: var(--line-dark);
+  --color-ok: var(--ok);
+  --color-critical: var(--critical);
+  --color-record: var(--record);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  --radius-card: var(--radius-md);
+  --radius-chip: var(--radius-sm);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--surface-000);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Tema oscuro de operación (prompt maestro, sección 5). Se activa con la clase
+   .tema-operacion en las pantallas del evento. Redefine los mismos tokens, así que
+   las clases de Tailwind (bg-surface-100, text-ink, border-line...) cambian solas.
+   Contrastes verificados: texto #f7f9fc y #b9d3ea sobre #061428 y #0d2443 superan AA.
+   --------------------------------------------------------------------------- */
+.tema-operacion {
+  --surface-000: #061428;   /* fondo: navy-950 */
+  --surface-100: #0c1f3d;   /* tarjetas */
+  --surface-200: #16335f;   /* botones secundarios, hexágonos */
+  --surface-300: #12294f;   /* tarjeta destacada */
+  --ink: #f7f9fc;
+  --ink-muted: #c3d3e6;
+  --line: #2a4873;
+  --gold-500: #e4c65b;      /* sobre navy el oro es uno solo */
+  --radius-md: 0px;         /* las tarjetas no se redondean: se cortan */
+  --radius-sm: 0px;
+  --corte: 14px;
+  background: var(--surface-000);
+  color: var(--ink);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-surface-200: var(--surface-200, #e3eef7);
+  --color-surface-300: var(--surface-300, #eef3f9);
+}
+
+/* Barra inferior flotante y botón «+»: respetan la zona segura del iPhone. */
+.barra-inferior {
+  bottom: max(12px, env(safe-area-inset-bottom));
+}
+.boton-mas {
+  bottom: calc(env(safe-area-inset-bottom) + 88px);
+}
+
+/* Bienvenida: entrada de cada paso, golpe de la cuenta regresiva y barra de luz que se llena. */
+@keyframes entrada {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes golpe {
+  0% { opacity: 0; transform: scale(1.6); }
+  25% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0.85; transform: scale(0.96); }
+}
+@keyframes barra {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Informe de cierre en papel o PDF: fondo blanco, sin barras ni botones. */
+.solo-imprimir {
+  display: none;
+}
+@media print {
+  .tema-operacion {
+    --surface-000: #ffffff;
+    --surface-100: #f3f6fa;
+    --surface-200: #dfe7f0;
+    --ink: #061428;
+    --ink-muted: #46586f;
+    --line: #c9d5e3;
+    color-scheme: light;
+    padding-bottom: 0 !important;
+  }
+  .tema-operacion nav,
+  .tema-operacion header a,
+  .tema-operacion header [aria-live],
+  .boton-mas,
+  .no-imprimir {
+    display: none !important;
+  }
+  .solo-imprimir {
+    display: block;
+  }
+  .informe li,
+  .informe section,
+  .informe dl > div {
+    break-inside: avoid;
+  }
+  .informe * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Control grande de tiempos (decisión 34): pista gruesa y un mando que se agarra con el pulgar. */
+.mando-dial {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 44px;
+  background: transparent;
+  touch-action: pan-y;
+}
+.mando-dial::-webkit-slider-runnable-track {
+  height: 14px;
+  border-radius: 0;
+  background: color-mix(in srgb, var(--gold-300) 22%, transparent);
+}
+.mando-dial::-moz-range-track {
+  height: 14px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--gold-300) 22%, transparent);
+}
+.mando-dial::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 52px;
+  height: 46px;
+  margin-top: -16px;
+  border-radius: 0;
+  background: var(--gold-300);
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+.mando-dial::-moz-range-thumb {
+  width: 38px;
+  height: 38px;
+  border-radius: 0;
+  border: 0;
+  background: var(--gold-300);
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+.mando-dial:disabled {
+  opacity: 0.5;
+}
+
+
+/* ---------------------------------------------------------------------------
+   Lenguaje de mando (decisión 38). Cuatro piezas: corte, encastre, tramo y botón.
+   Las reglas viven aquí para que todas las pantallas cambien juntas.
+   --------------------------------------------------------------------------- */
+body.tema-operacion {
+  position: relative;
+}
+/* Panel inclinado detrás de la cabecera. */
+body.tema-operacion::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 200px;
+  background: #0a1c38;
+  clip-path: polygon(0 0, 100% 0, 100% 58%, 0 100%);
+  z-index: 0;
+  pointer-events: none;
+}
+body.tema-operacion > * {
+  position: relative;
+  z-index: 1;
+}
+.tema-operacion .tema-operacion {
+  background: transparent;
+}
+
+/* Corte: dos esquinas cortadas en toda tarjeta. */
+.corte,
+.tema-operacion .rounded-card {
+  border-radius: 0;
+  clip-path: polygon(var(--corte) 0, 100% 0, 100% calc(100% - var(--corte)), calc(100% - var(--corte)) 100%, 0 100%, 0 var(--corte));
+}
+/* El borde también se corta: se dibuja la diagonal en las dos esquinas. */
+.tema-operacion .rounded-card[class*="border"] {
+  --filo: var(--line);
+  background-image:
+    linear-gradient(135deg, var(--filo) calc(var(--corte) * 0.7071 + 1.5px), transparent 0),
+    linear-gradient(315deg, var(--filo) calc(var(--corte) * 0.7071 + 1.5px), transparent 0);
+}
+.tema-operacion .rounded-card[class*="border-gold"] { --filo: color-mix(in srgb, var(--gold-300) 60%, transparent); }
+.tema-operacion .rounded-card[class*="ff8f7a"] { --filo: color-mix(in srgb, #ff8f7a 60%, transparent); }
+.tema-operacion .rounded-card.border-dashed { background-image: none; }
+
+/* Botones y enlaces con forma de botón: corte chico, letra de mando. */
+.tema-operacion :is(a, button, summary).rounded-full,
+.tema-operacion :is(a, button).rounded-chip {
+  --corte: 10px;
+  border-radius: 0;
+  clip-path: polygon(var(--corte) 0, 100% 0, 100% calc(100% - var(--corte)), calc(100% - var(--corte)) 100%, 0 100%, 0 var(--corte));
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+.tema-operacion :is(a, button).rounded-full[class*="bg-gold"] {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+/* Lo que está cortado dibuja el foco hacia adentro, para que no se pierda. */
+.tema-operacion :is(a, button, summary).rounded-full:focus-visible,
+.tema-operacion a.rounded-card:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+}
+
+/* Campos rectos, con línea firme. */
+.tema-operacion :is(input, textarea, select)[class*="rounded-"] {
+  border-radius: 0;
+  border-width: 2px;
+}
+
+/* Etiquetas: rectas y en mono. Los puntos de estado son rombos. Los números van en hexágono. */
+.tema-operacion span.rounded-full[class*="px-"] {
+  border-radius: 0;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+  padding-inline: 0.8rem;
+}
+.tema-operacion span.rounded-full[class*="size-2"] {
+  border-radius: 0;
+  transform: rotate(45deg);
+}
+.hexagono,
+.tema-operacion span.rounded-full[class*="size-1"] {
+  border-radius: 0;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+/* Tramo: el avance se cuenta en tramos inclinados. */
+.tramo {
+  flex: 1;
+  height: 12px;
+  clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
+  background: #1b3766;
+}
+.tramo[data-estado="hecho"] { background: #6fa3cc; }
+.tramo[data-estado="ahora"] { background: var(--gold-300); }
+
+/* Encastre: cada actividad calza en la siguiente. */
+.encastre-marco {
+  padding: 2px;
+  background: var(--gold-300);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), 98px calc(100% - 14px), 88px 100%, 52px 100%, 42px calc(100% - 14px), 0 calc(100% - 14px), 0 14px);
+}
+.encastre-pieza {
+  background: var(--surface-300);
+  padding: 14px 16px 28px;
+  clip-path: polygon(13px 0, 100% 0, 100% calc(100% - 14px), 97px calc(100% - 14px), 87px 100%, 49px 100%, 39px calc(100% - 14px), 0 calc(100% - 14px), 0 13px);
+}
+.encastre-recibe {
+  margin-top: -10px;
+  background: var(--surface-100);
+  padding: 24px 16px 16px;
+  clip-path: polygon(0 0, 38px 0, 49px 15px, 91px 15px, 102px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%);
+}
+
+/* Barra inferior: una sola pieza con las esquinas de arriba cortadas. */
+.barra-mando {
+  clip-path: polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%, 0 20px);
+}
+.etiqueta-mando {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* Nada redondeado: lo que parece botón se corta, lo demás queda recto. */
+.tema-operacion [class*="rounded-xl"],
+.tema-operacion [class*="rounded-2xl"],
+.tema-operacion [class*="rounded-3xl"],
+.tema-operacion [class*="rounded-lg"],
+.tema-operacion [class*="rounded-md"] {
+  border-radius: 0;
+}
+.tema-operacion :is(label, span, div).rounded-full[class*="min-h-"] {
+  --corte: 10px;
+  border-radius: 0;
+  clip-path: polygon(var(--corte) 0, 100% 0, 100% calc(100% - var(--corte)), calc(100% - var(--corte)) 100%, 0 100%, 0 var(--corte));
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}

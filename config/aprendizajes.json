@@ -1,0 +1,14 @@
+{
+  "_nota": "Encuesta de cierre (decisión 36). El equipo deja hasta `cantidad` aprendizajes y una respuesta libre; el cliente deja su ficha de satisfacción.",
+  "cantidad": 6,
+  "pregunta_final": "¿Algo más que agregar?",
+  "ayudas": [
+    "Lo que mejor funcionó",
+    "Lo que haría distinto",
+    "Lo que faltó prever",
+    "Un proveedor o persona que destacar",
+    "Algo que el cliente valoró",
+    "Lo que me llevo para el próximo evento"
+  ],
+  "pregunta_cliente": "¿Qué impresión te deja este evento?"
+}

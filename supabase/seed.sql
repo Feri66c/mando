@@ -59,10 +59,11 @@ insert into events (id, organization_id, name, event_type, client_name, venue_na
    'America/Lima', '2026-12-12 08:00-05', '2026-12-13 01:00-05', 'planned',
    '00000000-0000-0000-0000-0000000000a2');
 
-insert into event_members (event_id, profile_id, role, title) values
-  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a1', 'producer', 'Productor general'),
-  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a2', 'backend',  'Torre de control'),
-  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a3', 'viewer',   'Cliente');
+-- Los tres usuarios de ejemplo ya vieron la bienvenida (welcomed_at): entran directo al evento.
+insert into event_members (event_id, profile_id, role, title, level, welcomed_at) values
+  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a1', 'producer', 'Productor de campo', 2, now()),
+  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a2', 'backend',  'Productor general', 1, now()),
+  ('00000000-0000-0000-0000-0000000000e1', '00000000-0000-0000-0000-0000000000a3', 'viewer',   'Cliente', null, now());
 
 insert into areas (id, event_id, name, sort_order) values
   ('00000000-0000-0000-0000-0000000000b1', '00000000-0000-0000-0000-0000000000e1', 'Montaje', 1),
@@ -195,8 +196,10 @@ update events set criticality_config = $crit${
     {
       "clave": "compromiso_no_coincide",
       "nivel": 3,
-      "cuando": "En un momento crítico, lo encontrado no coincide con lo prometido.",
-      "parametros": {}
+      "cuando": "En un momento crítico, lo encontrado no coincide con lo prometido. Si es parcial, usa `nivel_parcial`.",
+      "parametros": {
+        "nivel_parcial": 2
+      }
     },
     {
       "clave": "hito_comprometido",
@@ -227,7 +230,53 @@ update events set criticality_config = $crit${
       "parametros": {
         "minutos": 30
       }
+    },
+    {
+      "clave": "documento_por_vencer",
+      "nivel": 2,
+      "cuando": "A un documento pendiente del expediente le faltan `dias_antes` días o menos para su plazo.",
+      "parametros": {
+        "dias_antes": 2
+      }
+    },
+    {
+      "clave": "documento_vencido",
+      "nivel": 3,
+      "cuando": "Un documento pendiente del expediente ya pasó su plazo.",
+      "parametros": {}
+    },
+    {
+      "clave": "documento_no_negociable_vencido",
+      "nivel": 4,
+      "cuando": "Un documento no negociable sigue pendiente después de su plazo y el evento ya llegó a su hora clave.",
+      "parametros": {}
     }
   ]
 }$crit$::jsonb
 where id = '00000000-0000-0000-0000-0000000000e1';
+
+-- No negociables e hitos estrella del evento de ejemplo (en un evento nuevo salen de la plantilla del tipo).
+insert into event_criteria (event_id, kind, title, sort_order) values
+  ('00000000-0000-0000-0000-0000000000e1', 'no_negociable', 'Energía de respaldo para sonido y luces', 1),
+  ('00000000-0000-0000-0000-0000000000e1', 'no_negociable', 'Capacidad del local respetada', 2),
+  ('00000000-0000-0000-0000-0000000000e1', 'no_negociable', 'Hora de apertura de puertas', 3),
+  ('00000000-0000-0000-0000-0000000000e1', 'hito_estrella', 'Entrada del show en el segundo exacto', 1),
+  ('00000000-0000-0000-0000-0000000000e1', 'hito_estrella', 'Momento de impacto registrado en video', 2),
+  ('00000000-0000-0000-0000-0000000000e1', 'hito_estrella', 'Valoración alta de técnicos y proveedores', 3)
+on conflict do nothing;
+
+-- Expediente del evento de ejemplo (en un evento nuevo sale de config/expediente.json según su tipo).
+insert into event_requirements (event_id, key, category, title, mandatory, due_at, sort_order)
+select '00000000-0000-0000-0000-0000000000e1', v.key, v.category, v.title, v.mandatory,
+       (select starts_at from events where id = '00000000-0000-0000-0000-0000000000e1') + make_interval(days => v.days), v.n
+from (values
+  ('sctr', 'seguridad', 'SCTR o seguro de vida del equipo', true, -3, 1),
+  ('epp', 'seguridad', 'EPP: equipos de protección personal', true, -3, 2),
+  ('carta-locacion', 'permisos', 'Carta o autorización de la locación', true, -3, 3),
+  ('contratos', 'proveedores', 'Contratos con proveedores', false, -5, 4),
+  ('plano', 'logistica', 'Plano de la locación', false, -3, 5),
+  ('facturas', 'administracion', 'Facturas (PDF y XML de SUNAT)', false, 2, 6),
+  ('cobranza', 'administracion', 'Documento de cobranza (conformidad del servicio)', false, 3, 7),
+  ('informe-eventualidades', 'eventualidades', 'Informe de eventualidades con fotos', false, 1, 8)
+) as v(key, category, title, mandatory, days, n)
+on conflict do nothing;

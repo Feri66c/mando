@@ -1,0 +1,17 @@
+{
+  "_nota": "Elementos base que el cliente aprueba antes de empezar (decisiones 28 y 29). Cada tipo de evento trae sus grupos; la productora puede prender o apagar grupos según el brief. Mientras haya algo sin aprobar, las piezas clave no se pueden marcar como empezadas.",
+  "grupos": [
+    { "clave": "casting", "nombre": "Casting", "prefijo": "C", "descripcion": "Modelos, anfitrionas, promotores y hosts." },
+    { "clave": "uniforme", "nombre": "Uniforme", "prefijo": "U", "descripcion": "Vestuario y look del equipo." },
+    { "clave": "utileria", "nombre": "Utilería", "prefijo": "T", "descripcion": "Módulos, material, mobiliario y escenografía." },
+    { "clave": "referencias", "nombre": "Referencias visuales", "prefijo": "R", "descripcion": "Cómo debe verse: fotos, renders y moodboard." }
+  ],
+  "por_tipo": {
+    "sampling": ["casting", "uniforme", "utileria"],
+    "centro-comercial": ["casting", "uniforme", "utileria", "referencias"],
+    "fiesta-corporativa": ["casting", "utileria", "referencias"],
+    "feria": ["casting", "uniforme", "utileria", "referencias"],
+    "concierto": ["referencias"],
+    "podcast": ["utileria", "referencias"]
+  }
+}

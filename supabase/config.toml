@@ -9,3 +9,18 @@ sql_paths = ["./seed.sql"]
 [auth]
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000"]
+
+# Ingreso con código de 6 dígitos al correo (decisión 7). Solo entran personas ya invitadas:
+# la cuenta solo se crea si el correo tiene una invitación pendiente.
+[auth.email]
+otp_length = 6
+
+[auth.email.template.magic_link]
+subject = "Tu código para entrar a MANDO"
+content_path = "./supabase/templates/codigo.html"
+
+# La primera vez que entra una persona invitada, Supabase usa la plantilla de «confirmación»:
+# es el mismo correo con el código.
+[auth.email.template.confirmation]
+subject = "Tu código para entrar a MANDO"
+content_path = "./supabase/templates/codigo.html"

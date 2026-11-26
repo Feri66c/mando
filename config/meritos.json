@@ -1,0 +1,46 @@
+{
+  "_nota": "Reglas de méritos del evento (decisión 22). Los pesos suman 100. Un criterio sin datos no cuenta y su peso se reparte entre los demás.",
+  "estrellas_maximas": 5,
+  "criterios": [
+    {
+      "clave": "puntualidad",
+      "nombre": "Puntualidad",
+      "peso": 30,
+      "explicacion": "Piezas que empezaron a la hora publicada. Las piezas clave valen doble.",
+      "tolerancia_min": 10,
+      "peso_pieza_clave": 2
+    },
+    {
+      "clave": "palabra",
+      "nombre": "Prometido = entregado",
+      "peso": 25,
+      "explicacion": "Lo que cada proveedor prometió contra lo que se encontró. Parcial vale la mitad.",
+      "valor_parcial": 0.5
+    },
+    {
+      "clave": "respuesta",
+      "nombre": "Respuesta a incidentes",
+      "peso": 15,
+      "explicacion": "Alertas de nivel Crítico o Red Flag resueltas a tiempo. Resuelta tarde vale la mitad.",
+      "nivel_minimo": 3,
+      "minutos_para_resolver": 30,
+      "valor_tarde": 0.5
+    },
+    {
+      "clave": "wow",
+      "nombre": "Momentos wow",
+      "peso": 15,
+      "explicacion": "Hitos estrella del tipo de evento que se lograron."
+    },
+    {
+      "clave": "valoracion",
+      "nombre": "Valoración de técnicos y proveedores",
+      "peso": 15,
+      "explicacion": "Cómo califica el equipo la producción al cierre."
+    }
+  ],
+  "no_negociables": {
+    "explicacion": "Si falla un no negociable, el evento termina sin estrellas y levanta una Red Flag.",
+    "nivel_alerta": 4
+  }
+}
