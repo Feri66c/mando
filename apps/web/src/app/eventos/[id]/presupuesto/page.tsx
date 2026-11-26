@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BudgetDecision, BudgetForm, BudgetLineForm, RemoveBudgetLine } from "@/components/operacion/planificacion";
+import { BudgetExtraDecision, BudgetExtrasRequest, BudgetExtrasToggle } from "@/components/operacion/ajustes";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
 import { COST_REFERENCES, budgetLinesTotal, budgetWarnings, formatMoney } from "@mando/core/planning";
+import { BUDGET_EXTRA_LABEL } from "@mando/core/data";
 import { formatTime } from "@mando/core/time";
 import { getBudget, getEventContext } from "@/lib/data";
 
@@ -31,6 +33,7 @@ export default async function BudgetPage({ params }: { params: Promise<{ id: str
   const lines = budget?.lines ?? [];
   const warnings = budgetWarnings(lines);
   const linesTotal = budgetLinesTotal(lines);
+  const pendingExtras = (budget?.extras ?? []).filter((x) => x.status === "requested");
 
   return (
     <>
@@ -43,7 +46,7 @@ export default async function BudgetPage({ params }: { params: Promise<{ id: str
         <Empty>{isBackend ? "Todavía no hay presupuesto. Cárgalo abajo." : "El productor general todavía no carga el presupuesto."}</Empty>
       ) : (
         <Card>
-          <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-muted">Monto global</p>
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-muted">{isClient ? "Monto global" : "Presupuesto asignado"}</p>
           <p className="mt-1 font-mono text-3xl font-semibold">{formatMoney(budget.total, budget.currency)}</p>
           <p className={`mt-2 font-mono text-xs font-semibold uppercase tracking-wider ${STATUS[budget.status].color}`}>
             {STATUS[budget.status].label}
@@ -100,6 +103,35 @@ export default async function BudgetPage({ params }: { params: Promise<{ id: str
               )}
             </Card>
           )}
+        </>
+      )}
+
+      {budget && !isClient && !closed && (isBackend || budget.extrasOpen) && (
+        <>
+          <SectionTitle>Adicionales</SectionTitle>
+          <Card>
+            {isBackend ? (
+              <>
+                <p className="mb-3 text-sm text-ink-muted">
+                  {budget.extrasOpen ? "La productora puede solicitar adicionales de personal, técnica o locación." : "Ábrelos si la productora puede pedir más personal, técnica o locación."}
+                </p>
+                <BudgetExtrasToggle eventId={id} open={budget.extrasOpen} />
+                {pendingExtras.length > 0 && (
+                  <ul aria-label="Adicionales solicitados" className="mt-4 divide-y divide-line">
+                    {pendingExtras.map((x) => (
+                      <li key={x.id} className="py-3">
+                        <p className="font-medium">{BUDGET_EXTRA_LABEL[x.kind]}</p>
+                        {x.note && <p className="text-sm text-ink-muted">«{x.note}»</p>}
+                        <BudgetExtraDecision extraId={x.id} label={BUDGET_EXTRA_LABEL[x.kind]} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            ) : (
+              <BudgetExtrasRequest eventId={id} extras={budget.extras} />
+            )}
+          </Card>
         </>
       )}
 

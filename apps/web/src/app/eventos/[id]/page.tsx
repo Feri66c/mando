@@ -6,7 +6,8 @@ import { Empty, SectionTitle, StatusChip, buttonPrimary } from "@/components/ope
 import { PLANNING_ELEMENTS, planningProgress } from "@mando/core/planning";
 import { nowAndNext } from "@mando/core/route";
 import { formatEventRange, formatTime } from "@mando/core/time";
-import { getAlerts, getEventContext, getPlanning, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
+import { Express } from "./express";
+import { getAlerts, getClientNotices, getEventContext, getPlanning, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Hoy" };
 
@@ -30,6 +31,23 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
   const ctx = await getEventContext(id);
   if (!ctx) notFound();
   const { event, criticality, isTeam } = ctx;
+  if (!isTeam) {
+    // El cliente no ve la operación: solo MANDO Express.
+    const [plan, notices] = await Promise.all([getPlanning(id), getClientNotices(id)]);
+    const approvals = plan.elements.find((e) => e.key === "aprobaciones");
+    return (
+      <Express
+        eventId={id}
+        status={event.status}
+        startsAt={event.startsAt}
+        endsAt={event.endsAt}
+        timeZone={event.timezone}
+        elements={plan.elements}
+        approvalsPending={Boolean(approvals && !approvals.ready)}
+        notices={notices}
+      />
+    );
+  }
   const [items, alerts, log, evidences, planning] = await Promise.all([
     getRouteItems(id),
     getAlerts(id),

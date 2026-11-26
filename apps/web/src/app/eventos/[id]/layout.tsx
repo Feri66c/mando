@@ -44,7 +44,7 @@ export default async function EventLayout({ children, params }: { children: Reac
         </div>
       </header>
       <main className="mx-auto max-w-2xl px-5 pt-3">{children}</main>
-      <BottomNav eventId={id} openAlerts={openAlerts} />
+      <BottomNav eventId={id} openAlerts={isTeam ? openAlerts : 0} client={!isTeam} />
       {isTeam && <PlusButton eventId={id} />}
       {isTeam && <ClockRules eventId={id} />}
     </div>

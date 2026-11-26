@@ -7,13 +7,13 @@ export type ItemStatus = "pending" | "in_progress" | "done" | "at_risk" | "moved
 export const ROLE_LABEL: Record<EventRole, string> = {
   viewer: "Cliente",
   producer: "Productor",
-  backend: "Torre de control",
+  backend: "Backend",
 };
 
 export const ROLE_DESCRIPTION: Record<EventRole, string> = {
-  viewer: "Solo lectura: ves la hoja de ruta y la bitácora en vivo.",
+  viewer: "MANDO Express: recibes los avisos de tu evento y apruebas lo que te toca.",
   producer: "Operas el evento: corriges la hoja de ruta y registras evidencias.",
-  backend: "Configuras el evento, las reglas, los proveedores y los reportes.",
+  backend: "Configuras el evento, das instrucciones al productor e informas al cliente.",
 };
 
 /** Estado del evento. Regla 8: el color nunca va solo, siempre con su palabra. */

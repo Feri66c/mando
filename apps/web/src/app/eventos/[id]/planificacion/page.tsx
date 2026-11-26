@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Semaforo } from "@/components/operacion/semaforo";
 import { PageTitle } from "@/components/operacion/ui";
 import { PLANNING_ELEMENTS, planningProgress, planningReady } from "@mando/core/planning";
 import { getEventContext, getPlanning } from "@/lib/data";
@@ -26,10 +27,9 @@ export default async function PlanningPage({ params }: { params: Promise<{ id: s
       <p className="mb-3 mt-1 text-sm text-ink-muted">
         Los 5 elementos del evento. Se pueden avanzar en paralelo. Con los cinco completos se desbloquea el timeline.
       </p>
-      <div className="flex gap-1" role="img" aria-label={`${progress.ready} de ${progress.total} elementos completos`}>
-        {PLANNING_ELEMENTS.map((e) => (
-          <div key={e.clave} className={`h-2 flex-1 ${planning.elements.find((s) => s.key === e.clave)?.ready ? "bg-gold-300" : "bg-surface-200"}`} />
-        ))}
+      <div className="rounded-card bg-surface-100 p-4">
+        <Semaforo elements={planning.elements} />
+        <p className="mt-2 text-sm text-ink-muted">Lo obligatorio desbloquea el reto. El resto se completa hasta el plazo que fija el backend.</p>
       </div>
 
       <ol className="mt-4 grid gap-2" aria-label="Elementos de la planificación">

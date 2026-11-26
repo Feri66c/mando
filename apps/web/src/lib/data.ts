@@ -30,6 +30,8 @@ import {
   fetchMoments,
   fetchMyEvents,
   fetchBrief,
+  fetchClientNotices,
+  fetchPlanningDeadline,
   fetchBriefDoubts,
   fetchProfileName,
   fetchRouteItems,
@@ -217,4 +219,13 @@ export async function getBrief(eventId: string, userId: string) {
 /** Dudas sobre el brief, para el backend. */
 export async function getBriefDoubts(eventId: string) {
   return fetchBriefDoubts(await requireClient(), eventId);
+}
+
+/** Avisos al cliente (MANDO Express). */
+export async function getClientNotices(eventId: string) {
+  return fetchClientNotices(await requireClient(), eventId);
+}
+
+export async function getPlanningDeadline(eventId: string) {
+  return fetchPlanningDeadline(await requireClient(), eventId);
 }

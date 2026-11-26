@@ -76,7 +76,7 @@ test("aceptación 1: el productor alarga la prueba de sonido y el cliente lo ve 
   await shot(viewer, "3-cliente-hoja-de-ruta");
 
   await viewer.goto(`/eventos/${EVENT}`);
-  await expect(viewer.getByText(/«Prueba de sonido»: 14:00 – 16:00 → 14:00 – 17:00/)).toBeVisible();
+  await expect(viewer.getByText("Tus ocurrencias")).toBeVisible(); // MANDO Express: sin la bitácora interna
   // El cliente no tiene botones de operación.
   await expect(viewer.getByRole("button", { name: /Crear: evidencia/ })).toHaveCount(0);
   await expect(viewer.getByRole("link", { name: "Abrir Modo En Vivo" })).toHaveCount(0);

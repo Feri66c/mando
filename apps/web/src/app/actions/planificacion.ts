@@ -109,7 +109,52 @@ export async function addTechItemAction(_prev: CierreState, fd: FormData): Promi
   );
 }
 
+/** El documento ya se subió al cubo privado; aquí se registra y el concepto queda confirmado. */
+export async function attachTechDocAction(input: { itemId: string; filePath: string; fileName: string }): Promise<CierreState> {
+  return run("attach_tech_doc", { p_item: input.itemId, p_path: input.filePath, p_name: input.fileName }, "Documento adjunto.");
+}
+
+export async function requestTechNaAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("request_tech_na", { p_item: text(fd, "item_id") }, "«No aplica» enviado al backend para su revisión.");
+}
+
+export async function reviewTechNaAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("review_tech_na", { p_item: text(fd, "item_id"), p_applies: text(fd, "aplica") === "si" });
+}
+
 // ---- Presupuesto ----
+
+export async function openBudgetExtrasAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("open_budget_extras", { p_event: text(fd, "event_id"), p_open: text(fd, "abrir") !== "no" });
+}
+
+export async function requestBudgetExtraAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("request_budget_extra", { p_event: text(fd, "event_id"), p_kind: text(fd, "tipo"), p_note: text(fd, "nota") || null }, "Solicitado al backend.");
+}
+
+export async function decideBudgetExtraAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("decide_budget_extra", { p_extra: text(fd, "extra_id"), p_approve: text(fd, "decision") === "aprobar" });
+}
+
+// ---- Backend ----
+
+export async function applyDeadlineAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("apply_planning_deadline", { p_event: text(fd, "event_id") }, "Plazo aplicado. Si faltaba algo, se levantó una Red Flag.");
+}
+
+export async function setDeadlineAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  return run("set_planning_deadline", { p_event: text(fd, "event_id"), p_hours: Number(text(fd, "horas")) || 0 }, "Plazo guardado.");
+}
+
+export async function sendInstructionAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  if (!text(fd, "texto")) return { ok: false, error: "Escribe la instrucción." };
+  return run("send_instruction", { p_event: text(fd, "event_id"), p_body: text(fd, "texto") }, "Instrucción enviada al productor.");
+}
+
+export async function sendClientNoticeAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  if (!text(fd, "texto")) return { ok: false, error: "Escribe el aviso." };
+  return run("send_client_notice", { p_event: text(fd, "event_id"), p_kind: text(fd, "tipo"), p_body: text(fd, "texto") }, "Aviso enviado al cliente.");
+}
 
 const money = (value: string) => Number(value.replace(/\s/g, "").replace(",", "."));
 

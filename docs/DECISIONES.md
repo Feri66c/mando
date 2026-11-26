@@ -225,6 +225,13 @@ Fecha: 26 de noviembre de 2026. Fer revisó la demo pantalla por pantalla, dict�
 | 39 | Modo oscuro con neón de evento | Reemplaza la regla de «un solo oro» (decisión 38 conserva las formas). Fondo negro, botones de contorno fino con brillo por dentro, del mismo tamaño grande. El amarillo es el acento principal y se suman naranja, rojo y verde. Letras y avisos más grandes para iPhone y iPad. |
 | 40 | Botón «Acepto» | En «Mis eventos» la persona ve «Te convocaron como» y su cargo, con un botón hexagonal grande «ACEPTO». Sin aceptar no entra. Queda en la bitácora. El cliente no tiene cargo que aceptar. |
 | 41 | Brief con dudas al backend | Después de aceptar, lo primero es el brief que carga el backend. La persona responde «¿Estás enterado del brief?» con «Acepto» o deja una duda. Con una duda abierta no avanza: la duda llega al backend como alerta de Atención y solo el backend la responde, confirmando o corrigiendo el brief. Cada corrección sube la versión y hay que leerlo de nuevo. Sin brief leído no se toma el mando. |
+| 42 | Técnico con documento y «No aplica» revisado | Los conceptos son genéricos (Sonido, Luces, Escenario). Cada uno tiene a la derecha «Adjuntar», que abre de inmediato la ventana para subir el documento y deja el concepto confirmado, y «No aplica». El «No aplica» de la productora va al backend: si acepta, deja de contar; si dice que sí aplica, sigue bloqueando y, si es obligatorio, levanta un Red Flag. |
+| 43 | Presupuesto asignado y adicionales | La productora ve el presupuesto asignado. Si el backend abre los adicionales, puede solicitar más personal, técnica o locación. El backend aprueba o no, y actualiza el monto. |
+| 44 | Avance en porcentaje con semáforo | La planificación muestra el avance en porcentaje con una barra que va de rojo a amarillo y termina en verde total solo cuando todo está completo. El avance lo decide el sistema, no una persona. |
+| 45 | Plazo y Red Flag | Lo obligatorio desbloquea el reto. Lo demás se completa hasta el plazo que fija el backend (5 horas antes por defecto). Al aplicar el plazo, lo que siga pendiente levanta un Red Flag y queda en la bitácora. |
+| 46 | Dos roles: Productor y Backend | En MANDO trabajan solo el productor y el backend. La «Torre de control» ahora se llama «Backend». |
+| 47 | MANDO Express para el cliente | El cliente ya no ve la operación. Ve el estado de su evento, el semáforo, lo que le toca aprobar y «Tus ocurrencias»: avisos «Todo OK» que genera el sistema cuando se cumple un hito, «Observación» (factura no pagada, adelanto no generado) y «Sin confirmación». Las ocurrencias internas se quedan con el equipo para el aprendizaje. |
+| 48 | Pantalla del backend | El backend tiene una pantalla con lo que espera su revisión, el plazo, la instrucción al productor (le llega como aviso y queda en la bitácora) y «Informar al cliente» con las observaciones y su propio aviso desplegable. |
 
 ## Supuestos
 
@@ -232,3 +239,8 @@ Fecha: 26 de noviembre de 2026. Fer revisó la demo pantalla por pantalla, dict�
 - **Quién lee el brief:** solo el equipo. El cliente no lo ve.
 - **Eventos sin brief:** si el backend no cargó brief, la bienvenida sigue como antes.
 - **App de teléfono (Expo):** todavía no muestra «Acepto» ni el brief; se hace en la web primero.
+- **El plazo no corre solo:** por ahora el backend lo aplica con un botón. El aviso automático necesita un servicio programado.
+- **Cliente:** conserva sus aprobaciones, el presupuesto y la ficha de satisfacción. Ya no tiene accesos a la hoja de ruta ni a las alertas; los permisos de la base de datos no se relajaron.
+- **Casting con fotos numeradas por cargo:** queda en la demo; en la app sigue el flujo actual de aprobaciones.
+- **«Entrevistado»:** sigue apagado fuera de los eventos tipo podcast.
+- **App de teléfono (Expo):** todavía no tiene estos cambios.

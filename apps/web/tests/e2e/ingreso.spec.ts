@@ -10,7 +10,7 @@ const PASSWORD = process.env.E2E_PASSWORD;
 
 const USERS = [
   { email: "productor@mando.test", role: "Productor", sees: 5 },
-  { email: "torre@mando.test", role: "Torre de control", sees: 5 },
+  { email: "torre@mando.test", role: "Backend", sees: 5 },
   { email: "cliente@mando.test", role: "Cliente", sees: 5 },
 ];
 
@@ -34,8 +34,15 @@ test.describe("ingreso de los tres roles (requiere Supabase con el seed)", () =>
       await expect(cards.first()).toContainText(user.role);
 
       await cards.first().getByRole("link").click();
-      await expect(page.getByText("Ahora", { exact: true })).toBeVisible();
-      await page.getByRole("navigation", { name: "Secciones del evento" }).getByRole("link", { name: "Hoja de ruta" }).click();
+      if (user.role === "Cliente") {
+        // El cliente entra a MANDO Express (decisión 47): sin accesos a la operación.
+        await expect(page.getByText("Tus ocurrencias")).toBeVisible();
+        await expect(page.getByRole("navigation", { name: "Secciones del evento" }).getByRole("link", { name: "Hoja de ruta" })).toHaveCount(0);
+        await page.goto(page.url() + "/hoja-de-ruta");
+      } else {
+        await expect(page.getByText("Ahora", { exact: true })).toBeVisible();
+        await page.getByRole("navigation", { name: "Secciones del evento" }).getByRole("link", { name: "Hoja de ruta" }).click();
+      }
       await expect(page.getByRole("heading", { name: "Hoja de ruta" })).toBeVisible();
       await expect(page.getByRole("list", { name: "Actividades" }).getByRole("listitem")).toHaveCount(user.sees);
       await expect(page.getByText("Prueba de sonido")).toBeVisible();

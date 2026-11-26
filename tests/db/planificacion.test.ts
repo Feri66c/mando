@@ -117,12 +117,12 @@ describe("Base de personas", () => {
 });
 
 describe("Lista técnica", () => {
-  it("nace con el evento; coordinación confirma y solo los niveles 1 y 2 sacan un obligatorio", async () => {
+  it("nace con el evento; coordinación confirma y «No aplica» lo revisa el backend", async () => {
     await scenario(async ({ admin, asUser }) => {
       const backend = asUser(USERS.backend);
       const id = (await backend(CREATE, [ORG, SAMPLING])).rows[0].id;
       const rows = (await backend("select id, title, mandatory, due_hours, status from event_tech_items where event_id = $1 order by sort_order", [id])).rows;
-      expect(rows.map((r) => r.title)).toContain("Módulo o stand armado");
+      expect(rows.map((r) => r.title)).toContain("Módulo o stand");
       expect(rows.find((r) => r.title === "Parlante portátil")).toMatchObject({ mandatory: false, due_hours: 24 });
       const must = rows.find((r) => r.mandatory)!;
       await backend("select public.set_tech_item($1, 'confirmed', $2)", [must.id, "3 × 2 m"]);
@@ -136,7 +136,7 @@ describe("Lista técnica", () => {
       const producer = asUser(USERS.producer);
       const item = (await producer("select public.add_tech_item($1, 'sonido', 'Consola de 32 canales', null, 1, true, 24) as id", [EVENT])).rows[0].id;
       expect((await admin("select due_hours from event_tech_items where id = $1", [item])).rows[0].due_hours).toBeNull(); // un obligatorio no tiene plazo de gracia
-      expect(await errorOf(producer, "select public.set_tech_item($1, 'not_applicable')", [item])).toMatch(/productor general o el productor de campo/);
+      expect(await errorOf(producer, "select public.set_tech_item($1, 'not_applicable')", [item])).toMatch(/lo revisa el backend/);
       await producer("select public.set_tech_item($1, 'confirmed')", [item]);
     });
   });

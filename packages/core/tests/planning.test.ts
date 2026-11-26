@@ -19,7 +19,7 @@ describe("planificación", () => {
   it("cada tipo de evento nace con su lista técnica y con el candado puesto", () => {
     const podcast = withDocuments({ clave: "podcast" });
     expect(podcast.planificacion).toBe(true);
-    expect(podcast.tecnica.map((t) => t.titulo)).toContain("Cámaras y tarjetas");
+    expect(podcast.tecnica.map((t) => t.titulo)).toContain("Cámaras");
     expect(techItemsFor("sampling").some((t) => t.obligatorio)).toBe(true);
     expect(techItemsFor("sampling").find((t) => t.titulo === "Parlante portátil")?.plazo_horas).toBe(24);
   });
@@ -39,5 +39,18 @@ describe("planificación", () => {
     expect(warnings).toHaveLength(1);
     expect(warnings[0].message).toContain("15 × S/ 10.00 por viaje");
     expect(budgetLinesTotal(lines)).toBe(751);
+  });
+});
+
+describe("semáforo del avance", () => {
+  const el = (key: string, done: number, total: number) => ({ key, ready: done >= total, done, total, missing: done >= total ? [] : ["falta"] });
+  it("va de rojo a amarillo y solo es verde con todo completo", async () => {
+    const { planningSemaphore } = await import("../src/planning");
+    const keys = ["legal", "personal", "tecnico", "presupuesto", "aprobaciones"];
+    expect(planningSemaphore(keys.map((k) => el(k, 0, 2)))).toMatchObject({ percent: 0, color: "rojo" });
+    expect(planningSemaphore([el("legal", 2, 2), el("personal", 2, 2), el("tecnico", 1, 2), el("presupuesto", 1, 1), el("aprobaciones", 0, 4)])).toMatchObject({ percent: 55, color: "amarillo" });
+    expect(planningSemaphore(keys.map((k) => el(k, 2, 2)))).toEqual({ percent: 100, color: "verde", label: "Verde total · todo completo" });
+    // Casi completo nunca marca 100: el verde total es solo con todo listo.
+    expect(planningSemaphore([...keys.slice(0, 4).map((k) => el(k, 9, 9)), el("aprobaciones", 199, 200)]).percent).toBeLessThan(100);
   });
 });
