@@ -32,6 +32,12 @@ Supuestos tomados para arrancar: ver [`docs/DECISIONES.md`](docs/DECISIONES.md).
 - `/bienvenida/<evento>`: la primera entrada de cada persona; ahí toma el mando.
 - Prueba del recorrido: `apps/web/tests/e2e/invitacion.spec.ts`. Decisiones 17 a 21 en `docs/DECISIONES.md`.
 
+## Estrellas, cierre y citados
+
+- `/eventos/<evento>/cierre`: estrellas del evento (reglas en `config/meritos.json`), no negociables, hitos estrella, valoración del equipo, enlace de publicación y cierre. Es también el informe que se guarda en PDF.
+- `/eventos/<evento>/citados`: hosts e invitados con su hora de citación, recordatorio por WhatsApp o correo y marca de llegada.
+- Pruebas: `tests/db/meritos.test.ts` y `apps/web/tests/e2e/z-cierre.spec.ts` (corre al final porque cierra el evento de ejemplo). Decisiones 22 a 24.
+
 ## Comandos
 
 ```

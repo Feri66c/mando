@@ -234,3 +234,13 @@ update events set criticality_config = $crit${
   ]
 }$crit$::jsonb
 where id = '00000000-0000-0000-0000-0000000000e1';
+
+-- No negociables e hitos estrella del evento de ejemplo (en un evento nuevo salen de la plantilla del tipo).
+insert into event_criteria (event_id, kind, title, sort_order) values
+  ('00000000-0000-0000-0000-0000000000e1', 'no_negociable', 'Energía de respaldo para sonido y luces', 1),
+  ('00000000-0000-0000-0000-0000000000e1', 'no_negociable', 'Capacidad del local respetada', 2),
+  ('00000000-0000-0000-0000-0000000000e1', 'no_negociable', 'Hora de apertura de puertas', 3),
+  ('00000000-0000-0000-0000-0000000000e1', 'hito_estrella', 'Entrada del show en el segundo exacto', 1),
+  ('00000000-0000-0000-0000-0000000000e1', 'hito_estrella', 'Momento de impacto registrado en video', 2),
+  ('00000000-0000-0000-0000-0000000000e1', 'hito_estrella', 'Valoración alta de técnicos y proveedores', 3)
+on conflict do nothing;

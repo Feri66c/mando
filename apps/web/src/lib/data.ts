@@ -5,6 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import {
   fetchAdminOrgs,
   fetchAlerts,
+  fetchClosing,
+  fetchCriteria,
+  fetchGuests,
+  fetchMyRating,
+  fetchScoreInputs,
   fetchCriticality,
   fetchEventTemplate,
   fetchPendingInvitations,
@@ -21,10 +26,11 @@ import {
   type RouteItem,
 } from "@mando/core/data";
 import { parseTemplate } from "@mando/core/event-types";
+import { MERIT_CONFIG, scoreEvent } from "@mando/core/merits";
 
 // Capa de acceso a datos de la web: las consultas viven en @mando/core/data (las comparte la app móvil);
 // aquí solo se obtiene el cliente con la sesión de la cookie y se manda a ingresar si no hay sesión.
-export type { Alert, Commitment, CurrentUser, Evidence, Invitation, LogEntry, Moment, MomentCheck, MyEvent, RouteItem, TeamMember } from "@mando/core/data";
+export type { Alert, Closing, Commitment, Criterion, Guest, CurrentUser, Evidence, Invitation, LogEntry, Moment, MomentCheck, MyEvent, RouteItem, TeamMember } from "@mando/core/data";
 
 /** Devuelve el cliente o manda a la pantalla de ingreso si falta conectar Supabase. */
 async function requireClient() {
@@ -112,4 +118,29 @@ export async function getPendingInvitations(eventId: string) {
 export async function getEventTemplate(eventId: string) {
   const { template, createdByName } = await fetchEventTemplate(await requireClient(), eventId);
   return { template: parseTemplate(template), createdByName };
+}
+
+// ---- Méritos, cierre y citados ----
+
+/** Estrellas del evento: la base da los números y la cuenta se hace con config/meritos.json. */
+export const getEventScore = cache(async function getEventScore(eventId: string) {
+  const minLevel = MERIT_CONFIG.criterios.find((c) => c.clave === "respuesta")?.nivel_minimo ?? 3;
+  const inputs = await fetchScoreInputs(await requireClient(), eventId, minLevel);
+  return { score: scoreEvent(inputs), summary: inputs.summary };
+});
+
+export async function getCriteria(eventId: string) {
+  return fetchCriteria(await requireClient(), eventId);
+}
+
+export async function getClosing(eventId: string) {
+  return fetchClosing(await requireClient(), eventId);
+}
+
+export async function getMyRating(eventId: string, userId: string) {
+  return fetchMyRating(await requireClient(), eventId, userId);
+}
+
+export async function getGuests(eventId: string) {
+  return fetchGuests(await requireClient(), eventId);
 }

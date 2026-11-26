@@ -47,6 +47,9 @@ writeFileSync(
     "",
     "-- Eventos por invitación y tipos de evento.",
     readFileSync(join(root, "supabase/migrations/20261128000005_invitaciones_y_tipos.sql"), "utf8"),
+    "",
+    "-- Méritos y cierre del evento.",
+    readFileSync(join(root, "supabase/migrations/20261129000006_meritos_y_cierre.sql"), "utf8"),
   ].join("\n"),
 );
 console.log("✓ supabase/actualizar-etapa-2.sql actualizado");

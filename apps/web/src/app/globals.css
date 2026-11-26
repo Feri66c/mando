@@ -103,3 +103,39 @@ body {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
+
+/* Informe de cierre en papel o PDF: fondo blanco, sin barras ni botones. */
+.solo-imprimir {
+  display: none;
+}
+@media print {
+  .tema-operacion {
+    --surface-000: #ffffff;
+    --surface-100: #f3f6fa;
+    --surface-200: #dfe7f0;
+    --ink: #061428;
+    --ink-muted: #46586f;
+    --line: #c9d5e3;
+    color-scheme: light;
+    padding-bottom: 0 !important;
+  }
+  .tema-operacion nav,
+  .tema-operacion header a,
+  .tema-operacion header [aria-live],
+  .boton-mas,
+  .no-imprimir {
+    display: none !important;
+  }
+  .solo-imprimir {
+    display: block;
+  }
+  .informe li,
+  .informe section,
+  .informe dl > div {
+    break-inside: avoid;
+  }
+  .informe * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

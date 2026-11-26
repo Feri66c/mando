@@ -458,3 +458,103 @@ export async function fetchEventTemplate(
   const template = data?.template as Record<string, unknown> | null;
   return { template: template && Object.keys(template).length > 0 ? template : null, createdByName: creator?.full_name ?? null };
 }
+
+// ---- Méritos, cierre y citados ----
+
+export type Criterion = {
+  id: string;
+  kind: "no_negociable" | "hito_estrella";
+  title: string;
+  status: "pending" | "ok" | "failed";
+  note: string | null;
+  checkedAt: string | null;
+};
+
+/** No negociables e hitos estrella del evento, en su orden. */
+export async function fetchCriteria(client: SupabaseClient, eventId: string): Promise<Criterion[]> {
+  const { data, error } = await client
+    .from("event_criteria")
+    .select("id, kind, title, status, note, checked_at")
+    .eq("event_id", eventId)
+    .order("sort_order", { ascending: true });
+  if (error) throw new Error(`No se pudieron leer los no negociables: ${error.message}`);
+  return (data ?? []).map((c) => ({
+    id: c.id as string,
+    kind: c.kind as Criterion["kind"],
+    title: c.title as string,
+    status: c.status as Criterion["status"],
+    note: (c.note as string | null) ?? null,
+    checkedAt: (c.checked_at as string | null) ?? null,
+  }));
+}
+
+export type EventSummary = {
+  items_total: number;
+  items_done: number;
+  changes: number;
+  alerts: number;
+  alerts_open: number;
+  evidences: number;
+  guests: number;
+  guests_on_time: number;
+};
+
+/** Números para la cuenta de estrellas: los mismos para el equipo y para el cliente. */
+export async function fetchScoreInputs(
+  client: SupabaseClient,
+  eventId: string,
+  minLevel = 3,
+): Promise<import("./merits").ScoreInputs & { summary: EventSummary }> {
+  const { data, error } = await client.rpc("event_score_inputs", { p_event: eventId, p_min_level: minLevel });
+  if (error) throw new Error(`No se pudieron leer los méritos del evento: ${error.message}`);
+  return data as import("./merits").ScoreInputs & { summary: EventSummary };
+}
+
+export type Closing = { closedAt: string | null; publishUrl: string | null };
+
+export async function fetchClosing(client: SupabaseClient, eventId: string): Promise<Closing> {
+  const { data, error } = await client.from("events").select("closed_at, publish_url").eq("id", eventId).maybeSingle();
+  if (error) throw new Error(`No se pudo leer el cierre del evento: ${error.message}`);
+  return { closedAt: (data?.closed_at as string | null) ?? null, publishUrl: (data?.publish_url as string | null) ?? null };
+}
+
+/** La valoración que dio esta persona, si ya valoró. */
+export async function fetchMyRating(client: SupabaseClient, eventId: string, userId: string): Promise<{ stars: number; comment: string | null } | null> {
+  const { data, error } = await client.from("event_ratings").select("stars, comment").eq("event_id", eventId).eq("profile_id", userId).maybeSingle();
+  if (error) throw new Error(`No se pudo leer tu valoración: ${error.message}`);
+  return data ? { stars: data.stars as number, comment: (data.comment as string | null) ?? null } : null;
+}
+
+export type Guest = {
+  id: string;
+  fullName: string;
+  guestRole: string;
+  phone: string | null;
+  email: string | null;
+  callAt: string;
+  remindedAt: string | null;
+  reminders: number;
+  arrivedAt: string | null;
+};
+
+/** Citados del evento (hosts e invitados). Solo el equipo los ve. */
+export async function fetchGuests(client: SupabaseClient, eventId: string): Promise<Guest[]> {
+  const { data, error } = await client
+    .from("event_guests")
+    .select("id, full_name, guest_role, phone, email, call_at, reminded_at, reminders, arrived_at")
+    .eq("event_id", eventId)
+    .is("removed_at", null)
+    .order("call_at", { ascending: true });
+  if (error) throw new Error(`No se pudieron leer los citados: ${error.message}`);
+  return (data ?? []).map((g) => ({
+    id: g.id as string,
+    fullName: g.full_name as string,
+    guestRole: g.guest_role as string,
+    phone: (g.phone as string | null) ?? null,
+    email: (g.email as string | null) ?? null,
+    callAt: g.call_at as string,
+    remindedAt: (g.reminded_at as string | null) ?? null,
+    reminders: Number(g.reminders ?? 0),
+    arrivedAt: (g.arrived_at as string | null) ?? null,
+  }));
+}

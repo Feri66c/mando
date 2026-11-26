@@ -84,7 +84,7 @@ Fecha: 26 de noviembre de 2026. Fer confirmó la lógica («Estoy de acuerdo con
 | # | Decisión | Qué se decidió |
 | --- | --- | --- |
 | 17 | Quién entra | Solo personas invitadas. Solo el productor general (administrador de la organización, nivel 1 en el evento) crea eventos e invita. Nadie se registra por su cuenta: la cuenta se crea al pedir el primer código, y solo si el correo tiene una invitación pendiente. |
-| 18 | Tipos de evento | Cinco tipos en `config/tipos-de-evento.json`: sampling, activación en centro comercial, fiesta corporativa, feria y concierto. Tres tamaños: ligero, medio y mayor. Cada tipo trae sus piezas, su hora clave, sus no negociables y sus cargos. Al crear el evento la plantilla se copia al evento y la hoja de ruta nace de sus piezas. |
+| 18 | Tipos de evento | Seis tipos en `config/tipos-de-evento.json`: sampling, activación en centro comercial, fiesta corporativa, feria, concierto y podcast (ver decisión 24). Tres tamaños: ligero, medio y mayor. Cada tipo trae sus piezas, su hora clave, sus no negociables y sus cargos. Al crear el evento la plantilla se copia al evento y la hoja de ruta nace de sus piezas. |
 | 19 | Cargos y jerarquía | Cuatro niveles: 1 productor general, 2 productor de campo, 3 coordinación, 4 técnicos y proveedores. El cliente no tiene nivel y solo mira. El cargo puede llevar un nombre propio (por ejemplo, «Road manager»). |
 | 20 | Bienvenida | La primera vez que alguien entra a un evento ve: gracias con su nombre, el evento y su cargo; los mandatorios de MANDO y los no negociables del tipo; su reto; y una cuenta 3-2-1 que termina en «Se inició la acción» con el reloj hacia la hora clave. Recién ahí queda con el mando activo (`event_members.welcomed_at`). |
 | 21 | Primer evento real | Un sampling. |
@@ -96,3 +96,24 @@ Fecha: 26 de noviembre de 2026. Fer confirmó la lógica («Estoy de acuerdo con
 - **Quien ya tiene cuenta** entra al evento en el momento de la invitación; quien no, al iniciar sesión por primera vez.
 - **Eventos anteriores a los tipos:** siguen funcionando; sus miembros quedaron con nivel según su rol y con la bienvenida ya vista.
 - **Pruebas:** `tests/db/invitaciones.test.ts` (permisos) y `apps/web/tests/e2e/invitacion.spec.ts` (el recorrido completo en el teléfono, con el código leído del buzón de prueba). Las pruebas del navegador corren una tras otra porque comparten la base.
+
+# Decisiones de méritos, cierre y podcast
+
+Fecha: 26 de noviembre de 2026. Fer aprobó la lógica de méritos y pidió sumar la producción de podcast.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 22 | Estrellas del evento | De 0 a 5, en medios. Cinco criterios con peso en `config/meritos.json`: puntualidad 30, prometido = entregado 25, respuesta a incidentes 15, momentos wow 15, valoración de técnicos y proveedores 15. Un criterio sin datos no cuenta y su peso se reparte. Si falla un no negociable, el evento queda en 0 estrellas y levanta una Red Flag que el cliente ve. |
+| 23 | Citados | Hosts e invitados que no usan MANDO: hora de citación, recordatorio por WhatsApp o correo con el mensaje ya escrito, y marca de llegada. Su puntualidad entra en el criterio de puntualidad. Sirve para cualquier tipo de evento. |
+| 24 | Tipo podcast | Ocho piezas: Brief, Imagen, Citación, Set, Prueba técnica, Grabación, Edición y Publicado. La hora clave es el inicio de la grabación. El enlace de YouTube se registra en el cierre y sale en el informe. |
+
+## Supuestos
+
+- **Quién marca:** los no negociables y los hitos estrella los marcan los niveles 1 y 2. Un no negociable fallado exige explicación. Si luego se corrige a cumplido, la Red Flag se resuelve y las estrellas vuelven; la bitácora conserva las dos marcas.
+- **Valoración:** la da el equipo de campo (niveles 2 a 4), de 1 a 5, una por persona. Solo el productor general ve cada nota; en la bitácora queda que valoró, no cuánto.
+- **Las mismas estrellas para todos:** la base entrega solo números (`event_score_inputs`) y la cuenta se hace con las reglas del archivo. El cliente ve las mismas estrellas que el equipo sin leer nada interno.
+- **Puntualidad:** una pieza está a tiempo si empezó hasta 10 minutos después de la hora publicada (el plan original, no el plan movido). Las piezas clave valen doble. Una pieza que ya debía empezar y nadie marcó cuenta como tarde.
+- **Cierre:** solo el productor general cierra, y solo con todos los no negociables marcados. Un evento cerrado no acepta marcas ni cambios; el equipo todavía puede valorar.
+- **Informe en PDF:** la pantalla «Estrellas y cierre» es el informe. El botón «Guardar como PDF» abre la impresión del teléfono o la computadora, con fondo blanco y sin botones. Un PDF generado en el servidor y enviado por correo queda para cuando haya servicio de correo.
+- **Recordatorios a citados:** igual que las invitaciones, MANDO arma el mensaje y la persona lo manda desde su WhatsApp o su correo; MANDO anota que se mandó. El envío automático queda para cuando haya servicio de correo y de WhatsApp.
+- **Insignias y rangos por persona:** siguen para la Etapa 5.

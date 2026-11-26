@@ -10,13 +10,14 @@ import {
 } from "@mando/core/event-types";
 
 describe("plantillas de tipos de evento (config/tipos-de-evento.json)", () => {
-  it("trae los cinco tipos confirmados por Fer", () => {
+  it("trae los seis tipos confirmados por Fer", () => {
     expect(EVENT_TEMPLATES.map((t) => t.clave)).toEqual([
       "sampling",
       "centro-comercial",
       "fiesta-corporativa",
       "feria",
       "concierto",
+      "podcast",
     ]);
   });
 

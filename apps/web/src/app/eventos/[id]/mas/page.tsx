@@ -15,6 +15,8 @@ export default async function MorePage({ params }: { params: Promise<{ id: strin
   const { event, user, isTeam } = ctx;
   const base = `/eventos/${id}`;
   const links = [
+    { href: `${base}/cierre`, label: "Estrellas y cierre", hint: "Cómo va el evento, los no negociables y el informe para guardar en PDF." },
+    ...(isTeam ? [{ href: `${base}/citados`, label: "Citados", hint: "Hosts e invitados: recordatorio por WhatsApp o correo y hora de llegada." }] : []),
     { href: `${base}/bitacora`, label: "Bitácora", hint: "Todo lo que pasó, minuto a minuto. No se edita ni se borra." },
     { href: `${base}/evidencias`, label: "Evidencias", hint: "Fotos, audios, videos y documentos con hora del servidor." },
     ...(isTeam ? [{ href: `${base}/momentos`, label: "Momentos críticos", hint: "Prueba de sonido, montaje, puertas: prometido contra entregado." }] : []),
