@@ -2,6 +2,7 @@ import type { DocState, ElementStatus } from "./planning";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CriticalityConfig } from "./criticality";
 import type { Talent } from "./talents";
+import { EXPERIENCE_TOLERANCE_MIN, type ChangeOrigin, type ExperienceData, type MinuteRow, type MomentTag } from "./experience";
 import { isVisibility, type AccessRow, type BrandKind, type ChainMember, type EmergencyKind, type EmergencyWindow, type Visibility } from "./command";
 import {
   isEventRole,
@@ -341,22 +342,25 @@ export type Evidence = {
   visibleToViewer: boolean;
   routeItemId: string | null;
   momentId: string | null;
+  /** Momento wow o eventualidad, si se marcó así (decisión 67). */
+  tag: MomentTag | null;
 };
 
 /** Evidencias con enlaces firmados de corta duración (los archivos son privados). */
 export async function fetchEvidences(
   client: SupabaseClient,
   eventId: string,
-  filter: { routeItemId?: string; momentId?: string } = {},
+  filter: { routeItemId?: string; momentId?: string; tagged?: boolean } = {},
 ): Promise<Evidence[]> {
   let query = client
     .from("evidences")
-    .select("id, kind, note, file_path, sha256, captured_at, received_at, visible_to_viewer, route_item_id, moment_id")
+    .select("id, kind, note, file_path, sha256, captured_at, received_at, visible_to_viewer, route_item_id, moment_id, tag")
     .eq("event_id", eventId)
     .order("received_at", { ascending: false })
     .limit(60);
   if (filter.routeItemId) query = query.eq("route_item_id", filter.routeItemId);
   if (filter.momentId) query = query.eq("moment_id", filter.momentId);
+  if (filter.tagged) query = query.not("tag", "is", null);
   const { data, error } = await query;
   if (error) throw new Error(`No se pudieron leer las evidencias: ${error.message}`);
   const rows = data ?? [];
@@ -378,6 +382,7 @@ export async function fetchEvidences(
     visibleToViewer: Boolean(r.visible_to_viewer),
     routeItemId: (r.route_item_id as string | null) ?? null,
     momentId: (r.moment_id as string | null) ?? null,
+    tag: (r.tag as MomentTag | null) ?? null,
   }));
 }
 
@@ -896,6 +901,11 @@ export type EventBrief = {
   summary: string;
   objective: string | null;
   attendees: string | null;
+  /** Sinopsis: lo esencial en pocas líneas, lo primero que lee cada persona. */
+  synopsis: string | null;
+  /** Documento adjunto del brief, con enlace firmado de corta duración. */
+  documentName: string | null;
+  documentUrl: string | null;
   /** Esta persona ya confirmó que está enterada de la versión vigente. */
   acked: boolean;
   /** Su última duda, si dejó alguna. */
@@ -903,8 +913,10 @@ export type EventBrief = {
 };
 
 export async function fetchBrief(client: SupabaseClient, eventId: string, userId: string): Promise<EventBrief | null> {
-  const { data: brief } = await client.from("event_briefs").select("version, summary, objective, attendees").eq("event_id", eventId).maybeSingle();
+  const { data: brief } = await client.from("event_briefs").select("version, summary, objective, attendees, synopsis, document_path, document_name").eq("event_id", eventId).maybeSingle();
   if (!brief) return null;
+  const documentPath = (brief.document_path as string | null) ?? null;
+  const signed = documentPath ? (await client.storage.from("evidences").createSignedUrl(documentPath, 60 * 60)).data : null;
   const [{ data: ack }, { data: doubts }] = await Promise.all([
     client.from("brief_acks").select("version").eq("event_id", eventId).eq("profile_id", userId).eq("version", brief.version).maybeSingle(),
     client.from("brief_doubts").select("id, question, status, answer, corrected").eq("event_id", eventId).eq("profile_id", userId).order("created_at", { ascending: false }).limit(1),
@@ -915,6 +927,9 @@ export async function fetchBrief(client: SupabaseClient, eventId: string, userId
     summary: brief.summary as string,
     objective: (brief.objective as string | null) ?? null,
     attendees: (brief.attendees as string | null) ?? null,
+    synopsis: (brief.synopsis as string | null) ?? null,
+    documentName: documentPath ? ((brief.document_name as string | null) ?? "Documento del brief") : null,
+    documentUrl: signed?.signedUrl ?? null,
     acked: !!ack,
     doubt: d ? { id: d.id as string, question: d.question as string, status: d.status as "open" | "answered", answer: (d.answer as string | null) ?? null, corrected: !!d.corrected } : null,
   };
@@ -1093,4 +1108,67 @@ export async function fetchAccessList(client: SupabaseClient, eventId: string): 
     role: r.role as string,
     docState: r.doc_state as string,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Minuto a minuto y People Experience (decisiones 65 a 69)
+// ---------------------------------------------------------------------------
+
+export type RouteVersion = {
+  id: string;
+  version: number;
+  origin: ChangeOrigin | null;
+  reason: string | null;
+  createdAt: string;
+  rows: MinuteRow[];
+};
+
+/** Versiones guardadas del minuto a minuto, de la más nueva a la más vieja. Solo las lee quien ve todo el evento. */
+export async function fetchRouteVersions(client: SupabaseClient, eventId: string): Promise<RouteVersion[]> {
+  const { data, error } = await client
+    .from("route_versions")
+    .select("id, version, origin, reason, created_at, snapshot")
+    .eq("event_id", eventId)
+    .order("version", { ascending: false });
+  if (error) throw new Error(`No se pudieron leer las versiones: ${error.message}`);
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    version: r.version as number,
+    origin: (r.origin as ChangeOrigin | null) ?? null,
+    reason: (r.reason as string | null) ?? null,
+    createdAt: r.created_at as string,
+    rows: ((r.snapshot ?? []) as Record<string, unknown>[]).map((i) => ({
+      title: i.title as string,
+      start: i.start as string,
+      end: i.end as string,
+      area: (i.area as string | null) ?? null,
+      milestone: Boolean(i.milestone),
+      status: i.status as string,
+    })),
+  }));
+}
+
+/** Los números del evento para el índice. Devuelve null si la persona no es de producción (niveles 1 y 2). */
+export async function fetchExperience(client: SupabaseClient, eventId: string): Promise<ExperienceData | null> {
+  const { data, error } = await client.rpc("people_experience", { p_event: eventId, p_tolerance_min: EXPERIENCE_TOLERANCE_MIN });
+  if (error || !data) return null;
+  const d = data as Record<string, unknown>;
+  const n = (key: string) => Number(d[key] ?? 0);
+  return {
+    changes: (d.changes ?? {}) as Record<string, number>,
+    versions: n("versions") || 1,
+    emergencies: (d.emergencies ?? {}) as Record<string, number>,
+    wow: n("wow"),
+    eventualidades: n("eventualidades"),
+    itemsTotal: n("items_total"),
+    itemsDone: n("items_done"),
+    itemsStarted: n("items_started"),
+    itemsOnTime: n("items_on_time"),
+    alertsTotal: n("alerts_total"),
+    alertsResolved: n("alerts_resolved"),
+    mandos: n("mandos"),
+    fieldPeople: n("field_people"),
+    clientStars: d.client_stars === null || d.client_stars === undefined ? null : Number(d.client_stars),
+    learnings: n("learnings"),
+  };
 }

@@ -318,3 +318,24 @@ Fecha: 26 de noviembre de 2026. «Mando es poder»: un mando central, sus subman
 - **Miembros que ya estaban** conservan visibilidad completa: nada cambia para ellos hasta que el backend lo decida.
 - **Pendiente:** reasignar el responsable buscando a la persona por su documento (hoy se elige por nombre), el estado de EPP por persona en la lista de ingreso y el filtro de la lista por área.
 - **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261211000018_cadena_de_mando.sql` en el SQL Editor, después de las migraciones 16 y 17.
+
+# Decisiones del minuto a minuto y el cierre · Entrega 4
+
+Fecha: 26 de noviembre de 2026. Que el evento se explique solo: qué cambió, por quién, qué salió increíble y qué no.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 65 | Origen de cada cambio | Al pedir un cambio a la hoja de ruta se elige de dónde viene: **pedido del cliente**, **producción** o **eventualidad**. Lo marca quien pide el cambio; producción (niveles 1 y 2) puede corregirlo después. El cierre cuenta los cambios por origen. |
+| 66 | Nuevo minuto a minuto | Cada cambio aplicado guarda una versión nueva del minuto a minuto, numerada (la 1 es el plan publicado), con su origen y su motivo, y lo anota en la bitácora. Las versiones no se editan ni se borran. La pantalla «Minuto a minuto» muestra la versión vigente, se guarda como PDF, se envía por WhatsApp o se copia como texto, y lista el historial. Las versiones las lee quien ve todo el evento. |
+| 67 | Momento wow y eventualidad | En «Hoy» hay dos botones de un toque. **Momento wow** abre la cámara y guarda la foto: la ve el cliente. **Eventualidad** pide una línea de lo que pasó: se queda con el equipo. Los dos quedan marcados, con hora del servidor, en evidencias y en la bitácora, y aparecen en el cierre. |
+| 68 | People Experience | El cierre muestra un índice de 0 a 100 con seis factores y el dato de cada uno: puntualidad, cumplimiento, estabilidad del plan, anticipación, respuesta a las alertas y satisfacción del cliente. Un cambio pedido por el cliente pesa menos que uno de producción; un cambio de último minuto pesa más que uno con tiempo. Lo que no tiene datos no cuenta. Pesos, tolerancia y lecturas viven en `config/people-experience.json`. Son solo números, sin nombres, y los ve producción (niveles 1 y 2). Junto al índice: staff de mando, personal de campo, versiones, mejores momentos y eventualidades. |
+| 69 | Brief largo, con sinopsis y documento | El brief admite hasta 10 000 letras, con contador. Se agrega una **sinopsis** (hasta 600 letras), que es lo primero que lee cada persona, y un **documento adjunto** que abre todo el equipo. Al corregir el brief el documento se conserva si no se adjunta otro. |
+
+## Supuestos
+
+- **A tiempo** es empezar hasta 10 minutos después de la hora del plan publicado. Se cambia en `config/people-experience.json`.
+- **Cambios ya aplicados** antes de esta entrega quedan «sin clasificar» y no tienen versión guardada: el historial empieza con el siguiente cambio.
+- **La app del teléfono** todavía no pregunta el origen: sus cambios entran «sin clasificar» y producción los clasifica después.
+- **Sinopsis con IA:** por ahora la escribe el backend. Generarla sola y resumir un documento largo necesita una llave de IA que carga Fer en Vercel; queda pendiente.
+- **Videos cortos para redes** a partir de los momentos wow: pendiente, depende de un servicio externo.
+- **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261212000019_minuto_a_minuto_y_experiencia.sql` en el SQL Editor, después de la migración 18.

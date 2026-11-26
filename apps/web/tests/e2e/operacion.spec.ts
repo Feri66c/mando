@@ -61,6 +61,7 @@ test("aceptación 1: el productor alarga la prueba de sonido y el cliente lo ve 
 
   const producer = await login(browser, "productor@mando.test");
   await producer.goto(`/eventos/${EVENT}/actividad/${ITEM.sonido}`);
+  await producer.getByText("Producción", { exact: true }).click(); // de dónde viene el cambio
   await producer.getByRole("button", { name: "Ver cómo queda" }).click(); // por defecto: agregar 60 min
   await expect(producer.getByText("Así queda la hoja de ruta")).toBeVisible();
   await expect(producer.getByText("No arrastra otras actividades.")).toBeVisible();
@@ -151,6 +152,7 @@ test("aceptación 4: mover un hito 30 minutos levanta una Red Flag que el client
   await producer.goto(`/eventos/${EVENT}/actividad/${ITEM.puertas}`);
   await producer.getByText("Mover de hora").click();
   await producer.getByText("30 min", { exact: true }).click();
+  await producer.getByText("Eventualidad", { exact: true }).click();
   await producer.getByRole("button", { name: "Ver cómo queda" }).click();
   await expect(producer.getByText("se arrastra").first()).toBeVisible();
   await producer.getByRole("button", { name: "Confirmar cambio" }).click();

@@ -60,6 +60,10 @@ export async function saveBrief(_prev: BriefState, formData: FormData): Promise<
     p_summary: text(formData, "resumen"),
     p_objective: text(formData, "objetivo") || null,
     p_attendees: text(formData, "asistentes") || null,
+    p_synopsis: text(formData, "sinopsis") || null,
+    // El documento ya lo subió la pantalla al cubo privado, en <evento>/brief/.
+    p_document_path: text(formData, "documento_ruta") || null,
+    p_document_name: text(formData, "documento_nombre") || null,
   });
   return result.ok ? { ...result, message: "Brief guardado. El equipo tiene que leerlo de nuevo." } : result;
 }

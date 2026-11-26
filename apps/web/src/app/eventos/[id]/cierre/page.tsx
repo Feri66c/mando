@@ -6,7 +6,10 @@ import { CriteriaBars, ScoreCard } from "@/components/operacion/merits";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
 import { MERIT_CONFIG } from "@mando/core/merits";
 import { formatDate, formatTime } from "@mando/core/time";
-import { getClosing, getCriteria, getEventContext, getEventScore, getMyRating, type Criterion } from "@/lib/data";
+import { EvidenceGrid } from "@/components/operacion/blocks";
+import { emergencyWindowLabel, EMERGENCY_WINDOWS } from "@mando/core/command";
+import { changesByOrigin, peopleExperience } from "@mando/core/experience";
+import { getClosing, getCriteria, getEventContext, getEventScore, getEvidences, getExperience, getMyRating, type Criterion } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Estrellas y cierre" };
 
@@ -48,7 +51,19 @@ export default async function ClosingPage({ params }: { params: Promise<{ id: st
   const ctx = await getEventContext(id);
   if (!ctx) notFound();
   const { event, user, isTeam } = ctx;
-  const [{ score, summary }, criteria, closing] = await Promise.all([getEventScore(id), getCriteria(id), getClosing(id)]);
+  const [{ score, summary }, criteria, closing, tagged, numbers] = await Promise.all([
+    getEventScore(id),
+    getCriteria(id),
+    getClosing(id),
+    getEvidences(id, { tagged: true }).catch(() => []),
+    isTeam ? getExperience(id) : Promise.resolve(null),
+  ]);
+  const wow = tagged.filter((e) => e.tag === "wow");
+  const incidents = isTeam ? tagged.filter((e) => e.tag === "eventualidad") : [];
+  // People Experience: solo producción (niveles 1 y 2). La base no le da los números a nadie más.
+  const experience = numbers ? peopleExperience(numbers) : null;
+  const origins = numbers ? changesByOrigin(numbers.changes) : [];
+  const emergencies = numbers ? EMERGENCY_WINDOWS.map((w) => ({ key: w.clave, name: emergencyWindowLabel(w.clave), count: numbers.emergencies[w.clave] ?? 0 })).filter((w) => w.count > 0) : [];
   const closed = event.status === "closed";
   const level = event.level;
   const canMark = isTeam && !closed && level !== null && level <= 2;
@@ -110,6 +125,95 @@ export default async function ClosingPage({ params }: { params: Promise<{ id: st
           </div>
         ))}
       </dl>
+
+      {wow.length > 0 && (
+        <>
+          <SectionTitle>Mejores momentos</SectionTitle>
+          <EvidenceGrid items={wow.slice(0, 8)} timeZone={event.timezone} isTeam={false} />
+        </>
+      )}
+
+      {numbers && experience && (
+        <section aria-label="People Experience">
+          <SectionTitle>People Experience</SectionTitle>
+          <div className="corte bg-surface-100 p-5">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="font-mono text-xs uppercase tracking-[0.16em] text-ink-muted">Índice del evento</p>
+                <p className="mt-1 font-display text-lg font-semibold">{experience.reading ?? "Aún sin datos de campo"}</p>
+              </div>
+              <p className="font-mono text-5xl font-semibold leading-none text-gold-300">
+                {experience.score ?? "–"}
+                <span className="text-lg text-ink-muted"> /100</span>
+              </p>
+            </div>
+            <ul className="mt-4 grid gap-3">
+              {experience.factors.map((f) => (
+                <li key={f.key}>
+                  <div className="flex items-baseline justify-between gap-3 text-sm">
+                    <span className="font-medium">{f.name}</span>
+                    <span className="font-mono text-xs text-ink-muted">{f.fact}</span>
+                  </div>
+                  <div className="mt-1 h-2 bg-surface-200" role="img" aria-label={f.value === null ? `${f.name}: sin datos` : `${f.name}: ${Math.round(f.value * 100)} de 100`}>
+                    {f.value !== null && <div className="h-full bg-gold-300" style={{ width: `${Math.round(f.value * 100)}%` }} />}
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-xs text-ink-muted">Se calcula con lo que quedó registrado en el evento. Lo que aún no tiene datos no cuenta.</p>
+          </div>
+
+          <dl className="mt-2 grid grid-cols-2 gap-2">
+            {[
+              { label: "Staff de mando", value: String(numbers.mandos) },
+              { label: "Personal de campo", value: String(numbers.fieldPeople) },
+              { label: "Versiones del minuto a minuto", value: String(numbers.versions) },
+              { label: "Momentos wow", value: String(numbers.wow) },
+              { label: "Eventualidades", value: String(numbers.eventualidades) },
+              { label: "Aprendizajes del equipo", value: String(numbers.learnings) },
+            ].map((f) => (
+              <div key={f.label} className="rounded-card bg-surface-100 p-4">
+                <dt className="text-sm text-ink-muted">{f.label}</dt>
+                <dd className="mt-1 font-mono text-xl font-semibold">{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+
+          <SectionTitle>Cambios por origen</SectionTitle>
+          <dl className="grid grid-cols-3 gap-2">
+            {origins.map((o) => (
+              <div key={o.key} className="rounded-card bg-surface-100 p-4">
+                <dt className="text-xs text-ink-muted">{o.name}</dt>
+                <dd className="mt-1 font-mono text-xl font-semibold">{o.count}</dd>
+              </div>
+            ))}
+          </dl>
+          {emergencies.length > 0 && (
+            <p className="mt-2 rounded-card bg-surface-100 px-4 py-3 text-sm">
+              <span className="font-semibold">Cambios de emergencia:</span>{" "}
+              <span className="text-ink-muted">{emergencies.map((w) => `${w.count} ${w.name.toLowerCase()}`).join(" · ")}</span>
+            </p>
+          )}
+          <Link href={`/eventos/${id}/minuto-a-minuto`} className="no-imprimir mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-ice-300 underline underline-offset-4">
+            Ver el minuto a minuto y sus versiones
+          </Link>
+        </section>
+      )}
+
+      {incidents.length > 0 && (
+        <>
+          <SectionTitle>Eventualidades</SectionTitle>
+          <ul className="grid gap-2">
+            {incidents.map((e) => (
+              <li key={e.id} className="rounded-card bg-surface-100 px-4 py-3 text-sm">
+                <span className="mr-2 font-mono text-xs text-ink-muted">{formatTime(e.receivedAt, event.timezone)}</span>
+                {e.note}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1 text-xs text-ink-muted">Solo las ve el equipo.</p>
+        </>
+      )}
 
       <div className="no-imprimir">
         <SectionTitle>{isTeam ? "Aprendizajes" : "Tu impresión"}</SectionTitle>

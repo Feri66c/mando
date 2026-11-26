@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertCard, EvidenceGrid, LogList } from "@/components/operacion/blocks";
+import { MomentButtons } from "@/components/operacion/momento";
 import { Empty, SectionTitle, StatusChip, buttonPrimary } from "@/components/operacion/ui";
 import { PLANNING_ELEMENTS, planningProgress } from "@mando/core/planning";
 import { nowAndNext } from "@mando/core/route";
@@ -139,6 +140,13 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
               </Link>
             ))}
           </div>
+        </>
+      )}
+
+      {isTeam && event.status !== "closed" && (
+        <>
+          <SectionTitle>Para el cierre</SectionTitle>
+          <MomentButtons eventId={id} />
         </>
       )}
 
