@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AssignToggle, PersonForm } from "@/components/operacion/planificacion";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
-import { DOC_STATE_LABEL, SUGGESTED_ROLES } from "@mando/core/planning";
-import { getEventContext, getEventOrganization, getPeopleBoard, type CrewPerson } from "@/lib/data";
+import { DOC_STATE_LABEL, roleOptions } from "@mando/core/planning";
+import { getEventContext, getEventOrganization, getPeopleBoard, getRoleCatalog, type CrewPerson } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Personal" };
 
@@ -40,6 +40,9 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
   const { event } = ctx;
   const canManage = event.level !== null && event.level <= 2 && event.status !== "closed";
   const [people, organizationId] = await Promise.all([getPeopleBoard(id), getEventOrganization(id)]);
+  const catalog = canManage && organizationId ? await getRoleCatalog(organizationId) : [];
+  const roles = roleOptions(catalog.filter((r) => r.status === "approved").map((r) => r.name));
+  const proposed = catalog.filter((r) => r.status === "pending");
   const assigned = people.filter((p) => p.assigned);
   const others = people.filter((p) => !p.assigned);
 
@@ -48,7 +51,7 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
       <PageTitle aside={<span className="font-mono text-sm text-ink-muted">{assigned.length} en el evento</span>}>Personal</PageTitle>
       <p className="mb-2 mt-1 text-sm text-ink-muted">
         {canManage
-          ? "Registra a cada persona una sola vez, con foto y DNI. En tus siguientes eventos solo la marcas con un check."
+          ? "Registra a cada persona una sola vez, con foto y documento. En tus siguientes eventos solo la marcas con un check."
           : "La gente que va a este evento."}
       </p>
 
@@ -67,8 +70,8 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
                     <PersonForm
                       eventId={id}
                       organizationId={organizationId}
-                      roles={SUGGESTED_ROLES}
-                      person={{ id: p.id, fullName: p.fullName, docNumber: p.docNumber ?? "", docExpiresOn: p.docExpiresOn ?? "", phone: p.phone ?? "", role: p.role ?? p.defaultRole ?? "" }}
+                      roles={roles}
+                      person={{ id: p.id, fullName: p.fullName, docType: p.docType ?? "dni", docNumber: p.docNumber ?? "", docExpiresOn: p.docExpiresOn ?? "", phone: p.phone ?? "", role: p.role ?? p.defaultRole ?? "" }}
                     />
                   </div>
                 </details>
@@ -98,8 +101,14 @@ export default async function CrewPage({ params }: { params: Promise<{ id: strin
         <>
           <SectionTitle>Registrar a alguien nuevo</SectionTitle>
           <Card>
-            <PersonForm eventId={id} organizationId={organizationId} roles={SUGGESTED_ROLES} />
+            <PersonForm eventId={id} organizationId={organizationId} roles={roles} />
           </Card>
+          {proposed.length > 0 && (
+            <p className="mt-2 text-xs text-ink-muted">
+              <span className="font-mono font-semibold uppercase tracking-wider text-gold-300">◆ Cargos por aprobar: </span>
+              {proposed.map((r) => r.name).join(", ")}. El backend los revisa.
+            </p>
+          )}
         </>
       )}
     </>

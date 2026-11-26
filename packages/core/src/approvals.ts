@@ -3,7 +3,15 @@
 import config from "../../../config/aprobaciones.json";
 
 export type ApprovalGroup = { clave: string; nombre: string; prefijo: string; descripcion: string };
-export type ApprovalStatus = "pending" | "approved" | "changes_requested";
+export type ApprovalStatus = "pending" | "approved" | "changes_requested" | "backup" | "rejected";
+
+/** El semáforo del casting (decisión 50): verde, ámbar y rojo. Siempre con su nombre escrito. */
+export const CASTING_VERDICTS = [
+  { clave: "approved", nombre: "Aprobado", color: "verde" },
+  { clave: "backup", nombre: "Backup", color: "ambar" },
+  { clave: "rejected", nombre: "No admitido", color: "rojo" },
+] as const;
+export type CastingVerdict = (typeof CASTING_VERDICTS)[number]["clave"];
 
 type Config = { grupos: ApprovalGroup[]; por_tipo: Record<string, string[]> };
 const CONFIG = config as unknown as Config;
@@ -22,9 +30,14 @@ export const APPROVAL_STATUS_LABEL: Record<ApprovalStatus, string> = {
   pending: "Por aprobar",
   approved: "Aprobado",
   changes_requested: "Pide cambio",
+  backup: "Backup",
+  rejected: "No admitido",
 };
 
-/** Qué falta para poder empezar: grupos prendidos sin nada subido y elementos sin aprobar. */
+/**
+ * Qué falta para poder empezar: grupos prendidos sin nada subido y elementos sin aprobar.
+ * En casting cada persona recibe un veredicto: basta que nadie quede por revisar y haya al menos una aprobada.
+ */
 export function approvalGate(groups: string[], items: { group: string; status: ApprovalStatus }[]): { ready: boolean; missing: string[] } {
   const missing: string[] = [];
   for (const key of groups) {
@@ -32,8 +45,9 @@ export function approvalGate(groups: string[], items: { group: string; status: A
     const own = items.filter((i) => i.group === key);
     if (own.length === 0) missing.push(`${name}: falta subirlo`);
     else {
-      const open = own.filter((i) => i.status !== "approved").length;
+      const open = own.filter((i) => (key === "casting" ? i.status === "pending" || i.status === "changes_requested" : i.status !== "approved")).length;
       if (open > 0) missing.push(`${name}: ${open} por aprobar`);
+      else if (!own.some((i) => i.status === "approved")) missing.push(`${name}: falta al menos una persona aprobada`);
     }
   }
   return { ready: missing.length === 0, missing };

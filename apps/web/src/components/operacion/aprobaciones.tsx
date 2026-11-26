@@ -7,10 +7,13 @@ import {
   removeApprovalAction,
   replaceApprovalAction,
   setApprovalGroupsAction,
+  setApprovalProfileAction,
   type CierreState,
 } from "@/app/actions/cierre";
 import { MAX_EVIDENCE_BYTES, approvalPath, sha256Hex } from "@mando/core/evidence";
 import { getBrowserClient } from "@/lib/supabase/browser";
+import type { ApprovalStatus } from "@mando/core/approvals";
+import { FichaFields, NextSteps, readFicha } from "./mando";
 import { buttonGhost, buttonPrimary, buttonSecondary, inputClass } from "./ui";
 
 const INITIAL: CierreState = { ok: false, error: null };
@@ -52,61 +55,132 @@ async function uploadPhoto(eventId: string, file: File, onStep: (text: string) =
   return { filePath, sha256 };
 }
 
-/** El recuadro para subir un elemento: foto, nombre y detalle. */
+/**
+ * El recuadro para subir un elemento: foto, nombre y detalle. En casting suma la mini ficha.
+ * Después de subir no vuelve a cero: queda abierto, con «Siguiente» y los caminos a seguir.
+ */
 export function AddApprovalForm({ eventId, group, groupName }: { eventId: string; group: string; groupName: string }) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const [round, setRound] = useState(0);
   const [name, setName] = useState("");
   const [detail, setDetail] = useState("");
   const [state, setState] = useState<Working>(INITIAL);
   const busy = Boolean(state.working);
+  const casting = group === "casting";
+  const done = state.ok && Boolean(state.message);
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const profile = casting ? readFicha(new FormData(e.currentTarget)) : undefined;
     try {
       if (!name.trim()) throw new Error("Escribe el nombre.");
       const file = fileRef.current?.files?.[0] ?? null;
       const uploaded = file ? await uploadPhoto(eventId, file, (working) => setState({ ...INITIAL, working })) : null;
       setState({ ...INITIAL, working: "Registrando…" });
-      const result = await addApprovalAction({ eventId, group, name, detail, filePath: uploaded?.filePath ?? null, sha256: uploaded?.sha256 ?? null });
-      setState(result);
-      if (result.ok) {
-        setName("");
-        setDetail("");
-        if (fileRef.current) fileRef.current.value = "";
-      }
+      setState(await addApprovalAction({ eventId, group, name, detail, filePath: uploaded?.filePath ?? null, sha256: uploaded?.sha256 ?? null, profile }));
     } catch (err) {
       setState({ ok: false, error: err instanceof Error ? err.message : "No se pudo guardar." });
     }
   }
 
+  function next() {
+    setName("");
+    setDetail("");
+    setState(INITIAL);
+    setRound((r) => r + 1);
+    requestAnimationFrame(() => nameRef.current?.focus());
+  }
+
   return (
-    <details className="mt-2 rounded-card border border-dashed border-line p-3">
-      <summary className="cursor-pointer text-sm font-semibold text-ice-300">Subir a {groupName}</summary>
-      <form onSubmit={submit} className="mt-3 grid gap-3">
-        <div>
-          <label htmlFor={`ap-foto-${group}`} className="block text-sm font-medium">
-            Foto
-          </label>
-          <input ref={fileRef} id={`ap-foto-${group}`} type="file" accept="image/*,application/pdf" aria-label={`Foto para ${groupName}`} className="mt-1.5 block w-full text-sm text-ink-muted file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-surface-200 file:px-4 file:text-sm file:font-semibold file:text-ink" />
+    <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)} className="mt-2 rounded-card border border-dashed border-line p-3">
+      <summary className="cursor-pointer text-sm font-semibold text-ice-300">{casting ? "Sumar persona al casting" : `Subir a ${groupName}`}</summary>
+      {done ? (
+        <div className="mt-3">
+          <NextSteps eventId={eventId} message={state.message ?? "Subido."} nextLabel={casting ? "Siguiente persona" : "Subir otro"} onNext={next} current="aprobaciones" />
         </div>
-        <div>
-          <label htmlFor={`ap-nombre-${group}`} className="block text-sm font-medium">
-            Nombre
-          </label>
-          <input id={`ap-nombre-${group}`} value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} aria-label={`Nombre en ${groupName}`} className={`${inputClass} mt-1.5`} />
-        </div>
-        <div>
-          <label htmlFor={`ap-detalle-${group}`} className="block text-sm font-medium">
-            Detalle
-          </label>
-          <input id={`ap-detalle-${group}`} value={detail} onChange={(e) => setDetail(e.target.value)} maxLength={200} aria-label={`Detalle en ${groupName}`} className={`${inputClass} mt-1.5`} />
-        </div>
-        <button type="submit" disabled={busy} className={`${buttonPrimary} justify-self-start`}>
-          {busy ? "Subiendo…" : "Subir para aprobación"}
-        </button>
-        <Feedback state={state} />
-      </form>
+      ) : (
+        <form key={round} onSubmit={submit} className="mt-3 grid gap-3">
+          <div>
+            <label htmlFor={`ap-foto-${group}`} className="block text-sm font-medium">
+              {casting ? "Foto real (basta una del celular)" : "Foto"}
+            </label>
+            <input ref={fileRef} id={`ap-foto-${group}`} type="file" accept="image/*,application/pdf" aria-label={`Foto para ${groupName}`} className="mt-1.5 block w-full text-sm text-ink-muted file:mr-3 file:min-h-11 file:rounded-full file:border-0 file:bg-surface-200 file:px-4 file:text-sm file:font-semibold file:text-ink" />
+          </div>
+          <div>
+            <label htmlFor={`ap-nombre-${group}`} className="block text-sm font-medium">
+              {casting ? "Nombre y apellido" : "Nombre"}
+            </label>
+            <input ref={nameRef} id={`ap-nombre-${group}`} value={name} onChange={(e) => setName(e.target.value)} required maxLength={80} aria-label={`Nombre en ${groupName}`} className={`${inputClass} mt-1.5`} />
+          </div>
+          <div>
+            <label htmlFor={`ap-detalle-${group}`} className="block text-sm font-medium">
+              {casting ? "Para qué papel" : "Detalle"}
+            </label>
+            <input id={`ap-detalle-${group}`} value={detail} onChange={(e) => setDetail(e.target.value)} maxLength={200} aria-label={`Detalle en ${groupName}`} className={`${inputClass} mt-1.5`} />
+          </div>
+          {casting && <FichaFields uid={`nuevo-${round}`} />}
+          <button type="submit" disabled={busy} className={`${buttonPrimary} justify-self-start`}>
+            {busy ? "Subiendo…" : "Subir para aprobación"}
+          </button>
+          <Feedback state={state} />
+        </form>
+      )}
     </details>
+  );
+}
+
+/** En casting nadie se retira: la persona queda guardada. Aquí se actualiza su foto o se corrige su mini ficha. */
+export function CastingTeamActions({ eventId, itemId, label, profile }: { eventId: string; itemId: string; label: string; profile: Record<string, string> }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [state, setState] = useState<Working>(INITIAL);
+  const [editing, setEditing] = useState(false);
+  const busy = Boolean(state.working);
+
+  async function replace(file: File | null) {
+    if (!file) return;
+    try {
+      const uploaded = await uploadPhoto(eventId, file, (working) => setState({ ...INITIAL, working }));
+      setState({ ...INITIAL, working: "Registrando…" });
+      setState(await replaceApprovalAction({ itemId, ...uploaded }));
+    } catch (err) {
+      setState({ ok: false, error: err instanceof Error ? err.message : "No se pudo guardar." });
+    } finally {
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function saveFicha(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const next = readFicha(new FormData(e.currentTarget));
+    setState({ ...INITIAL, working: "Guardando…" });
+    const result = await setApprovalProfileAction({ itemId, profile: next });
+    setState(result);
+    if (result.ok) setEditing(false);
+  }
+
+  return (
+    <div>
+      <input ref={fileRef} type="file" accept="image/*" className="sr-only" tabIndex={-1} aria-label={`Nueva foto para ${label}`} onChange={(e) => void replace(e.target.files?.[0] ?? null)} />
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} aria-label={`Actualizar foto: ${label}`} className={buttonGhost}>
+          Actualizar foto
+        </button>
+        <button type="button" disabled={busy} onClick={() => setEditing((v) => !v)} aria-expanded={editing} aria-label={`Editar ficha: ${label}`} className={buttonGhost}>
+          {editing ? "Cerrar ficha" : "Editar ficha"}
+        </button>
+      </div>
+      {editing && (
+        <form onSubmit={saveFicha} className="mt-3 grid gap-3">
+          <FichaFields uid={itemId} values={profile} />
+          <button type="submit" disabled={busy} className={`${buttonSecondary} justify-self-start`}>
+            Guardar ficha
+          </button>
+        </form>
+      )}
+      <Feedback state={state} />
+    </div>
   );
 }
 
@@ -154,7 +228,7 @@ export function ApprovalTeamActions({ eventId, itemId, label }: { eventId: strin
  * La decisión. El cliente aprueba con un toque o pide un cambio contando qué cambiar.
  * El productor general puede registrar lo que el cliente decidió por otro medio, y debe decir cómo lo supo.
  */
-export function ApprovalDecision({ itemId, label, status, onBehalf }: { itemId: string; label: string; status: "pending" | "approved" | "changes_requested"; onBehalf: boolean }) {
+export function ApprovalDecision({ itemId, label, status, onBehalf }: { itemId: string; label: string; status: ApprovalStatus; onBehalf: boolean }) {
   const [state, action, pending] = useActionState(decideApprovalAction, INITIAL);
   const [mode, setMode] = useState<null | "approve" | "change">(null);
   const needsNote = mode === "change" || (mode === "approve" && onBehalf);

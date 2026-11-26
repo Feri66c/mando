@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { BudgetExtraDecision, ClientNoticeForm, DeadlineForm, InstructionForm, TechNaReview } from "@/components/operacion/ajustes";
+import { BudgetExtraDecision, ClientNoticeForm, DeadlineForm, InstructionForm, RoleReview, TechNaReview } from "@/components/operacion/ajustes";
 import { LogList } from "@/components/operacion/blocks";
+import { BrandForm, BrandRemove, ModalityForm } from "@/components/operacion/cadena";
 import { Semaforo } from "@/components/operacion/semaforo";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
+import { brandKindLabel } from "@mando/core/command";
 import { BUDGET_EXTRA_LABEL, NOTICE_LABEL } from "@mando/core/data";
 import { formatTime } from "@mando/core/time";
-import { getBriefDoubts, getBudget, getClientNotices, getEventContext, getLog, getPlanning, getPlanningDeadline, getTechItems } from "@/lib/data";
+import { getBrands, getBriefDoubts, getBudget, getClientNotices, getEventContext, getEventOrganization, getLog, getPlanning, getPlanningDeadline, getRoleCatalog, getTechItems } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Backend" };
 
@@ -24,7 +26,8 @@ export default async function BackendPage({ params }: { params: Promise<{ id: st
   if (!ctx || ctx.event.role !== "backend") notFound();
   const { event, criticality } = ctx;
   const closed = event.status === "closed";
-  const [planning, tech, budget, doubts, notices, hours, log] = await Promise.all([
+  const [brands, planning, tech, budget, doubts, notices, hours, log] = await Promise.all([
+    getBrands(id),
     getPlanning(id),
     getTechItems(id),
     getBudget(id),
@@ -33,10 +36,12 @@ export default async function BackendPage({ params }: { params: Promise<{ id: st
     getPlanningDeadline(id),
     getLog(id, 8),
   ]);
+  const organizationId = await getEventOrganization(id);
+  const rolesPending = (organizationId ? await getRoleCatalog(organizationId) : []).filter((r) => r.status === "pending");
   const naPending = tech.filter((t) => t.naRequested);
   const extrasPending = (budget?.extras ?? []).filter((x) => x.status === "requested");
   const doubtsOpen = doubts.filter((d) => d.status === "open");
-  const waiting = naPending.length + extrasPending.length + doubtsOpen.length;
+  const waiting = naPending.length + extrasPending.length + doubtsOpen.length + rolesPending.length;
 
   return (
     <>
@@ -65,6 +70,16 @@ export default async function BackendPage({ params }: { params: Promise<{ id: st
                 <p className="mt-1 font-semibold">{BUDGET_EXTRA_LABEL[x.kind]}</p>
                 {x.note && <p className="text-sm text-ink-muted">«{x.note}»</p>}
                 {!closed && <BudgetExtraDecision extraId={x.id} label={BUDGET_EXTRA_LABEL[x.kind]} />}
+              </Card>
+            </li>
+          ))}
+          {rolesPending.map((r) => (
+            <li key={r.id}>
+              <Card>
+                <p className="font-mono text-xs font-semibold uppercase tracking-[0.12em] text-gold-300">Cargo propuesto</p>
+                <p className="mt-1 font-semibold">{r.name}</p>
+                <p className="text-sm text-ink-muted">{r.proposedByName ? `Lo propone ${r.proposedByName}. ` : ""}Si lo apruebas, queda en la lista de cargos de todos.</p>
+                <RoleReview roleId={r.id} name={r.name} />
               </Card>
             </li>
           ))}
@@ -99,6 +114,44 @@ export default async function BackendPage({ params }: { params: Promise<{ id: st
           </Card>
         </>
       )}
+
+      <SectionTitle href={`/eventos/${id}/mando`} linkLabel="Cadena de mando">
+        Marcas y modalidad
+      </SectionTitle>
+      <Card>
+        <p className="mb-3 text-sm text-ink-muted">
+          Las marcas aparecen arriba, junto al nombre del evento, para todo el equipo y para el cliente. Sube el logo oficial que te dio la marca.
+        </p>
+        {brands.length > 0 && (
+          <ul aria-label="Marcas cargadas" className="mb-4 divide-y divide-line">
+            {brands.map((b) => (
+              <li key={b.id} className="flex items-center gap-3 py-2">
+                {b.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={b.logoUrl} alt="" className="h-9 w-16 shrink-0 rounded-md bg-white object-contain px-1.5 py-1" />
+                ) : (
+                  <span aria-hidden className="flex h-9 w-16 shrink-0 items-center justify-center rounded-md border border-dashed border-line text-[10px] uppercase tracking-wider text-ink-muted">
+                    Sin logo
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{b.name}</p>
+                  <p className="text-xs text-ink-muted">{brandKindLabel(b.kind)}</p>
+                </div>
+                {!closed && <BrandRemove brandId={b.id} name={b.name} />}
+              </li>
+            ))}
+          </ul>
+        )}
+        {!closed && (
+          <>
+            <BrandForm eventId={id} />
+            <div className="mt-4 border-t border-line pt-4">
+              <ModalityForm eventId={id} modality={event.modality} agency={event.agencyName} />
+            </div>
+          </>
+        )}
+      </Card>
 
       <SectionTitle>Informar al cliente</SectionTitle>
       <Card>

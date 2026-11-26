@@ -3,10 +3,17 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import {
+  fetchAccessList,
   fetchAdminOrgs,
+  fetchAreas,
+  fetchBrands,
+  fetchCommandChain,
+  fetchEmergencyChanges,
   fetchAlerts,
   fetchBudget,
   fetchPeopleBoard,
+  fetchRoleCatalog,
+  fetchTalentBank,
   fetchPlanning,
   fetchTechItems,
   fetchApprovalGroups,
@@ -189,6 +196,19 @@ export async function getPeopleBoard(eventId: string) {
   return fetchPeopleBoard(await requireClient(), eventId);
 }
 
+/** Cargos del catálogo de la organización: aprobados y por aprobar. Vacío si no le toca verlos. */
+export async function getRoleCatalog(organizationId: string) {
+  try {
+    return await fetchRoleCatalog(await requireClient(), organizationId);
+  } catch {
+    return [];
+  }
+}
+
+export async function getTalentBank(eventId: string) {
+  return fetchTalentBank(await requireClient(), eventId);
+}
+
 export async function getTechItems(eventId: string) {
   return fetchTechItems(await requireClient(), eventId);
 }
@@ -228,4 +248,31 @@ export async function getClientNotices(eventId: string) {
 
 export async function getPlanningDeadline(eventId: string) {
   return fetchPlanningDeadline(await requireClient(), eventId);
+}
+
+// ---- Cadena de mando, marcas y cambios de emergencia ----
+
+export const getCommandChain = cache(async function getCommandChain(eventId: string) {
+  return fetchCommandChain(await requireClient(), eventId);
+});
+
+export async function getAreas(eventId: string) {
+  return fetchAreas(await requireClient(), eventId);
+}
+
+/** Marcas del evento. Si algo falla (p. ej. la base aún no tiene la tabla), el evento se ve igual, sin logos. */
+export const getBrands = cache(async function getBrands(eventId: string) {
+  try {
+    return await fetchBrands(await requireClient(), eventId);
+  } catch {
+    return [];
+  }
+});
+
+export async function getEmergencyChanges(eventId: string) {
+  return fetchEmergencyChanges(await requireClient(), eventId);
+}
+
+export async function getAccessList(eventId: string) {
+  return fetchAccessList(await requireClient(), eventId);
 }

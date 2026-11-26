@@ -5,7 +5,8 @@ import { notFound, redirect } from "next/navigation";
 import { revokeInvitation } from "@/app/actions/panel";
 import { Eyebrow, LevelBadge, PanelShell, PieceChain, TierMeter } from "@/components/panel/kit";
 import { Card, Empty, buttonGhost, buttonSecondary } from "@/components/operacion/ui";
-import { getBrief, getBriefDoubts, getCurrentUser, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
+import { getAreas, getBrief, getBriefDoubts, getCurrentUser, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
+import { SUGGESTED_AREAS } from "@mando/core/command";
 import { DEFAULT_CARGOS, LEVEL_LABEL, TIERS, invitationMessage, type TierKey } from "@mando/core/event-types";
 import { formatDate, formatTime } from "@mando/core/time";
 import { BriefForm, DoubtAnswer } from "./brief-panel";
@@ -31,7 +32,8 @@ export default async function EventTeamPage({
   if (!event) notFound();
   if (event.role !== "backend") redirect(`/eventos/${id}`); // solo el productor general arma el equipo
 
-  const [{ template }, team, invitations, brief, doubts, headerList] = await Promise.all([
+  const [areas, { template }, team, invitations, brief, doubts, headerList] = await Promise.all([
+    getAreas(id).catch(() => []),
     getEventTemplate(id),
     getTeam(id),
     getPendingInvitations(id),
@@ -121,7 +123,12 @@ export default async function EventTeamPage({
       <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
         <div className="min-w-0">
           <section>
-            <h2 className="mb-3 font-display text-lg font-semibold">Equipo con el mando activo</h2>
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-display text-lg font-semibold">Equipo con el mando activo</h2>
+              <Link href={`/eventos/${id}/mando`} className="text-sm font-medium underline underline-offset-4">
+                Ver la cadena de mando
+              </Link>
+            </div>
             <ul className="space-y-2" aria-label="Equipo">
               {team.map((m) => (
                 <li
@@ -209,7 +216,9 @@ export default async function EventTeamPage({
           <Card>
             <InviteForm
               eventId={id}
-              cargos={cargos.map((c) => ({ cargo: c.cargo, nivel: c.nivel, descripcion: c.nivel ? `Nivel ${c.nivel} · ${LEVEL_LABEL[c.nivel]}` : "Solo mira en vivo" }))}
+              areas={[...new Set([...areas.map((a) => a.name), ...SUGGESTED_AREAS])]}
+              team={team.filter((m) => m.role !== "viewer").map((m) => ({ profileId: m.profileId, fullName: m.fullName, title: m.title }))}
+              cargos={cargos.map((c) => ({ cargo: c.cargo, nivel: c.nivel, descripcion: c.nivel ? (LEVEL_LABEL[c.nivel] === c.cargo ? `Nivel ${c.nivel}` : `Nivel ${c.nivel} · ${LEVEL_LABEL[c.nivel]}`) : "Solo mira en vivo" }))}
             />
           </Card>
           <p className="mt-3 text-sm text-ink-muted">

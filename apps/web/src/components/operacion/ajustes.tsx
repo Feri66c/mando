@@ -11,6 +11,7 @@ import {
   openBudgetExtrasAction,
   requestBudgetExtraAction,
   requestTechNaAction,
+  reviewRoleAction,
   reviewTechNaAction,
   sendClientNoticeAction,
   sendInstructionAction,
@@ -111,6 +112,25 @@ export function TechNaReview({ itemId, title }: { itemId: string; title: string 
         </button>
         <button type="submit" name="aplica" value="no" disabled={pending} aria-label={`Aceptar que no aplica: ${title}`} className={`${buttonSecondary} flex-1`}>
           Aceptar
+        </button>
+      </div>
+      <Feedback state={state} />
+    </form>
+  );
+}
+
+/** El backend aprueba un cargo propuesto: pasa al catálogo de toda la organización. */
+export function RoleReview({ roleId, name }: { roleId: string; name: string }) {
+  const [state, action, pending] = useActionState(reviewRoleAction, INITIAL);
+  return (
+    <form action={action} className="mt-3">
+      <input type="hidden" name="role_id" value={roleId} />
+      <div className="flex gap-2">
+        <button type="submit" name="decision" value="approve" disabled={pending} aria-label={`Aprobar cargo: ${name}`} className={`${buttonPrimary} flex-1`}>
+          Aprobar
+        </button>
+        <button type="submit" name="decision" value="reject" disabled={pending} aria-label={`No aprobar cargo: ${name}`} className={`${buttonGhost} flex-1`}>
+          No aprobar
         </button>
       </div>
       <Feedback state={state} />

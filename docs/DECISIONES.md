@@ -257,3 +257,64 @@ Fecha: 26 de noviembre de 2026. Al entrar por primera vez a MANDO en vivo, «Mis
 
 - **Por qué no se vio antes:** la base de pruebas daba esos permisos por su cuenta, igual que los proyectos antiguos de Supabase.
 - **Proyectos ya instalados:** basta con ejecutar una vez `supabase/migrations/20261208000015_permisos_explicitos.sql` en el SQL Editor. No hace falta volver a publicar la app.
+
+# Decisiones del centro de mando · Entrega 1
+
+Fecha: 26 de noviembre de 2026. Fer dictó 23 cambios mirando la app en vivo («Mando es poder»). Se construyen en cuatro entregas. Esta es la primera.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 50 | Semáforo de casting | Cada persona del casting recibe un veredicto: **Aprobado** (verde), **Backup** (ámbar) o **No admitido** (rojo). La luz prendida late y siempre lleva su nombre escrito. Decide el cliente, o el backend en su nombre; la productora lo ve al instante. Nadie se retira del casting: los botones «Reemplazar» y «Retirar» se cambian por «Actualizar foto» y «Editar ficha», y la persona queda guardada con su veredicto. El casting queda completo cuando nadie espera revisión y hay al menos una persona aprobada. |
+| 51 | Mini ficha junto a la foto | Cada persona del casting lleva su mini ficha: edad, talla, estatura, contextura, tono de piel, color de ojos, nacionalidad, disponibilidad, habilidad, hobby, idiomas, experiencia, distrito, calzado, alergias y tatuajes visibles. Se llena al subir y se ve al lado de la foto, también para el cliente que aprueba. Los campos y sus opciones viven en `config/ficha-casting.json`. |
+| 52 | Tipo de documento | La ficha de personal pide tipo y número: **DNI** (8 números exactos, no deja escribir más ni letras), **carnet de extranjería** (9 a 12 letras o números) o **pasaporte** (6 a 12). La persona se reconoce por tipo y número: volver a escribir el mismo documento trae su ficha. |
+| 53 | Cargos con «Agregar otro» | La lista de cargos es más larga y va en orden alfabético. Su última opción siempre es «Agregar otro cargo». El cargo escrito se usa de inmediato en la ficha y queda **propuesto**: el backend lo aprueba en su pantalla y pasa al catálogo de toda la organización. Toda lista de la mini ficha también termina en «Agregar otro». |
+| 54 | Continuidad y MANDO vivo | Después de «Registrar y sumar al evento» la pantalla ya no vuelve a cero: confirma, ofrece «Siguiente persona» y pregunta «¿A dónde quieres ir?» con las partes de la planificación. Lo mismo al subir al casting. Las tarjetas llevan una luz que recorre su filo, el botón principal respira y los semáforos laten. Quien pide menos movimiento en su teléfono ve todo quieto. |
+
+## Supuestos
+
+- **Quién da el veredicto:** el cliente, igual que las demás aprobaciones; el backend puede marcarlo en su nombre. La productora sube y corrige, pero no decide.
+- **Datos personales:** el documento y el teléfono siguen visibles solo para los niveles 1 y 2. El cliente ve foto y mini ficha de su propio evento, nunca el documento.
+- **Listas largas:** solo las primeras tarjetas de cada lista llevan la luz en movimiento, para no cansar al teléfono.
+- **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261209000016_casting_ficha_documento_cargos.sql` en el SQL Editor.
+- **Pendiente en las siguientes entregas:** banco de talentos con importación de CSV, cadena de mando con visibilidad por jerarquía, logos de marca y agencia, minuto a minuto exportable y cierre con People Experience.
+
+# Decisiones del centro de mando · Entrega 2
+
+Fecha: 26 de noviembre de 2026. «No estamos trabajando para un evento, estamos almacenando.»
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 55 | Banco de talentos | La base de personas de la organización es ahora un banco de talentos que sirve para todos los eventos. Cada persona se reconoce por tipo y número de documento: al volver a escribirlo, vuelve con su foto y su mini ficha, y lo nuevo se suma a lo que ya había. Se ordena por categorías (anfitriona, promotora, modelo, host, animador, locutor, personaje, actor) y la productora puede agregar otras. Tiene buscador por nombre, documento, talla o habilidad. Las categorías viven en `config/banco-talentos.json`. |
+| 56 | Del banco al casting | Cada persona del banco tiene el botón «Sumar al casting»: entra al casting del evento con su foto y su ficha, lista para el semáforo del cliente. Una persona entra una sola vez por evento. |
+| 57 | Ingresar e exportar listas | «Ingresar CSV» recibe la lista de una castinera. Lo mínimo es nombre y apellido; edad, talla, documento, celular y categoría entran si la columna se llama así. Antes de ingresar, MANDO muestra cuántas personas entran y qué filas no, con el motivo. Volver a subir la misma lista no duplica a nadie. Límite: 500 personas por lista. «Exportar a Excel (CSV)» baja todo el banco. |
+| 58 | Autorización de datos | El banco guarda datos personales (documento, foto, tono de piel). Para registrar a alguien nuevo o ingresar una lista hay que confirmar que la persona autorizó guardar sus datos; queda anotado quién lo confirmó y cuándo. |
+
+## Supuestos
+
+- **Quién ve el banco:** solo el productor general y el productor de campo (niveles 1 y 2). El cliente ve la foto y la mini ficha de quienes están en el casting de su evento, nunca el documento ni el celular. Lo decide la base de datos, no solo la pantalla.
+- **Sin documento:** una persona importada sin documento se reconoce por su nombre exacto. Conviene completar el documento después.
+- **Exportación segura:** lo que empieza con `=`, `+`, `-` o `@` se exporta como texto, para que Excel no lo ejecute como fórmula.
+- **Excel directo:** por ahora la lista entra y sale en CSV, que Excel abre y guarda. Leer archivos `.xlsx` queda para después.
+- **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261210000017_banco_de_talentos.sql` en el SQL Editor, después de la migración 16.
+
+# Decisiones del centro de mando · Entrega 3
+
+Fecha: 26 de noviembre de 2026. «Mando es poder»: un mando central, sus submandos y lo que ve cada uno.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 59 | Cadena de mando | Cada persona del equipo tiene un área, un mando al que reporta y una visibilidad. El backend arma toda la cadena; el productor de campo suma y ordena a sus submandos (coordinación y técnicos), que quedan bajo su mando. La pantalla «Cadena de mando» muestra el árbol y cuánta gente tiene conectada cada mando, contando a toda la que cuelga de él. El mando al que alguien reporta tiene igual o mayor jerarquía y no se pueden cerrar círculos. Cada cambio queda en la bitácora. |
+| 60 | Visibilidad por persona | Hay tres alcances: **Todo el evento**, **Solo su área** y **Solo lo suyo**. Si nadie dice otra cosa: productores, todo; coordinación, su área; técnicos y proveedores, lo suyo. Un submando ve las actividades de su área, las que tiene a su cargo y los hitos del evento; de alertas, evidencias, bitácora y cambios, solo lo de esas actividades y lo que hizo él. Nunca ve presupuesto, casting, banco de talentos, citados, avisos al cliente ni documentos de otros. Lo decide la base de datos, no la pantalla, y tampoco puede marcar ni pedir cambios sobre actividades que no ve. Los productores (niveles 1 y 2) siempre ven todo. |
+| 61 | Marcas del evento | El backend carga las marcas del evento: del cliente, de la agencia y de la productora, con su logo oficial (PNG, JPG o WebP, hasta 2 MB) o solo el nombre. Aparecen junto al nombre del evento para todo el equipo y para el cliente. MANDO no trae logos de terceros: los sube quien tiene derecho a usarlos. |
+| 62 | Modalidad: tercerización | El evento se marca como directo con el cliente, de agencia o **tercerizado**, con el nombre de la agencia. La etiqueta se ve junto al nombre del evento. |
+| 63 | Cambios de emergencia | Un cambio cerca del evento (persona, proveedor, horario, locación u otro) se registra con una línea y su detalle. El servidor lo clasifica con la hora del evento: con tiempo, **48 horas**, **24 horas** o **último minuto**, y levanta una alerta cada vez más alta. No se edita ni se borra y queda en la bitácora. Lo reportan producción y coordinación. |
+| 64 | Staff de mando y lista de ingreso | La misma pantalla resume el Staff de mando (mandos y personas en campo) y exporta la **lista de ingreso** para el local: «MANDO · nombre del evento · Participantes», numerada, con nombre, documento, cargo y estado del documento; completa o por cargo. El responsable de un documento del expediente es quien lo sube, salvo que se haya asignado antes a otra persona. |
+
+## Supuestos
+
+- **Último minuto** es a 2 horas o menos del inicio, o con el evento en marcha. Entre 2 y 24 horas es «24 horas»; entre 24 y 48, «48 horas». Si Fer prefiere otros cortes, se cambian en la función `report_emergency_change`.
+- **Lista técnica y locación** las sigue viendo todo el equipo: un técnico las necesita para trabajar.
+- **Archivos:** antes cualquier persona del equipo podía abrir cualquier archivo del evento si conocía su ruta. Ahora un submando abre solo las evidencias que ve, los documentos que le tocan y los logos.
+- **Miembros que ya estaban** conservan visibilidad completa: nada cambia para ellos hasta que el backend lo decida.
+- **Pendiente:** reasignar el responsable buscando a la persona por su documento (hoy se elige por nombre), el estado de EPP por persona en la lista de ingreso y el filtro de la lista por área.
+- **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261211000018_cadena_de_mando.sql` en el SQL Editor, después de las migraciones 16 y 17.

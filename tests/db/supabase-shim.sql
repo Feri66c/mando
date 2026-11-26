@@ -26,10 +26,10 @@ create table if not exists auth.identities (
 
 -- Igual que Supabase: el id del usuario sale del JWT de la petición.
 create or replace function auth.uid() returns uuid language sql stable as $$
-  select nullif(coalesce(
-    current_setting('request.jwt.claim.sub', true),
-    current_setting('request.jwt.claims', true)::jsonb ->> 'sub'
-  ), '')::uuid
+  select coalesce(
+    nullif(current_setting('request.jwt.claim.sub', true), ''),
+    nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub'
+  )::uuid
 $$;
 
 grant usage on schema public, auth, extensions to anon, authenticated, service_role;

@@ -5,6 +5,8 @@
 
 import { refresh } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { CASTING_VERDICTS } from "@mando/core/approvals";
+import { cleanFicha } from "@mando/core/casting";
 import { cleanLearnings } from "@mando/core/learnings";
 import { zonedDateTimeToIso } from "@mando/core/time";
 
@@ -164,20 +166,41 @@ export async function addApprovalAction(input: {
   detail: string;
   filePath: string | null;
   sha256: string | null;
+  profile?: Record<string, string>;
 }): Promise<CierreState> {
   if (!input.name.trim()) return { ok: false, error: "Escribe el nombre." };
   return run(
     "add_approval_item",
-    { p_event: input.eventId, p_group: input.group, p_name: input.name, p_detail: input.detail.trim() || null, p_file_path: input.filePath, p_sha256: input.sha256 },
-    "Subido. El cliente ya lo ve.",
+    {
+      p_event: input.eventId,
+      p_group: input.group,
+      p_name: input.name,
+      p_detail: input.detail.trim() || null,
+      p_file_path: input.filePath,
+      p_sha256: input.sha256,
+      p_profile: cleanFicha(input.profile ?? {}),
+    },
+    `«${input.name.trim()}» ya está subido. El cliente lo ve.`,
   );
+}
+
+/** El semáforo del casting: Aprobado, Backup o No admitido. */
+export async function decideCastingAction(_prev: CierreState, fd: FormData): Promise<CierreState> {
+  const verdict = text(fd, "verdict");
+  const label = CASTING_VERDICTS.find((v) => v.clave === verdict)?.nombre;
+  if (!label) return { ok: false, error: "Elige Aprobado, Backup o No admitido." };
+  return run("decide_casting", { p_item: text(fd, "item_id"), p_verdict: verdict, p_note: text(fd, "note") || null }, `Marcado: ${label}.`);
+}
+
+export async function setApprovalProfileAction(input: { itemId: string; profile: Record<string, string> }): Promise<CierreState> {
+  return run("set_approval_profile", { p_item: input.itemId, p_profile: cleanFicha(input.profile) }, "Ficha guardada.");
 }
 
 export async function replaceApprovalAction(input: { itemId: string; filePath: string; sha256: string }): Promise<CierreState> {
   return run(
     "update_approval_item",
     { p_item: input.itemId, p_action: "replace", p_file_path: input.filePath, p_sha256: input.sha256 },
-    "Reemplazado. Vuelve a estar por aprobar.",
+    "Foto actualizada. Vuelve a estar por aprobar.",
   );
 }
 

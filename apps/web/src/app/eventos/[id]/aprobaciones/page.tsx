@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AddApprovalForm, ApprovalDecision, ApprovalGroupsForm, ApprovalTeamActions } from "@/components/operacion/aprobaciones";
+import { AddApprovalForm, ApprovalDecision, ApprovalGroupsForm, ApprovalTeamActions, CastingTeamActions } from "@/components/operacion/aprobaciones";
+import { CastingSemaforo, FichaView } from "@/components/operacion/mando";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
 import { APPROVAL_GROUPS, APPROVAL_STATUS_LABEL, approvalGate, type ApprovalStatus } from "@mando/core/approvals";
 import { formatTime } from "@mando/core/time";
@@ -12,12 +14,15 @@ const STATUS_COLOR: Record<ApprovalStatus, string> = {
   pending: "text-gold-300",
   approved: "text-[#8fe0b8]",
   changes_requested: "text-[#ff6f86]",
+  backup: "text-gold-300",
+  rejected: "text-[#ff6f86]",
 };
-const STATUS_MARK: Record<ApprovalStatus, string> = { pending: "◆", approved: "✓", changes_requested: "!" };
+const STATUS_MARK: Record<ApprovalStatus, string> = { pending: "◆", approved: "✓", changes_requested: "!", backup: "◐", rejected: "✕" };
 
 /**
  * Elementos base que el cliente aprueba antes de empezar: casting, uniforme, utilería y referencias.
  * La productora sube; el cliente aprueba o pide un cambio, en vivo. Sin todo aprobado no se marca el inicio.
+ * El casting lleva semáforo (decisión 50): Aprobado, Backup o No admitido, con la mini ficha junto a la foto.
  */
 export default async function ApprovalsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -75,6 +80,44 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ id: 
               <ul aria-label={g.nombre} className="grid gap-2">
                 {own.map((a) => {
                   const label = `${a.code} ${a.name}`;
+                  if (g.clave === "casting")
+                    return (
+                      <li key={a.id} className="rounded-card bg-surface-100 p-4">
+                        <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
+                          {a.fileUrl ? (
+                            <a href={a.fileUrl} target="_blank" rel="noreferrer" aria-label={`Ver foto de ${label}`} className="shrink-0">
+                              {/* eslint-disable-next-line @next/next/no-img-element -- enlace firmado de corta duración */}
+                              <img src={a.fileUrl} alt={`Foto de ${a.name}`} className="h-36 w-28 bg-surface-200 object-cover" />
+                            </a>
+                          ) : (
+                            <div aria-hidden="true" className="grid h-36 w-28 shrink-0 place-items-center bg-surface-200 font-mono text-xs text-ink-muted">
+                              sin foto
+                            </div>
+                          )}
+                          <div className="min-w-[9rem] flex-1">
+                            <p className="font-mono text-xs text-ink-muted">
+                              {a.code}
+                              {a.version > 1 ? ` · foto ${a.version}` : ""}
+                            </p>
+                            <p className="font-display text-lg font-bold leading-tight">{a.name}</p>
+                            {a.detail && <p className="mt-0.5 text-sm text-ink-muted">{a.detail}</p>}
+                            <p className={`mt-1 font-mono text-xs font-semibold uppercase tracking-wider ${STATUS_COLOR[a.status]}`}>
+                              <span aria-hidden="true">{STATUS_MARK[a.status]} </span>
+                              {APPROVAL_STATUS_LABEL[a.status]}
+                              {a.status !== "pending" && a.decidedAt ? ` · ${formatTime(a.decidedAt, event.timezone)}` : ""}
+                            </p>
+                            {a.status !== "pending" && a.decisionNote && <p className="mt-1 text-sm">«{a.decisionNote}»</p>}
+                          </div>
+                          <div className="w-full min-w-0 border-t border-line pt-3 sm:w-[46%] sm:border-l sm:border-t-0 sm:pl-4 sm:pt-0">
+                            <FichaView profile={a.profile} />
+                          </div>
+                        </div>
+                        <div className="mt-3 grid gap-3">
+                          <CastingSemaforo itemId={a.id} label={label} status={a.status} canDecide={canDecide} />
+                          {canUpload && <CastingTeamActions eventId={id} itemId={a.id} label={label} profile={a.profile} />}
+                        </div>
+                      </li>
+                    );
                   return (
                     <li key={a.id} className="rounded-card bg-surface-100 p-4">
                       <div className="flex items-start gap-3">
@@ -115,6 +158,11 @@ export default async function ApprovalsPage({ params }: { params: Promise<{ id: 
               </ul>
             )}
             {canUpload && <AddApprovalForm eventId={id} group={g.clave} groupName={g.nombre} />}
+            {g.clave === "casting" && canChoose && (
+              <Link href={`/eventos/${id}/talentos`} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-gold-300 underline underline-offset-4">
+                Elegir del banco de talentos
+              </Link>
+            )}
           </section>
         );
       })}

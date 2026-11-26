@@ -5,7 +5,8 @@ import { ClockRules, LiveClock, RealtimeRefresh } from "@/components/operacion/l
 import { BottomNav, PlusButton } from "@/components/operacion/nav";
 import { ROLE_LABEL } from "@mando/core/labels";
 import { zoneLabel } from "@mando/core/time";
-import { getAlerts, getEventContext } from "@/lib/data";
+import { modalityBadge } from "@mando/core/command";
+import { getAlerts, getBrands, getEventContext } from "@/lib/data";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -17,7 +18,9 @@ export default async function EventLayout({ children, params }: { children: Reac
   if (!ctx) notFound(); // no es miembro: para la base de datos, el evento no existe
   const { user, event, isTeam } = ctx;
   if (!event.welcomedAt) redirect(`/bienvenida/${id}`); // primero la bienvenida: ahí toma el mando
-  const openAlerts = (await getAlerts(id)).filter((a) => a.status === "open").length;
+  const [alerts, brands] = await Promise.all([getAlerts(id), getBrands(id)]);
+  const openAlerts = alerts.filter((a) => a.status === "open").length;
+  const badge = modalityBadge(event.modality, event.agencyName);
   const firstName = user.fullName.split(" ")[0];
 
   return (
@@ -36,12 +39,33 @@ export default async function EventLayout({ children, params }: { children: Reac
               Hola, {firstName} · {event.title ?? ROLE_LABEL[event.role]}
             </p>
             <p className="mt-1 truncate font-display text-[21px] font-bold leading-tight">{event.name}</p>
+            {badge && (
+              <p className="mt-1 inline-flex items-center gap-1.5 rounded-full border border-gold-300/60 px-2.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-gold-300">
+                <span aria-hidden className="size-1.5 rotate-45 bg-gold-300" />
+                {badge}
+              </p>
+            )}
           </div>
           <div className="shrink-0 text-right">
             <LiveClock timeZone={event.timezone} className="text-[28px] font-semibold leading-none" />
             <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-[#a9bdd6]">hora de {zoneLabel(event.timezone)}</p>
           </div>
         </div>
+        {brands.length > 0 && (
+          <ul aria-label="Marcas del evento" className="mt-3 flex flex-wrap items-center gap-2">
+            {brands.map((b) => (
+              <li key={b.id} title={b.name}>
+                {b.logoUrl ? (
+                  // Logo subido por el backend al cubo privado; el enlace firmado cambia cada hora.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={b.logoUrl} alt={b.name} className="h-8 w-auto max-w-[120px] rounded-md bg-white object-contain px-2 py-1" />
+                ) : (
+                  <span className="inline-flex h-8 items-center rounded-md border border-line px-2.5 text-xs font-semibold">{b.name}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </header>
       <main className="mx-auto max-w-2xl px-5 pt-3">{children}</main>
       <BottomNav eventId={id} openAlerts={isTeam ? openAlerts : 0} client={!isTeam} />
