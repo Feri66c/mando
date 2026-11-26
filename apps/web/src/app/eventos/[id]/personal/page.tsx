@@ -22,7 +22,7 @@ function PersonRow({ p, children }: { p: CrewPerson; children?: React.ReactNode 
       <div className="min-w-0 flex-1">
         <p className="font-medium leading-snug">{p.fullName}</p>
         <p className="text-sm text-ink-muted">{p.role ?? p.defaultRole ?? "Sin rol"}</p>
-        <p className={`mt-0.5 font-mono text-xs font-semibold uppercase tracking-wider ${ok ? "text-[#8fe0b8]" : "text-[#ff8f7a]"}`}>
+        <p className={`mt-0.5 font-mono text-xs font-semibold uppercase tracking-wider ${ok ? "text-[#8fe0b8]" : "text-[#ff6f86]"}`}>
           {DOC_STATE_LABEL[p.docState]}
           {!p.photoUrl ? " · falta la foto" : ""}
         </p>

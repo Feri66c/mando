@@ -2,12 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { ackBrief, raiseBriefDoubt } from "@/app/actions/brief";
 import { takeControl } from "@/app/actions/panel";
+import type { EventBrief } from "@mando/core/data";
 import { Logo } from "@/components/brand";
-import { buttonPrimary } from "@/components/operacion/ui";
+import { buttonPrimary, buttonSecondary, inputClass } from "@/components/operacion/ui";
 
 type Props = {
   eventId: string;
+  /** El brief que cargó el backend, con lo que ya respondió esta persona. null si no hay o si es el cliente. */
+  brief: EventBrief | null;
   firstName: string;
   inviter: string | null;
   eventName: string;
@@ -39,7 +43,7 @@ function remaining(targetMs: number, nowMs: number): string | null {
   return d > 0 ? `${d} d ${clock}` : clock;
 }
 
-type Stage = "gracias" | "reglas" | "reto" | "cuenta" | "accion";
+type Stage = "gracias" | "brief" | "reglas" | "reto" | "cuenta" | "accion";
 
 export function Welcome(props: Props) {
   const router = useRouter();
@@ -48,6 +52,8 @@ export function Welcome(props: Props) {
   const [now, setNow] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [question, setQuestion] = useState("");
   const headingRef = useRef<HTMLHeadingElement>(null);
   const target = props.keyTimeIso ? new Date(props.keyTimeIso).getTime() : null;
   const rules = props.isViewer ? VIEWER_PROMISES : props.mandatories;
@@ -80,6 +86,31 @@ export function Welcome(props: Props) {
       clearTimeout(go);
     };
   }, [stage, router, props.eventId]);
+
+  const afterBrief: Stage = rules.length > 0 ? "reglas" : "reto";
+  const brief = props.brief;
+  const doubtOpen = brief?.doubt?.status === "open";
+
+  async function acknowledge() {
+    if (brief?.acked) return setStage(afterBrief);
+    setBusy(true);
+    setError(null);
+    const result = await ackBrief(props.eventId);
+    setBusy(false);
+    if (!result.ok) return setError(result.error ?? "No se pudo registrar. Intenta de nuevo.");
+    setStage(afterBrief);
+  }
+
+  async function sendDoubt() {
+    setBusy(true);
+    setError(null);
+    const result = await raiseBriefDoubt(props.eventId, question);
+    setBusy(false);
+    if (!result.ok) return setError(result.error ?? "No se pudo enviar. Intenta de nuevo.");
+    setAsking(false);
+    setQuestion("");
+    router.refresh();
+  }
 
   async function start() {
     setBusy(true);
@@ -149,9 +180,115 @@ export function Welcome(props: Props) {
               </p>
             </div>
 
-            <button type="button" onClick={() => setStage(rules.length > 0 ? "reglas" : "reto")} className={`${buttonPrimary} mt-auto w-full`}>
+            <button type="button" onClick={() => setStage(brief ? "brief" : afterBrief)} className={`${buttonPrimary} mt-auto w-full`}>
               Continuar
             </button>
+          </section>
+        )}
+
+        {stage === "brief" && brief && (
+          <section className="flex flex-1 flex-col motion-safe:animate-[entrada_.5s_ease-out]">
+            <p className={eyebrow}>Antes de empezar</p>
+            <h1 ref={headingRef} tabIndex={-1} className={title}>
+              Este es tu brief.
+            </h1>
+            <p className="mt-3 text-lg text-ink-muted">Léelo completo. Es tu guion para este evento.</p>
+
+            <div className="corte mt-5 bg-surface-100 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-mono text-xs uppercase tracking-[0.14em] text-gold-300">Brief del evento</p>
+                <span className="bg-surface-200 px-2.5 py-1 font-mono text-xs uppercase tracking-wider">Versión {brief.version}</span>
+              </div>
+              <p className="mt-3 font-display text-2xl font-semibold leading-tight">{props.eventName}</p>
+              <p className="mt-3 whitespace-pre-line text-lg leading-relaxed">{brief.summary}</p>
+              <dl className="mt-4 divide-y divide-line text-base">
+                {props.dateText && (
+                  <div className="flex gap-4 py-2.5">
+                    <dt className="w-28 shrink-0 font-mono text-xs uppercase tracking-wider text-ink-muted">Fecha</dt>
+                    <dd>{props.dateText}{props.timeText ? ` · ${props.timeText}, hora de ${props.zone}` : ""}</dd>
+                  </div>
+                )}
+                {brief.attendees && (
+                  <div className="flex gap-4 py-2.5">
+                    <dt className="w-28 shrink-0 font-mono text-xs uppercase tracking-wider text-ink-muted">Asistentes</dt>
+                    <dd>{brief.attendees}</dd>
+                  </div>
+                )}
+                {brief.objective && (
+                  <div className="flex gap-4 py-2.5">
+                    <dt className="w-28 shrink-0 font-mono text-xs uppercase tracking-wider text-ink-muted">Objetivo</dt>
+                    <dd>{brief.objective}</dd>
+                  </div>
+                )}
+                <div className="flex gap-4 py-2.5">
+                  <dt className="w-28 shrink-0 font-mono text-xs uppercase tracking-wider text-ink-muted">Tu cargo</dt>
+                  <dd>{props.cargo}</dd>
+                </div>
+              </dl>
+            </div>
+
+            {brief.doubt?.status === "answered" && !brief.acked && (
+              <div className="corte mt-4 border border-gold-500/60 bg-surface-100 p-4">
+                <p className="font-mono text-xs uppercase tracking-[0.14em] text-ok">
+                  El backend respondió{brief.doubt.corrected ? " y corrigió el brief" : ""}
+                </p>
+                <p className="mt-2 text-sm text-ink-muted">Tu duda: «{brief.doubt.question}»</p>
+                <p className="mt-2 text-lg font-medium">{brief.doubt.answer}</p>
+              </div>
+            )}
+
+            {error && (
+              <p role="alert" className="mt-4 border border-critical/40 bg-critical/10 px-3 py-2 text-sm">
+                {error}
+              </p>
+            )}
+
+            {doubtOpen ? (
+              <div className="corte mt-4 border border-critical/60 bg-critical/10 p-4" role="status">
+                <p className="font-mono text-xs uppercase tracking-[0.14em] text-[#ff6f86]">No avanzas todavía</p>
+                <p className="mt-2 text-lg font-medium">Tu duda llegó al backend como alerta: «{brief.doubt?.question}»</p>
+                <p className="mt-2 text-ink-muted">Esperando la confirmación del backend.</p>
+                <button type="button" onClick={() => router.refresh()} className={`${buttonSecondary} mt-4 w-full`}>
+                  Revisar si ya respondieron
+                </button>
+              </div>
+            ) : asking ? (
+              <div className="mt-4">
+                <label htmlFor="duda-brief" className="block font-medium">
+                  ¿Qué no coincide con lo que sabías?
+                </label>
+                <textarea
+                  id="duda-brief"
+                  rows={3}
+                  maxLength={1000}
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  placeholder="Ejemplo: a mí me dijeron que era el 17. ¿Pueden confirmar la fecha?"
+                  className={`${inputClass} mt-2`}
+                />
+                <div className="mt-3 flex gap-2">
+                  <button type="button" onClick={sendDoubt} disabled={busy || !question.trim()} className={`${buttonPrimary} flex-1`}>
+                    {busy ? "Enviando…" : "Enviar al backend"}
+                  </button>
+                  <button type="button" onClick={() => setAsking(false)} className={`${buttonSecondary} flex-1`}>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6">
+                <p className="text-center font-display text-xl font-semibold">¿Estás enterado del brief?</p>
+                <button type="button" onClick={acknowledge} disabled={busy} className="acepto mt-3">
+                  {busy ? "Un momento…" : "Acepto"}
+                </button>
+                <p className="mt-2 text-center text-sm text-ink-muted">Sí, estoy enterado.</p>
+                {!brief.acked && (
+                  <button type="button" onClick={() => setAsking(true)} className={`${buttonSecondary} mt-4 w-full !text-[var(--naranja)]`}>
+                    Tengo una duda
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         )}
 
@@ -164,7 +301,7 @@ export function Welcome(props: Props) {
             <ul className="mt-6 space-y-2">
               {rules.map((m) => (
                 <li key={m.titulo} className="corte flex gap-3 bg-surface-100 p-4">
-                  <span aria-hidden="true" className={`mt-0.5 font-mono text-lg leading-none ${props.isViewer ? "text-ice-300" : "text-[#ff8f7a]"}`}>
+                  <span aria-hidden="true" className={`mt-0.5 font-mono text-lg leading-none ${props.isViewer ? "text-ice-300" : "text-[#ff6f86]"}`}>
                     {props.isViewer ? "○" : "✕"}
                   </span>
                   <div>

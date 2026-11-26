@@ -25,7 +25,7 @@ function CriterionList({ items, canMark, label }: { items: Criterion[]; canMark:
           <div className="flex items-start gap-3">
             <span
               aria-hidden="true"
-              className={`mt-0.5 font-mono text-lg leading-none ${c.status === "ok" ? "text-[#8fe0b8]" : c.status === "failed" ? "text-[#ff8f7a]" : "text-ink-muted"}`}
+              className={`mt-0.5 font-mono text-lg leading-none ${c.status === "ok" ? "text-[#8fe0b8]" : c.status === "failed" ? "text-[#ff6f86]" : "text-ink-muted"}`}
             >
               {STATUS_MARK[c.status]}
             </span>

@@ -215,3 +215,20 @@ Fecha: 26 de noviembre de 2026. Fer aprobó el rediseño y pidió aplicarlo a la
 - **Dónde vive:** las reglas de forma están en `apps/web/src/app/globals.css` y las piezas en `components/operacion/ui.tsx` y `nav.tsx`, para que todas las pantallas cambien juntas. La lógica no se tocó.
 - **Foco y contraste:** lo que está cortado dibuja el foco hacia adentro. Los estados siguen llevando su palabra escrita.
 - **Pendiente del rediseño:** el teclado propio del código de 6 dígitos, «elige tu mando», las insignias y las pantallas de podcast y minuto a minuto del lienzo de diseño.
+
+# Decisiones del repaso con Fer sobre el link de prueba
+
+Fecha: 26 de noviembre de 2026. Fer revisó la demo pantalla por pantalla, dictó los cambios y dijo «Listo confirmado, comienza a programar».
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 39 | Modo oscuro con neón de evento | Reemplaza la regla de «un solo oro» (decisión 38 conserva las formas). Fondo negro, botones de contorno fino con brillo por dentro, del mismo tamaño grande. El amarillo es el acento principal y se suman naranja, rojo y verde. Letras y avisos más grandes para iPhone y iPad. |
+| 40 | Botón «Acepto» | En «Mis eventos» la persona ve «Te convocaron como» y su cargo, con un botón hexagonal grande «ACEPTO». Sin aceptar no entra. Queda en la bitácora. El cliente no tiene cargo que aceptar. |
+| 41 | Brief con dudas al backend | Después de aceptar, lo primero es el brief que carga el backend. La persona responde «¿Estás enterado del brief?» con «Acepto» o deja una duda. Con una duda abierta no avanza: la duda llega al backend como alerta de Atención y solo el backend la responde, confirmando o corrigiendo el brief. Cada corrección sube la versión y hay que leerlo de nuevo. Sin brief leído no se toma el mando. |
+
+## Supuestos
+
+- **Dónde carga el brief el backend:** en el panel del evento, junto con las dudas por responder.
+- **Quién lee el brief:** solo el equipo. El cliente no lo ve.
+- **Eventos sin brief:** si el backend no cargó brief, la bienvenida sigue como antes.
+- **App de teléfono (Expo):** todavía no muestra «Acepto» ni el brief; se hace en la web primero.

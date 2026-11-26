@@ -39,7 +39,7 @@ export default async function TechPage({ params }: { params: Promise<{ id: strin
             {g.items.map((i) => {
               const deadline = techDeadline(event.startsAt, i.dueHours);
               const late = i.status === "pending" && deadline !== null && deadline.getTime() < now;
-              const color = i.status === "confirmed" ? "text-[#8fe0b8]" : i.status === "not_applicable" ? "text-ink-muted" : late ? "text-[#ff8f7a]" : "text-gold-300";
+              const color = i.status === "confirmed" ? "text-[#8fe0b8]" : i.status === "not_applicable" ? "text-ink-muted" : late ? "text-[#ff6f86]" : "text-gold-300";
               return (
                 <li key={i.id} className="rounded-card bg-surface-100 p-4">
                   <p className="font-medium leading-snug">

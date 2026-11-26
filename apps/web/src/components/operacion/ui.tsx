@@ -113,9 +113,9 @@ export function areaColor(order: number): string {
 }
 
 export const buttonPrimary =
-  "inline-flex min-h-12 items-center justify-center rounded-full bg-gold-500 px-5 text-base font-semibold text-navy-950 disabled:opacity-60";
+  "inline-flex min-h-14 items-center justify-center rounded-full bg-gold-500 px-5 text-base font-semibold text-navy-950 disabled:opacity-60";
 export const buttonSecondary =
-  "inline-flex min-h-11 items-center justify-center rounded-full bg-surface-200 px-4 text-sm font-semibold text-ink disabled:opacity-60";
+  "inline-flex min-h-12 items-center justify-center rounded-full bg-surface-200 px-4 text-sm font-semibold text-ink disabled:opacity-60";
 export const buttonGhost =
   "inline-flex min-h-11 items-center justify-center rounded-full border border-line px-4 text-sm font-semibold text-ink disabled:opacity-60";
 export const inputClass =

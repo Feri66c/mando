@@ -69,7 +69,7 @@ export default async function LocationPage({ params }: { params: Promise<{ id: s
               <div className="grid gap-2">
                 {loc.killerZones && (
                   <Card>
-                    <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#ff8f7a]">Zonas killer</p>
+                    <p className="font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[#ff6f86]">Zonas killer</p>
                     <p className="mt-1 whitespace-pre-line">{loc.killerZones}</p>
                   </Card>
                 )}

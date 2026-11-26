@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Presupuesto" };
 const STATUS = {
   sent: { label: "Por aprobar", color: "text-gold-300" },
   approved: { label: "✓ Aprobado por el cliente", color: "text-[#8fe0b8]" },
-  changes_requested: { label: "El cliente pidió un cambio", color: "text-[#ff8f7a]" },
+  changes_requested: { label: "El cliente pidió un cambio", color: "text-[#ff6f86]" },
 } as const;
 
 /**
@@ -64,8 +64,8 @@ export default async function BudgetPage({ params }: { params: Promise<{ id: str
           {warnings.length > 0 && (
             <ul aria-label="Avisos del presupuesto" className="mb-2 grid gap-2">
               {warnings.map((w) => (
-                <li key={w.title} className="rounded-card border border-[#ff8f7a]/50 bg-surface-100 px-4 py-3 text-sm">
-                  <span className="font-semibold text-[#ff8f7a]">Por debajo del mercado. </span>
+                <li key={w.title} className="rounded-card border border-[#ff6f86]/50 bg-surface-100 px-4 py-3 text-sm">
+                  <span className="font-semibold text-[#ff6f86]">Por debajo del mercado. </span>
                   {w.message}
                 </li>
               ))}
