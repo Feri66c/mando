@@ -17,3 +17,39 @@ Fecha: 24 de noviembre de 2026. Fer delegó estas decisiones para no bloquear el
 - **Ajustes al esquema del paquete**: `permits.is_required` (las reglas hablan de «permiso obligatorio»); perfil creado automáticamente al registrarse un usuario; `received_at` de evidencias fijado por el servidor; `event_role_of()` deja de ser pública porque revelaba roles ajenos.
 - **Seed**: además del evento de ejemplo del paquete, crea los tres usuarios de prueba en Supabase Auth y carga la escala de criticidad. Es solo para desarrollo (regla 9).
 - **Cache Components de Next.js**: apagado; todas las pantallas dependen de la sesión.
+
+# Decisiones del prompt maestro (v1) y supuestos de la Etapa 1
+
+Fecha: 26 de noviembre de 2026. Fer confirmó el plan de la Etapa 1 y las recomendaciones de la
+sección 6 de `docs/PROMPT-MAESTRO.md`.
+
+## Sección 6 del prompt maestro
+
+| # | Decisión | Qué se decidió | Cuándo aplica |
+| --- | --- | --- | --- |
+| 4 | App móvil | Expo (React Native) en este mismo repositorio, compartiendo tipos y reglas con la web. No una app que solo envuelve la web. | Etapa 2 |
+| 5 | Trabajo sin señal | Cola local de evidencias y marcas de hora que se sincroniza al volver la señal. Vale la hora del servidor (`received_at`); se guarda también la del teléfono (`captured_at`). La base ya guarda las dos desde la Etapa 1. | Etapa 2 |
+| 6 | Avisos al teléfono | Notificaciones de Expo, disparadas desde la base según el nivel de criticidad. En la Etapa 1 los avisos se ven solo dentro de la web abierta. | Etapa 2 |
+| 7 | Ingreso | Código de 6 dígitos al correo, Google y Apple, los tres juntos (Apple pide su propio ingreso si se ofrece el de Google). En la Etapa 1 sigue el ingreso con contraseña. | Etapa 2 |
+| 8 | Estructura | Monorepo `apps/web`, `apps/mobile`, `packages/core`. La mudanza se hace al empezar la Etapa 2; en la Etapa 1 la lógica común queda en `src/lib/core/` para moverla sin reescribirla. | Etapa 2 |
+| 9 | Sitio público | Dentro de `apps/web`, en rutas públicas sin sesión. | Etapa 6 |
+
+## Decisiones nuevas de la Etapa 1
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 10 | Red Flag en el tema oscuro | El color del nivel 4 (`#061428`) es el mismo del fondo oscuro. En el tema oscuro la etiqueta Red Flag es blanca con texto azul noche y la palabra escrita. El tema claro no cambia y el JSON no cambia. |
+| 11 | Prometido contra entregado | `commitments.outcome` con tres estados: `met` (cumplido), `partial` (parcial), `unmet` (incumplido). `matches` se mantiene y se calcula (`true` solo si es cumplido). Parcial levanta la regla `compromiso_no_coincide` con nivel `nivel_parcial` (2, Atención); incumplido con su nivel (3, Crítico). |
+| 12 | Rol Proveedor | Se deja para la Etapa 3, con la hoja de llamado. En la Etapa 1 el proveedor no entra a MANDO. |
+
+## Supuestos de la Etapa 1
+
+- **Todo cambio de la hoja de ruta pasa por funciones de la base** (`request_change`, `confirm_change`, `mark_item`). La app sigue sin poder hacer `update` directo en `route_items`. Cada función valida el rol, trabaja en una transacción, escribe en la bitácora y evalúa las reglas.
+- **Recálculo en cascada** (docs/07): si una actividad dependiente empieza antes de que termine aquella de la que depende (más su `lag_minutes`), se desplaza lo necesario conservando su duración. Las actividades listas o canceladas no se mueven. Adelantar una actividad no adelanta a las que dependen de ella.
+- **Tipos de cambio en la Etapa 1:** `extend` (más o menos minutos al final) y `move` (desplazar inicio y fin). Reasignar, agregar o cancelar actividades llega con la torre de control.
+- **Reglas por reloj** (`actividad_retrasada`, `actividad_sin_responsable`, `momento_critico_sin_resolver`, permisos): las evalúa `evaluate_clock_rules`, que la pantalla del equipo llama cada minuto mientras está abierta. Un programador en el servidor (pg_cron) queda para cuando haya avisos al teléfono (Etapa 2).
+- **Una alerta por situación:** si ya hay una alerta abierta o reconocida con la misma regla y la misma actividad, solo sube su nivel si corresponde.
+- **Qué ve el cliente en la bitácora:** cambios y marcas de actividades visibles, evidencias visibles y alertas de nivel 4. Momentos críticos, respuestas y compromisos son internos.
+- **Evidencias:** archivo en Supabase Storage, cubo privado `evidences`, ruta `<id del evento>/<archivo>`. Se ven con enlaces firmados de corta duración. La huella SHA-256 se calcula en el teléfono antes de subir. Límite de 50 MB por archivo.
+- **Tiempo real:** las pantallas se suscriben a los cambios del evento con Supabase Realtime y se vuelven a dibujar. Qué filas llegan lo decide la seguridad por fila, no la pantalla.
+- **Tema oscuro:** es el de las pantallas del evento (Hoy, Hoja de ruta, Alertas, Más, Modo En Vivo). Ingreso y «Mis eventos» siguen en tema claro por ahora.
