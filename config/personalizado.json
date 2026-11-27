@@ -1,0 +1,1766 @@
+{
+  "_nota": "Evento personalizado (decisión 83). El productor general le pone nombre y marca los componentes; cada componente deriva documentos al Legal (expediente), cargos al Personal, ítems al Técnico, grupos a Aprobaciones, partidas al Presupuesto y piezas al timeline. Las categorías de documentos son las 6 del expediente. Los plazos se cuentan en días desde la hora clave; lo previo nunca vence después del tope de 48 horas. Son referencias para Perú: el productor general ajusta lo que aplique.",
+  "clave": "personalizado",
+  "nombre": "Personalizado",
+  "descripcion": "Arma tu propio megaproyecto: le pones nombre, marcas lo que lleva y MANDO lo deriva a legal, logística, transporte, personal, técnico y presupuesto.",
+  "hora_clave": "Inicio del evento",
+  "areas": [
+    {
+      "clave": "legal",
+      "nombre": "Legal"
+    },
+    {
+      "clave": "logistica",
+      "nombre": "Logística"
+    },
+    {
+      "clave": "transporte",
+      "nombre": "Transporte"
+    },
+    {
+      "clave": "personal",
+      "nombre": "Personal y talento"
+    },
+    {
+      "clave": "tecnico",
+      "nombre": "Técnico"
+    },
+    {
+      "clave": "presupuesto",
+      "nombre": "Presupuesto"
+    },
+    {
+      "clave": "aprobaciones",
+      "nombre": "Aprobación del cliente"
+    },
+    {
+      "clave": "seguridad",
+      "nombre": "Seguridad"
+    }
+  ],
+  "base": {
+    "piezas": [
+      {
+        "titulo": "Brief y alcance",
+        "detalle": "Objetivo, público, alcance y presupuesto",
+        "inicio_min": -20160,
+        "duracion_min": 120,
+        "clave": false,
+        "visible_cliente": true
+      },
+      {
+        "titulo": "Convocatoria del equipo",
+        "detalle": "Equipo invitado y confirmado",
+        "inicio_min": -10080,
+        "duracion_min": 60,
+        "clave": false,
+        "visible_cliente": false
+      },
+      {
+        "titulo": "Montaje",
+        "detalle": "Llegada de proveedores y armado",
+        "inicio_min": -1440,
+        "duracion_min": 480,
+        "clave": false,
+        "visible_cliente": false
+      },
+      {
+        "titulo": "Inicio del evento",
+        "detalle": "La hora que el cliente espera",
+        "inicio_min": 0,
+        "duracion_min": 240,
+        "clave": true,
+        "visible_cliente": true
+      },
+      {
+        "titulo": "Cierre y desmontaje",
+        "detalle": "Close out, conteo y retiro",
+        "inicio_min": 300,
+        "duracion_min": 180,
+        "clave": false,
+        "visible_cliente": true
+      }
+    ],
+    "cargos": [
+      {
+        "cargo": "Productor general",
+        "nivel": 1,
+        "rol": "backend"
+      },
+      {
+        "cargo": "Torre de control",
+        "nivel": 1,
+        "rol": "backend"
+      },
+      {
+        "cargo": "Productor de campo",
+        "nivel": 2,
+        "rol": "producer"
+      },
+      {
+        "cargo": "Coordinador",
+        "nivel": 3,
+        "rol": "producer"
+      },
+      {
+        "cargo": "Cliente",
+        "nivel": null,
+        "rol": "viewer"
+      }
+    ],
+    "no_negociables": [],
+    "hitos_estrella": [
+      "El evento empieza a la hora anunciada",
+      "Momento de impacto registrado",
+      "Cierre sin incidentes"
+    ]
+  },
+  "bloques": [
+    {
+      "clave": "base",
+      "nombre": "Base del proyecto",
+      "modulos": [
+        {
+          "clave": "presupuesto-desglosado",
+          "nombre": "Presupuesto desglosado",
+          "descripcion": "Partidas por área, aprobadas por el cliente antes de gastar.",
+          "deriva": [
+            "presupuesto",
+            "legal"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "presupuesto-aprobado",
+              "titulo": "Presupuesto desglosado aprobado por el cliente",
+              "categoria": "administracion",
+              "plazo_dias": -10,
+              "no_negociable": true
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Administración y finanzas",
+              "nivel": 2,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Producción",
+            "Personal",
+            "Técnico",
+            "Logística",
+            "Imprevistos (5 a 10 %)"
+          ]
+        },
+        {
+          "clave": "proveedores",
+          "nombre": "Proveedores y subcontratas",
+          "descripcion": "Varios proveedores con contrato, RUC y pólizas.",
+          "deriva": [
+            "legal",
+            "presupuesto"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "ficha-ruc-proveedores",
+              "titulo": "Ficha RUC y vigencia de poder de cada proveedor",
+              "categoria": "proveedores",
+              "plazo_dias": -10,
+              "no_negociable": false
+            },
+            {
+              "clave": "polizas-proveedores",
+              "titulo": "Pólizas de responsabilidad civil de los proveedores",
+              "categoria": "seguridad",
+              "plazo_dias": -5,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Coordinador de proveedores",
+              "nivel": 3,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Proveedores"
+          ]
+        },
+        {
+          "clave": "adelantos",
+          "nombre": "Adelantos y pagos a cuenta",
+          "descripcion": "Pagos parciales a proveedores con voucher.",
+          "deriva": [
+            "presupuesto",
+            "legal"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "vouchers-adelantos",
+              "titulo": "Vouchers de adelantos a proveedores",
+              "categoria": "administracion",
+              "plazo_dias": -3,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Adelantos"
+          ]
+        }
+      ]
+    },
+    {
+      "clave": "entorno",
+      "nombre": "Entorno",
+      "modulos": [
+        {
+          "clave": "interior",
+          "nombre": "Interior: salón, hotel o auditorio",
+          "descripcion": "Local cerrado con sus reglas y horarios.",
+          "deriva": [
+            "legal",
+            "logistica"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "carta-locacion",
+              "titulo": "Carta o autorización de la locación",
+              "categoria": "permisos",
+              "plazo_dias": -5,
+              "no_negociable": true
+            },
+            {
+              "clave": "itse-local",
+              "titulo": "Certificado ITSE vigente del local",
+              "categoria": "permisos",
+              "plazo_dias": -10,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "energia",
+              "titulo": "Energía",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": []
+        },
+        {
+          "clave": "exterior",
+          "nombre": "Exterior o vía pública",
+          "descripcion": "Calle, parque o plaza: permiso municipal y plan por clima.",
+          "deriva": [
+            "legal",
+            "seguridad",
+            "logistica"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "permiso-via-publica",
+              "titulo": "Permiso municipal de uso de vía pública",
+              "categoria": "permisos",
+              "plazo_dias": -15,
+              "no_negociable": true
+            },
+            {
+              "clave": "plan-clima",
+              "titulo": "Plan de contingencia por lluvia, viento o sol",
+              "categoria": "seguridad",
+              "plazo_dias": -5,
+              "no_negociable": false
+            },
+            {
+              "clave": "coordinacion-pnp",
+              "titulo": "Coordinación con PNP y serenazgo",
+              "categoria": "seguridad",
+              "plazo_dias": -5,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "escenario",
+              "titulo": "Toldos o carpas",
+              "obligatorio": true
+            },
+            {
+              "categoria": "energia",
+              "titulo": "Grupo electrógeno",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [
+            "Permiso de vía pública aprobado"
+          ],
+          "partidas": [
+            "Toldos",
+            "Grupo electrógeno"
+          ]
+        },
+        {
+          "clave": "centro-comercial",
+          "nombre": "Centro comercial",
+          "descripcion": "Atado al reglamento del mall y a sus ventanas de montaje.",
+          "deriva": [
+            "legal",
+            "logistica"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "reglamento-mall",
+              "titulo": "Reglamento del centro comercial firmado",
+              "categoria": "permisos",
+              "plazo_dias": -7,
+              "no_negociable": true
+            },
+            {
+              "clave": "ventanas-montaje",
+              "titulo": "Ventanas de montaje y desmontaje aprobadas",
+              "categoria": "logistica",
+              "plazo_dias": -5,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": []
+        },
+        {
+          "clave": "recinto-masivo",
+          "nombre": "Recinto masivo: estadio, arena o feria",
+          "descripcion": "Público masivo con aforo controlado.",
+          "deriva": [
+            "legal",
+            "seguridad",
+            "personal"
+          ],
+          "pesado": true,
+          "documentos": [
+            {
+              "clave": "itse-espectaculo",
+              "titulo": "ITSE o visto bueno de Defensa Civil para el espectáculo",
+              "categoria": "permisos",
+              "plazo_dias": -15,
+              "no_negociable": true
+            },
+            {
+              "clave": "plan-seguridad",
+              "titulo": "Plan de seguridad y evacuación",
+              "categoria": "seguridad",
+              "plazo_dias": -10,
+              "no_negociable": true
+            },
+            {
+              "clave": "ambulancia",
+              "titulo": "Ambulancia y equipo médico contratados",
+              "categoria": "seguridad",
+              "plazo_dias": -5,
+              "no_negociable": true
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Jefe de seguridad",
+              "nivel": 3,
+              "rol": "producer"
+            },
+            {
+              "cargo": "Equipo médico",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [
+            "Aforo controlado en tiempo real",
+            "Plan de evacuación y equipo médico en sitio"
+          ],
+          "partidas": [
+            "Seguridad",
+            "Ambulancia"
+          ]
+        },
+        {
+          "clave": "naturaleza",
+          "nombre": "Playa, campo o zona protegida",
+          "descripcion": "Autoridad de la zona, residuos y accesos.",
+          "deriva": [
+            "legal",
+            "logistica",
+            "transporte"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "autorizacion-zona",
+              "titulo": "Autorización de la autoridad de la zona (municipio, capitanía o área protegida)",
+              "categoria": "permisos",
+              "plazo_dias": -20,
+              "no_negociable": true
+            },
+            {
+              "clave": "plan-residuos",
+              "titulo": "Plan de manejo de residuos",
+              "categoria": "logistica",
+              "plazo_dias": -5,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "energia",
+              "titulo": "Grupo electrógeno",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Limpieza y residuos"
+          ]
+        },
+        {
+          "clave": "gira",
+          "nombre": "Varias ciudades o gira",
+          "descripcion": "El mismo evento en más de una ciudad.",
+          "deriva": [
+            "logistica",
+            "transporte",
+            "presupuesto"
+          ],
+          "pesado": true,
+          "documentos": [
+            {
+              "clave": "ruta-viajes",
+              "titulo": "Ruta de viajes, pasajes y hospedajes",
+              "categoria": "logistica",
+              "plazo_dias": -10,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Coordinador de viajes",
+              "nivel": 3,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [
+            {
+              "titulo": "Traslado entre ciudades",
+              "detalle": "Equipo y carga a la siguiente plaza",
+              "inicio_min": -2880,
+              "duracion_min": 480,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [],
+          "partidas": [
+            "Pasajes",
+            "Hospedaje",
+            "Viáticos"
+          ]
+        }
+      ]
+    },
+    {
+      "clave": "estructuras",
+      "nombre": "Estructuras y montaje",
+      "modulos": [
+        {
+          "clave": "con-estructuras",
+          "nombre": "Con estructuras",
+          "descripcion": "Escenario, truss, tarimas o ground support.",
+          "deriva": [
+            "seguridad",
+            "tecnico",
+            "legal"
+          ],
+          "pesado": true,
+          "documentos": [
+            {
+              "clave": "memoria-calculo",
+              "titulo": "Memoria de cálculo de estructuras firmada por ingeniero",
+              "categoria": "seguridad",
+              "plazo_dias": -10,
+              "no_negociable": true
+            },
+            {
+              "clave": "certificado-montaje",
+              "titulo": "Certificado de montaje y anclaje de estructuras",
+              "categoria": "seguridad",
+              "plazo_dias": -3,
+              "no_negociable": true
+            },
+            {
+              "clave": "sctr-montaje",
+              "titulo": "SCTR del personal de montaje",
+              "categoria": "seguridad",
+              "plazo_dias": -5,
+              "no_negociable": true
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "escenario",
+              "titulo": "Estructuras (escenario, truss, tarimas)",
+              "obligatorio": true
+            },
+            {
+              "categoria": "escenario",
+              "titulo": "Inspección de estructuras",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Jefe de montaje",
+              "nivel": 3,
+              "rol": "producer"
+            },
+            {
+              "cargo": "Rigger",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [
+            {
+              "titulo": "Montaje de estructuras",
+              "detalle": "Armado y anclaje",
+              "inicio_min": -2880,
+              "duracion_min": 720,
+              "clave": false,
+              "visible_cliente": false
+            },
+            {
+              "titulo": "Inspección de estructuras",
+              "detalle": "Revisión antes de abrir",
+              "inicio_min": -600,
+              "duracion_min": 60,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [
+            "Estructuras certificadas antes de abrir"
+          ],
+          "partidas": [
+            "Estructuras",
+            "Montajistas"
+          ]
+        },
+        {
+          "clave": "sin-estructuras",
+          "nombre": "Sin estructuras",
+          "descripcion": "Módulos y mobiliario liviano, sin carga elevada.",
+          "deriva": [
+            "logistica",
+            "tecnico"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "plano",
+              "titulo": "Plano de distribución",
+              "categoria": "logistica",
+              "plazo_dias": -3,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "escenario",
+              "titulo": "Módulos y mobiliario liviano",
+              "obligatorio": false,
+              "plazo_horas": 24
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Mobiliario"
+          ]
+        },
+        {
+          "clave": "escenografia",
+          "nombre": "Escenografía o fabricación",
+          "descripcion": "Piezas fabricadas a medida con planos y renders.",
+          "deriva": [
+            "aprobaciones",
+            "legal",
+            "presupuesto"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "orden-fabricacion",
+              "titulo": "Orden de fabricación firmada",
+              "categoria": "proveedores",
+              "plazo_dias": -15,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [
+            "utileria",
+            "referencias"
+          ],
+          "cargos": [],
+          "piezas": [
+            {
+              "titulo": "Fabricación",
+              "detalle": "Taller del proveedor",
+              "inicio_min": -14400,
+              "duracion_min": 7200,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [],
+          "partidas": [
+            "Fabricación"
+          ]
+        },
+        {
+          "clave": "pantallas",
+          "nombre": "Pantallas y tecnología",
+          "descripcion": "Pantallas LED, video y operador.",
+          "deriva": [
+            "tecnico",
+            "presupuesto"
+          ],
+          "pesado": false,
+          "documentos": [],
+          "tecnica": [
+            {
+              "categoria": "video",
+              "titulo": "Pantallas LED",
+              "obligatorio": true
+            },
+            {
+              "categoria": "video",
+              "titulo": "Contenidos para pantalla",
+              "obligatorio": false,
+              "plazo_horas": 2
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Operador de video",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Pantallas"
+          ]
+        },
+        {
+          "clave": "energia",
+          "nombre": "Energía propia",
+          "descripcion": "Generador, tableros y pozo a tierra.",
+          "deriva": [
+            "tecnico",
+            "seguridad"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "protocolo-electrico",
+              "titulo": "Protocolo de pozo a tierra y conformidad del electricista",
+              "categoria": "seguridad",
+              "plazo_dias": -5,
+              "no_negociable": true
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "energia",
+              "titulo": "Energía",
+              "obligatorio": true
+            },
+            {
+              "categoria": "energia",
+              "titulo": "Energía de respaldo",
+              "obligatorio": false,
+              "plazo_horas": 24
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Electricista",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Energía"
+          ]
+        },
+        {
+          "clave": "sonido-luces",
+          "nombre": "Sonido y luces",
+          "descripcion": "Sistema de sonido, micrófonos y luces.",
+          "deriva": [
+            "tecnico"
+          ],
+          "pesado": false,
+          "documentos": [],
+          "tecnica": [
+            {
+              "categoria": "sonido",
+              "titulo": "Sonido",
+              "obligatorio": true
+            },
+            {
+              "categoria": "microfonos",
+              "titulo": "Micrófonos",
+              "obligatorio": true
+            },
+            {
+              "categoria": "luces",
+              "titulo": "Luces",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Stage manager",
+              "nivel": 3,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [
+            {
+              "titulo": "Prueba de sonido",
+              "detalle": "Línea por línea",
+              "inicio_min": -480,
+              "duracion_min": 120,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [],
+          "partidas": [
+            "Sonido",
+            "Luces"
+          ]
+        }
+      ]
+    },
+    {
+      "clave": "talento",
+      "nombre": "Talento y personal",
+      "modulos": [
+        {
+          "clave": "modelos",
+          "nombre": "Modelos, anfitrionas y promotoras",
+          "descripcion": "Casting, uniforme y contratos.",
+          "deriva": [
+            "personal",
+            "aprobaciones",
+            "legal",
+            "presupuesto"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "contratos-talento",
+              "titulo": "Contratos y recibos del talento",
+              "categoria": "proveedores",
+              "plazo_dias": -5,
+              "no_negociable": false
+            },
+            {
+              "clave": "uso-de-imagen",
+              "titulo": "Autorización de uso de imagen del talento",
+              "categoria": "permisos",
+              "plazo_dias": -5,
+              "no_negociable": true
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [
+            "casting",
+            "uniforme"
+          ],
+          "cargos": [
+            {
+              "cargo": "Jefa de anfitrionas",
+              "nivel": 3,
+              "rol": "producer"
+            },
+            {
+              "cargo": "Anfitriona o modelo",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Modelos",
+            "Anfitrionas"
+          ]
+        },
+        {
+          "clave": "hosts",
+          "nombre": "Hosts, animadores o locutores",
+          "descripcion": "Conducción con guion y micrófono.",
+          "deriva": [
+            "personal",
+            "aprobaciones",
+            "tecnico"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "pauta-host",
+              "titulo": "Guion o pauta de conducción",
+              "categoria": "logistica",
+              "plazo_dias": -3,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "microfonos",
+              "titulo": "Micrófono inalámbrico para el host",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [
+            "casting"
+          ],
+          "cargos": [
+            {
+              "cargo": "Host o animador",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Host"
+          ]
+        },
+        {
+          "clave": "talento-internacional",
+          "nombre": "Talento internacional",
+          "descripcion": "Artista o speaker que viene de fuera: migraciones, rider e impuestos.",
+          "deriva": [
+            "personal",
+            "legal",
+            "transporte",
+            "presupuesto"
+          ],
+          "pesado": true,
+          "documentos": [
+            {
+              "clave": "calidad-migratoria",
+              "titulo": "Visa o calidad migratoria del artista (Migraciones)",
+              "categoria": "permisos",
+              "plazo_dias": -30,
+              "no_negociable": true
+            },
+            {
+              "clave": "contrato-artista",
+              "titulo": "Contrato del artista y rider técnico",
+              "categoria": "proveedores",
+              "plazo_dias": -30,
+              "no_negociable": true
+            },
+            {
+              "clave": "retencion-no-domiciliado",
+              "titulo": "Retención de impuesto a no domiciliados (SUNAT)",
+              "categoria": "administracion",
+              "plazo_dias": -5,
+              "no_negociable": false
+            },
+            {
+              "clave": "pasajes-artista",
+              "titulo": "Pasajes, hospedaje y traslados del artista",
+              "categoria": "logistica",
+              "plazo_dias": -10,
+              "no_negociable": false
+            },
+            {
+              "clave": "seguro-viaje",
+              "titulo": "Seguro de viaje del artista y su equipo",
+              "categoria": "seguridad",
+              "plazo_dias": -10,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "otros",
+              "titulo": "Rider técnico del artista",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Manager de talento internacional",
+              "nivel": 3,
+              "rol": "producer"
+            },
+            {
+              "cargo": "Road manager",
+              "nivel": 3,
+              "rol": "producer"
+            },
+            {
+              "cargo": "Traductor o enlace",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [
+            {
+              "titulo": "Llegada del artista",
+              "detalle": "Recojo en aeropuerto y hotel",
+              "inicio_min": -1440,
+              "duracion_min": 180,
+              "clave": false,
+              "visible_cliente": false
+            },
+            {
+              "titulo": "Prueba con el artista",
+              "detalle": "Prueba técnica con su equipo",
+              "inicio_min": -300,
+              "duracion_min": 90,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [
+            "Artista con calidad migratoria en regla"
+          ],
+          "partidas": [
+            "Fee del artista",
+            "Pasajes y hotel del artista"
+          ]
+        },
+        {
+          "clave": "menores",
+          "nombre": "Menores de edad en escena",
+          "descripcion": "Niños o adolescentes en el evento o la grabación.",
+          "deriva": [
+            "legal",
+            "personal",
+            "seguridad"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "autorizacion-padres",
+              "titulo": "Autorización notarial de padres o tutores",
+              "categoria": "permisos",
+              "plazo_dias": -7,
+              "no_negociable": true
+            },
+            {
+              "clave": "permiso-menores",
+              "titulo": "Permiso de trabajo de menores (Ministerio de Trabajo)",
+              "categoria": "permisos",
+              "plazo_dias": -15,
+              "no_negociable": true
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Responsable de menores",
+              "nivel": 3,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [
+            "Menores siempre acompañados y autorizados"
+          ],
+          "partidas": []
+        },
+        {
+          "clave": "staff",
+          "nombre": "Staff y personal de campo",
+          "descripcion": "Equipo numeroso con planilla, uniforme y lista de acceso.",
+          "deriva": [
+            "personal",
+            "legal",
+            "aprobaciones"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "planilla-staff",
+              "titulo": "Contratos o planilla del staff",
+              "categoria": "administracion",
+              "plazo_dias": -5,
+              "no_negociable": false
+            },
+            {
+              "clave": "lista-acceso",
+              "titulo": "Lista de acceso con documento de identidad",
+              "categoria": "logistica",
+              "plazo_dias": -2,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [
+            "uniforme"
+          ],
+          "cargos": [
+            {
+              "cargo": "Coordinador de personal",
+              "nivel": 3,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Staff",
+            "Alimentación del equipo"
+          ]
+        },
+        {
+          "clave": "musica",
+          "nombre": "Música y derechos de autor",
+          "descripcion": "Música en vivo o grabada ante público.",
+          "deriva": [
+            "legal",
+            "presupuesto"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "licencia-apdayc",
+              "titulo": "Licencia de derechos de autor (APDAYC)",
+              "categoria": "permisos",
+              "plazo_dias": -7,
+              "no_negociable": true
+            },
+            {
+              "clave": "licencia-conexos",
+              "titulo": "Licencia de derechos conexos (UNIMPRO)",
+              "categoria": "permisos",
+              "plazo_dias": -7,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Derechos de autor"
+          ]
+        }
+      ]
+    },
+    {
+      "clave": "comercio",
+      "nombre": "Importaciones y exportaciones",
+      "modulos": [
+        {
+          "clave": "importa-productora",
+          "nombre": "Importa la productora",
+          "descripcion": "La productora es el importador de registro: RUC, agente de aduanas y aranceles.",
+          "deriva": [
+            "legal",
+            "logistica",
+            "transporte",
+            "presupuesto"
+          ],
+          "pesado": true,
+          "documentos": [
+            {
+              "clave": "ruc-importador",
+              "titulo": "RUC habilitado para importar",
+              "categoria": "administracion",
+              "plazo_dias": -45,
+              "no_negociable": false
+            },
+            {
+              "clave": "proforma-extranjero",
+              "titulo": "Proforma y orden de compra al proveedor extranjero",
+              "categoria": "proveedores",
+              "plazo_dias": -45,
+              "no_negociable": false
+            },
+            {
+              "clave": "agente-aduanas",
+              "titulo": "Agente de aduanas contratado",
+              "categoria": "proveedores",
+              "plazo_dias": -30,
+              "no_negociable": false
+            },
+            {
+              "clave": "dam-importacion",
+              "titulo": "DAM de importación numerada",
+              "categoria": "logistica",
+              "plazo_dias": -15,
+              "no_negociable": true
+            },
+            {
+              "clave": "permisos-sectoriales",
+              "titulo": "Permisos sectoriales del producto (DIGESA, SENASA, MTC o DIGEMID)",
+              "categoria": "permisos",
+              "plazo_dias": -20,
+              "no_negociable": true
+            },
+            {
+              "clave": "aranceles-igv",
+              "titulo": "Pago de aranceles e IGV de importación",
+              "categoria": "administracion",
+              "plazo_dias": -10,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Coordinador de comercio exterior",
+              "nivel": 3,
+              "rol": "producer"
+            },
+            {
+              "cargo": "Agente de aduanas",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [
+            {
+              "titulo": "Desaduanaje",
+              "detalle": "Mercadería nacionalizada",
+              "inicio_min": -14400,
+              "duracion_min": 2880,
+              "clave": false,
+              "visible_cliente": false
+            },
+            {
+              "titulo": "Llegada al almacén",
+              "detalle": "Recepción e inventario",
+              "inicio_min": -10080,
+              "duracion_min": 240,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [
+            "Mercadería nacionalizada antes del montaje"
+          ],
+          "partidas": [
+            "Flete internacional",
+            "Aranceles e IGV",
+            "Agente de aduanas"
+          ]
+        },
+        {
+          "clave": "importa-tercero",
+          "nombre": "Importa el cliente o un tercero",
+          "descripcion": "Otro es el importador; la productora recibe y verifica.",
+          "deriva": [
+            "legal",
+            "logistica"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "constancia-nacionalizacion",
+              "titulo": "Constancia de nacionalización del importador",
+              "categoria": "logistica",
+              "plazo_dias": -10,
+              "no_negociable": true
+            },
+            {
+              "clave": "acta-entrega-importado",
+              "titulo": "Acta de entrega de lo importado",
+              "categoria": "logistica",
+              "plazo_dias": -3,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": []
+        },
+        {
+          "clave": "courier",
+          "nombre": "Envío por courier",
+          "descripcion": "Envíos chicos por courier, con su límite de valor.",
+          "deriva": [
+            "logistica",
+            "presupuesto"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "guia-courier",
+              "titulo": "Guía del courier y declaración de valor",
+              "categoria": "logistica",
+              "plazo_dias": -10,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Courier"
+          ]
+        },
+        {
+          "clave": "internamiento",
+          "nombre": "Activos de internamiento temporal",
+          "descripcion": "Equipos que entran al país solo por el evento y salen en el mismo estado.",
+          "deriva": [
+            "legal",
+            "logistica",
+            "transporte",
+            "presupuesto"
+          ],
+          "pesado": true,
+          "documentos": [
+            {
+              "clave": "admision-temporal",
+              "titulo": "Declaración de admisión temporal para reexportación",
+              "categoria": "logistica",
+              "plazo_dias": -15,
+              "no_negociable": true
+            },
+            {
+              "clave": "garantia-sunat",
+              "titulo": "Garantía o carta fianza ante SUNAT",
+              "categoria": "administracion",
+              "plazo_dias": -15,
+              "no_negociable": true
+            },
+            {
+              "clave": "inventario-series",
+              "titulo": "Inventario de activos con números de serie",
+              "categoria": "logistica",
+              "plazo_dias": -10,
+              "no_negociable": false
+            },
+            {
+              "clave": "ata-carnet",
+              "titulo": "Carné ATA, si el país de origen lo usa",
+              "categoria": "logistica",
+              "plazo_dias": -20,
+              "no_negociable": false
+            },
+            {
+              "clave": "dam-reexportacion",
+              "titulo": "DAM de reexportación de los activos",
+              "categoria": "logistica",
+              "plazo_dias": 15,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Coordinador de comercio exterior",
+              "nivel": 3,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [
+            {
+              "titulo": "Reexportación de activos",
+              "detalle": "Embalaje y salida del país",
+              "inicio_min": 1440,
+              "duracion_min": 2880,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [
+            "Activos internados con garantía vigente"
+          ],
+          "partidas": [
+            "Garantía SUNAT",
+            "Flete de retorno"
+          ]
+        },
+        {
+          "clave": "exportaciones",
+          "nombre": "Exportaciones",
+          "descripcion": "Material o producto que sale del país después del evento.",
+          "deriva": [
+            "legal",
+            "logistica",
+            "transporte"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "dam-exportacion",
+              "titulo": "Factura y DAM de exportación",
+              "categoria": "administracion",
+              "plazo_dias": 5,
+              "no_negociable": false
+            },
+            {
+              "clave": "certificado-origen",
+              "titulo": "Certificado de origen",
+              "categoria": "logistica",
+              "plazo_dias": 3,
+              "no_negociable": false
+            },
+            {
+              "clave": "embalaje-nimf",
+              "titulo": "Embalaje tratado (NIMF-15) y fumigación",
+              "categoria": "logistica",
+              "plazo_dias": 3,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [
+            {
+              "titulo": "Embarque de exportación",
+              "detalle": "Carga y salida",
+              "inicio_min": 2880,
+              "duracion_min": 1440,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [],
+          "partidas": [
+            "Flete de exportación"
+          ]
+        }
+      ]
+    },
+    {
+      "clave": "movimiento",
+      "nombre": "Transporte y almacén",
+      "modulos": [
+        {
+          "clave": "carga",
+          "nombre": "Transporte de carga",
+          "descripcion": "Camiones y fletes de material.",
+          "deriva": [
+            "transporte",
+            "logistica",
+            "legal"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "guias-remision",
+              "titulo": "Guías de remisión de la carga",
+              "categoria": "logistica",
+              "plazo_dias": -2,
+              "no_negociable": true
+            },
+            {
+              "clave": "seguro-carga",
+              "titulo": "Seguro de la carga",
+              "categoria": "seguridad",
+              "plazo_dias": -3,
+              "no_negociable": false
+            },
+            {
+              "clave": "datos-vehiculos",
+              "titulo": "Placa, licencia y SOAT de los vehículos",
+              "categoria": "logistica",
+              "plazo_dias": -2,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Coordinador de transporte",
+              "nivel": 3,
+              "rol": "producer"
+            },
+            {
+              "cargo": "Conductor",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [
+            {
+              "titulo": "Traslado de carga",
+              "detalle": "Del almacén al lugar",
+              "inicio_min": -1440,
+              "duracion_min": 240,
+              "clave": false,
+              "visible_cliente": false
+            }
+          ],
+          "no_negociables": [],
+          "partidas": [
+            "Fletes"
+          ]
+        },
+        {
+          "clave": "movilidad",
+          "nombre": "Movilidad de equipo o público",
+          "descripcion": "Buses o vans para el equipo o invitados.",
+          "deriva": [
+            "transporte",
+            "logistica",
+            "personal"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "lista-pasajeros",
+              "titulo": "Lista de pasajeros por unidad",
+              "categoria": "logistica",
+              "plazo_dias": -2,
+              "no_negociable": false
+            },
+            {
+              "clave": "autorizacion-mtc",
+              "titulo": "Autorización de transporte de personal (MTC)",
+              "categoria": "permisos",
+              "plazo_dias": -5,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Coordinador de transporte",
+              "nivel": 3,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Movilidad"
+          ]
+        },
+        {
+          "clave": "almacen",
+          "nombre": "Almacén y custodia",
+          "descripcion": "Guardar material antes y después.",
+          "deriva": [
+            "logistica",
+            "seguridad"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "acta-almacen",
+              "titulo": "Acta de recepción en almacén",
+              "categoria": "logistica",
+              "plazo_dias": -5,
+              "no_negociable": false
+            },
+            {
+              "clave": "seguro-custodia",
+              "titulo": "Seguro de bienes en custodia",
+              "categoria": "seguridad",
+              "plazo_dias": -5,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Almacenero",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Almacén"
+          ]
+        }
+      ]
+    },
+    {
+      "clave": "producto",
+      "nombre": "Producto y experiencias",
+      "modulos": [
+        {
+          "clave": "alimentos",
+          "nombre": "Alimentos, bebidas o degustación",
+          "descripcion": "Producto que se come o se toma.",
+          "deriva": [
+            "legal",
+            "personal"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "registro-sanitario",
+              "titulo": "Registro sanitario del producto (DIGESA)",
+              "categoria": "permisos",
+              "plazo_dias": -10,
+              "no_negociable": true
+            },
+            {
+              "clave": "carne-sanidad",
+              "titulo": "Carné de sanidad del personal que manipula",
+              "categoria": "seguridad",
+              "plazo_dias": -5,
+              "no_negociable": true
+            },
+            {
+              "clave": "licencia-alcohol",
+              "titulo": "Autorización para bebidas alcohólicas, si aplica",
+              "categoria": "permisos",
+              "plazo_dias": -10,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [
+            "Producto con registro sanitario vigente"
+          ],
+          "partidas": [
+            "Producto y degustación"
+          ]
+        },
+        {
+          "clave": "sorteos",
+          "nombre": "Premios, sorteos o promociones",
+          "descripcion": "Concursos y sorteos con premio.",
+          "deriva": [
+            "legal",
+            "presupuesto"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "autorizacion-sorteo",
+              "titulo": "Autorización de promoción comercial o sorteo (Ministerio del Interior)",
+              "categoria": "permisos",
+              "plazo_dias": -15,
+              "no_negociable": true
+            },
+            {
+              "clave": "bases-sorteo",
+              "titulo": "Bases del sorteo publicadas",
+              "categoria": "permisos",
+              "plazo_dias": -7,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Premios"
+          ]
+        },
+        {
+          "clave": "pirotecnia",
+          "nombre": "Pirotecnia y efectos especiales",
+          "descripcion": "Fuegos, chispas frías, humo o CO2.",
+          "deriva": [
+            "legal",
+            "seguridad",
+            "tecnico"
+          ],
+          "pesado": true,
+          "documentos": [
+            {
+              "clave": "autorizacion-sucamec",
+              "titulo": "Autorización de SUCAMEC para pirotecnia",
+              "categoria": "permisos",
+              "plazo_dias": -15,
+              "no_negociable": true
+            },
+            {
+              "clave": "operador-pirotecnia",
+              "titulo": "Operador de pirotecnia certificado",
+              "categoria": "seguridad",
+              "plazo_dias": -7,
+              "no_negociable": true
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "otros",
+              "titulo": "Efectos especiales",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [],
+          "piezas": [],
+          "no_negociables": [
+            "Pirotecnia autorizada y operada por certificado"
+          ],
+          "partidas": [
+            "Efectos especiales"
+          ]
+        },
+        {
+          "clave": "drones",
+          "nombre": "Drones",
+          "descripcion": "Tomas aéreas o show de drones.",
+          "deriva": [
+            "legal",
+            "tecnico"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "autorizacion-drones",
+              "titulo": "Registro y autorización de drones (MTC)",
+              "categoria": "permisos",
+              "plazo_dias": -10,
+              "no_negociable": true
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "video",
+              "titulo": "Drones",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [],
+          "cargos": [
+            {
+              "cargo": "Piloto de drones",
+              "nivel": 4,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Drones"
+          ]
+        },
+        {
+          "clave": "streaming",
+          "nombre": "Transmisión o grabación",
+          "descripcion": "Cámaras, streaming o contenido para redes.",
+          "deriva": [
+            "tecnico",
+            "legal",
+            "aprobaciones"
+          ],
+          "pesado": false,
+          "documentos": [
+            {
+              "clave": "aviso-grabacion",
+              "titulo": "Aviso de grabación al público y uso de imagen",
+              "categoria": "permisos",
+              "plazo_dias": -2,
+              "no_negociable": false
+            }
+          ],
+          "tecnica": [
+            {
+              "categoria": "video",
+              "titulo": "Cámaras",
+              "obligatorio": true
+            },
+            {
+              "categoria": "video",
+              "titulo": "Internet dedicado para transmisión",
+              "obligatorio": true
+            }
+          ],
+          "aprobaciones": [
+            "referencias"
+          ],
+          "cargos": [
+            {
+              "cargo": "Director de cámaras",
+              "nivel": 3,
+              "rol": "producer"
+            }
+          ],
+          "piezas": [],
+          "no_negociables": [],
+          "partidas": [
+            "Producción audiovisual"
+          ]
+        }
+      ]
+    }
+  ]
+}

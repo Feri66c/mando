@@ -6,7 +6,7 @@ import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui"
 import { COST_REFERENCES, budgetLinesTotal, budgetWarnings, formatMoney } from "@mando/core/planning";
 import { BUDGET_EXTRA_LABEL } from "@mando/core/data";
 import { formatTime } from "@mando/core/time";
-import { getBudget, getEventContext } from "@/lib/data";
+import { getBudget, getCustomBudgetParts, getEventContext } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Presupuesto" };
 
@@ -29,7 +29,7 @@ export default async function BudgetPage({ params }: { params: Promise<{ id: str
   const isBackend = event.role === "backend";
   if (!isClient && !(event.level !== null && event.level <= 2)) notFound();
   const closed = event.status === "closed";
-  const budget = await getBudget(id);
+  const [budget, customParts] = await Promise.all([getBudget(id), isClient ? Promise.resolve([]) : getCustomBudgetParts(id)]);
   const lines = budget?.lines ?? [];
   const warnings = budgetWarnings(lines);
   const linesTotal = budgetLinesTotal(lines);
@@ -59,6 +59,19 @@ export default async function BudgetPage({ params }: { params: Promise<{ id: str
             </div>
           )}
         </Card>
+      )}
+
+      {customParts.length > 0 && (
+        <section aria-label="Partidas del armado" className="mt-4">
+          <p className="font-mono text-sm font-bold uppercase tracking-[0.14em] text-gold-300">Partidas que pide tu armado</p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {customParts.map((p) => (
+              <li key={p} className="bg-surface-100 px-3 py-1.5 text-base shadow-[inset_0_0_0_1px_var(--surface-200)]">
+                {p}
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {budget && !isClient && (isBackend || budget.breakdownVisible) && (

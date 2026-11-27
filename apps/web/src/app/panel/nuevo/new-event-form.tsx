@@ -1,11 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { createEvent, type PanelState } from "@/app/actions/panel";
 import { PieceChain, TierMeter } from "@/components/panel/kit";
 import { buttonPrimary, inputClass } from "@/components/operacion/ui";
 import type { EventTemplate, TierKey } from "@mando/core/event-types";
 import { DEFAULT_TIMEZONE, ZONE_OPTIONS, zoneLabel } from "@mando/core/time";
+import { CUSTOM_INFO, CUSTOM_KIND, composeCustomTemplate, pickModules } from "@mando/core/custom-event";
+import { CustomBuilder, CustomSummary } from "./custom-builder";
 
 const initial: PanelState = { ok: false, error: null };
 const label = "block text-sm font-medium";
@@ -21,8 +23,23 @@ export function NewEventForm({
 }) {
   const [state, action, pending] = useActionState(createEvent, initial);
   const [kind, setKind] = useState(templates[0].clave);
-  const template = templates.find((t) => t.clave === kind) ?? templates[0];
   const [zone, setZone] = useState(DEFAULT_TIMEZONE);
+  const [typeName, setTypeName] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const custom = kind === CUSTOM_KIND;
+  const modules = useMemo(() => pickModules([...selected]), [selected]);
+  const customTemplate = useMemo(
+    () => composeCustomTemplate(typeName.trim() || CUSTOM_INFO.nombre, [...selected]),
+    [typeName, selected],
+  );
+  const template: EventTemplate = custom ? customTemplate : (templates.find((t) => t.clave === kind) ?? templates[0]);
+  const toggle = (key: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
 
   return (
     <form action={action} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -55,10 +72,34 @@ export function NewEventForm({
               </span>
             </label>
           ))}
+          <label className="personalizado-opcion" data-on={custom ? "" : undefined}>
+            <input
+              type="radio"
+              name="tipo"
+              value={CUSTOM_KIND}
+              checked={custom}
+              onChange={() => setKind(CUSTOM_KIND)}
+              className="mt-1 h-4 w-4 accent-[var(--gold-300)]"
+            />
+            <span className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center justify-between gap-2">
+                <span className="font-display text-xl font-bold">{CUSTOM_INFO.nombre}</span>
+                <span className="personalizado-sello">Arma el tuyo</span>
+              </span>
+              <span className="mt-1 block text-sm text-ink-muted">{CUSTOM_INFO.descripcion}</span>
+              {custom && (
+                <span className="mt-2 block">
+                  <TierMeter tier={customTemplate.tamano} label={tiers[customTemplate.tamano].nombre} />
+                </span>
+              )}
+            </span>
+          </label>
         </div>
+        {custom && <CustomBuilder typeName={typeName} onTypeName={setTypeName} selected={selected} onToggle={toggle} />}
       </fieldset>
 
       <div className="min-w-0 space-y-5">
+        {custom && <CustomSummary modules={modules} template={customTemplate} />}
         <section aria-live="polite" className="bg-surface-100 p-4">
           <p className="font-mono text-xs uppercase tracking-[0.16em] text-ink-muted">
             {template.nombre} · {template.piezas.length} piezas
