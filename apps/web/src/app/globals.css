@@ -427,7 +427,7 @@ body.tema-operacion::after {
   padding: 1.5px;
   pointer-events: none;
   --neon: var(--ice-300, #a9cce8);
-  background: conic-gradient(from var(--giro), transparent 0 74%, color-mix(in srgb, var(--neon) 55%, transparent) 86%, var(--neon) 93%, #fff 96%, transparent 100%);
+  background: conic-gradient(from var(--giro), transparent 0 62%, color-mix(in srgb, var(--neon) 18%, transparent) 78%, color-mix(in srgb, var(--neon) 70%, transparent) 94%, transparent 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
@@ -484,14 +484,14 @@ button.luz-boton:disabled { opacity: 0.6; }
 .tema-operacion input.neon-activo { border-color: var(--gold-300, #e4c65b); }
 
 @media (prefers-reduced-motion: no-preference) {
-  .tema-operacion .rounded-card::before { opacity: 0.9; animation: recorrido 7s linear infinite; }
+  .tema-operacion .rounded-card::before { opacity: 0.55; animation: recorrido 16s linear infinite; }
   /* Listas largas: solo las primeras tarjetas llevan recorrido, para no cansar al teléfono. */
   .tema-operacion li:nth-child(n + 9) > .rounded-card::before,
   .tema-operacion li.rounded-card:nth-child(n + 9)::before { animation: none; opacity: 0; }
   .tema-operacion li:nth-child(even) > .rounded-card::before,
-  .tema-operacion li.rounded-card:nth-child(even)::before { animation-delay: -3.5s; }
+  .tema-operacion li.rounded-card:nth-child(even)::before { animation-delay: -8s; }
   .tema-operacion .rounded-card.neon-activo::before,
-  .tema-operacion .rounded-card:focus-within::before { animation-duration: 3.2s; opacity: 1; }
+  .tema-operacion .rounded-card:focus-within::before { animation-duration: 8s; opacity: 0.85; }
 
   .luz[data-on] { animation: latido-luz 1.6s ease-in-out infinite; }
   .luz-boton[data-on] { animation: latido-filo 1.6s ease-in-out infinite; }
@@ -573,3 +573,99 @@ button.luz-boton:disabled { opacity: 0.6; }
   0%, 100% { opacity: 1; transform: rotate(45deg) scale(1); box-shadow: 0 0 8px var(--tono), 0 0 16px color-mix(in srgb, var(--tono) 60%, transparent); }
   50% { opacity: 0.45; transform: rotate(45deg) scale(0.7); box-shadow: 0 0 2px var(--tono); }
 }
+
+/* ---------------------------------------------------------------------------
+   Tablero vivo (decisión 71): piezas que encienden al tocarlas, línea de LEDs
+   y rótulo rojo que parpadea. Luz lenta y suave, sin destellos.
+   --------------------------------------------------------------------------- */
+.pieza {
+  --tono: var(--ice-300, #8fe6ff);
+  position: relative;
+  display: block;
+  padding: 1rem;
+  background: linear-gradient(180deg, #1b1f2c 0%, #12141c 100%);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 3px 0 0 color-mix(in srgb, var(--tono) 35%, transparent);
+  transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.3), box-shadow 0.22s ease, background 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.pieza[data-lista] { --tono: var(--ok, #1cf2a0); }
+.pieza[data-cerrada] { opacity: 0.7; }
+.pieza-numero {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--tono);
+  background: #0b0d13;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--tono) 45%, transparent);
+  transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+.pieza[data-lista] .pieza-numero { background: var(--tono); color: #07080c; }
+a.pieza:hover,
+a.pieza:focus-visible {
+  outline: none;
+  background: linear-gradient(180deg, #212636 0%, #151824 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), inset 3px 0 0 var(--tono), inset 0 0 22px color-mix(in srgb, var(--tono) 12%, transparent);
+}
+a.pieza[data-presionada],
+a.pieza:active {
+  transform: translateY(-2px) scale(1.012);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tono) 16%, #1d2130) 0%, #151824 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 3px 0 0 var(--tono), inset 0 0 0 1.5px color-mix(in srgb, var(--tono) 70%, transparent), inset 0 0 30px color-mix(in srgb, var(--tono) 22%, transparent);
+}
+a.pieza[data-presionada] .pieza-numero,
+a.pieza:active .pieza-numero {
+  background: var(--tono);
+  color: #07080c;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--tono) 60%, transparent);
+}
+
+/* Línea de LEDs: los apagados se ven de fondo; los encendidos llevan su color. */
+.leds { display: flex; gap: 3px; }
+.leds > i {
+  flex: 1;
+  height: 14px;
+  transform: skewX(-18deg);
+  background: color-mix(in srgb, var(--tono) 13%, #12141c);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tono) 22%, transparent);
+  transition: background 0.5s ease, box-shadow 0.5s ease;
+}
+.leds > i[data-on] {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tono) 78%, #fff) 0%, var(--tono) 60%);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--tono) 55%, transparent);
+}
+.semaforo-rotulo { display: inline-flex; align-items: center; gap: 0.55rem; }
+.semaforo-rotulo > i {
+  width: 0.6rem;
+  height: 0.6rem;
+  flex: none;
+  background: currentColor;
+  transform: rotate(45deg);
+  box-shadow: 0 0 8px currentColor;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .semaforo-rotulo[data-alerta] { animation: parpadeo 1.5s ease-in-out infinite; }
+  .leds > i[data-sigue] { animation: led-sigue 1.5s ease-in-out infinite; }
+  .senal[data-vivo] { animation: senal-respira 2.8s ease-in-out infinite; }
+}
+@keyframes parpadeo {
+  0%, 55%, 100% { opacity: 1; }
+  75% { opacity: 0.28; }
+}
+@keyframes led-sigue {
+  0%, 100% { background: color-mix(in srgb, var(--tono) 13%, #12141c); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--tono) 22%, transparent); }
+  50% { background: color-mix(in srgb, var(--tono) 85%, #12141c); box-shadow: 0 0 10px color-mix(in srgb, var(--tono) 60%, transparent); }
+}
+@keyframes senal-respira {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.18); }
+}
+/* Cabecera del evento: reloj y fecha que se leen de lejos en el iPhone. */
+.reloj-evento { font-size: clamp(2.5rem, 12vw, 3.25rem); font-weight: 600; line-height: 1; color: #fff; text-shadow: 0 0 14px rgba(143, 230, 255, 0.35); }

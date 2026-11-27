@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isVisibility } from "@mando/core/command";
 import { DEFAULT_CARGOS, getTemplate, parseTemplate, validateTemplate } from "@mando/core/event-types";
 import { withDocuments } from "@mando/core/requirements";
-import { DEFAULT_TIMEZONE, zonedDateTimeToIso } from "@mando/core/time";
+import { pickZone, zonedDateTimeToIso } from "@mando/core/time";
 import { DEFAULT_CRITICALITY } from "@mando/core/default-config";
 
 export type PanelState = { ok: boolean; error: string | null; message?: string | null };
@@ -43,7 +43,8 @@ export async function createEvent(_prev: PanelState, formData: FormData): Promis
   if (!name) return { ok: false, error: "Escribe el nombre del evento." };
   const org = text(formData, "organizacion");
   if (!UUID.test(org)) return { ok: false, error: "No encontramos tu organización. Vuelve a entrar." };
-  const keyTime = zonedDateTimeToIso(text(formData, "fecha"), text(formData, "hora"), DEFAULT_TIMEZONE);
+  const zone = pickZone(text(formData, "zona")); // solo las zonas de config/zonas-horarias.json
+  const keyTime = zonedDateTimeToIso(text(formData, "fecha"), text(formData, "hora"), zone);
   if (!keyTime) return { ok: false, error: `Elige la fecha y la hora de: ${template.hora_clave.toLowerCase()}.` };
 
   let eventId: string;
@@ -54,7 +55,7 @@ export async function createEvent(_prev: PanelState, formData: FormData): Promis
       p_name: name,
       p_client: text(formData, "cliente"),
       p_venue: text(formData, "lugar"),
-      p_timezone: DEFAULT_TIMEZONE,
+      p_timezone: zone,
       p_key_time: keyTime,
       p_template: withDocuments(template), // la plantilla viaja con su lista de documentos del expediente
       p_criticality: DEFAULT_CRITICALITY,

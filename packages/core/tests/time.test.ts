@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDate, formatEventRange, formatTime, zoneLabel } from "@mando/core/time";
+import { DEFAULT_TIMEZONE, ZONE_OPTIONS, formatDate, formatEventRange, formatTime, pickZone, zoneLabel } from "@mando/core/time";
 
 // Regla 10: se guarda en UTC y se muestra en la zona del evento.
 describe("horas en la zona del evento", () => {
@@ -19,6 +19,18 @@ describe("horas en la zona del evento", () => {
   it("si la zona es inválida, usa Lima", () => {
     expect(formatTime("2026-12-12T23:30:00Z", "Marte/Base")).toBe("18:30");
     expect(zoneLabel(null)).toBe("Lima");
+  });
+
+  it("las zonas para elegir existen, no se repiten y se leen con nombre propio", () => {
+    expect(ZONE_OPTIONS.length).toBeGreaterThan(2);
+    expect(new Set(ZONE_OPTIONS.map((z) => z.zona)).size).toBe(ZONE_OPTIONS.length);
+    for (const z of ZONE_OPTIONS) expect(() => new Intl.DateTimeFormat("es-PE", { timeZone: z.zona })).not.toThrow();
+    expect(zoneLabel("America/Bogota")).toBe("Colombia");
+    expect(zoneLabel("America/Argentina/Buenos_Aires")).toBe("Argentina");
+    expect(zoneLabel("Asia/Tokyo")).toBe("Tokyo");
+    expect(pickZone("America/Bogota")).toBe("America/Bogota");
+    expect(pickZone("Marte/Base")).toBe(DEFAULT_TIMEZONE);
+    expect(pickZone(null)).toBe(DEFAULT_TIMEZONE);
   });
 
   it("la fecha también respeta la zona (medianoche UTC sigue siendo el día anterior en Lima)", () => {

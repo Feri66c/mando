@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertCard, EvidenceGrid, LogList } from "@/components/operacion/blocks";
+import { Pieza } from "@/components/operacion/pieza";
+import { Semaforo } from "@/components/operacion/semaforo";
 import { MomentButtons } from "@/components/operacion/momento";
 import { Empty, SectionTitle, StatusChip, buttonPrimary } from "@/components/operacion/ui";
 import { PLANNING_ELEMENTS, planningProgress } from "@mando/core/planning";
 import { nowAndNext } from "@mando/core/route";
-import { formatEventRange, formatTime } from "@mando/core/time";
+import { formatTime } from "@mando/core/time";
 import { Express } from "./express";
 import { getAlerts, getClientNotices, getEventContext, getPlanning, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
 
@@ -71,18 +73,22 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
     { label: "Momento crítico", href: `${base}/momentos#nuevo`, icon: <><path d="M12 2.5 L21.5 12 L12 21.5 L2.5 12 Z" /><path d="M12 8 V12.5 H15.5" /></> },
   ];
 
-  return (
+  // Con la planificación incompleta, lo primero es la planificación; el timeline baja al final (decisión 71).
+  const planningFirst = planning.gate && pendingElements.length > 0 && event.status !== "closed";
+  const timelineBlock = (
     <>
-      <h1 className="sr-only">Hoy</h1>
       <section aria-label="Avance del evento">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="etiqueta-mando text-ice-300">
-            {stages.length > 0 ? `Etapa ${Math.min(doneCount + 1, stages.length)} de ${stages.length}` : "Sin hoja de ruta"}
-          </span>
-          <span className="font-mono text-[11px] tracking-wide text-ink">{formatEventRange(event.startsAt, event.endsAt, event.timezone)}</span>
-        </div>
+        <p className="font-display text-xl font-bold uppercase tracking-[0.06em] text-ice-300">
+          {stages.length > 0 ? (
+            <>
+              Etapa <span className="luz-blanca font-mono text-2xl">{Math.min(doneCount + 1, stages.length)}</span> de {stages.length}
+            </>
+          ) : (
+            "Sin hoja de ruta"
+          )}
+        </p>
         {stages.length > 0 && (
-          <div aria-hidden className="mt-2 flex gap-[3px]">
+          <div aria-hidden className="mt-2.5 flex gap-[3px]">
             {stages.map((i) => (
               <span key={i.id} className="tramo" data-estado={i.status === "done" ? "hecho" : current?.id === i.id ? "ahora" : "falta"} />
             ))}
@@ -108,7 +114,55 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      {pendingElements.length > 0 && event.status !== "closed" && (
+    </>
+  );
+
+  return (
+    <>
+      <h1 className="sr-only">Hoy</h1>
+      {planningFirst && (
+        <section aria-label="Planificación" className="mb-6">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-2xl font-bold">Planificación</h2>
+            <span className="luz-blanca font-mono text-xl font-semibold">
+              {progress.ready} de {progress.total}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-ink-muted">Lo primero. Entra a cualquiera de las piezas, en el orden que quieras.</p>
+          <div className="mt-3">
+            <Semaforo elements={planning.elements} />
+          </div>
+          <ol className="mt-4 grid gap-2.5">
+            {PLANNING_ELEMENTS.map((e, i) => {
+              const s = planning.elements.find((x) => x.key === e.clave);
+              const done = Boolean(s?.ready);
+              const open = e.clave !== "presupuesto" || (event.level !== null && event.level <= 2);
+              return (
+                <li key={e.clave}>
+                  <Pieza href={open ? `${base}/${e.ruta}` : undefined} label={`${e.nombre}: ${done ? "completo" : "pendiente"}`} done={done}>
+                    <div className="flex items-center gap-3.5">
+                      <span aria-hidden className="pieza-numero">
+                        {done ? "✓" : i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-display text-xl font-semibold leading-snug">{e.nombre}</p>
+                        <p className={`mt-0.5 font-mono text-[13px] font-semibold uppercase tracking-wider ${done ? "text-ok" : "text-gold-300"}`}>
+                          {done ? "Completo" : (s?.missing ?? []).join(" · ") || "Pendiente"}
+                        </p>
+                      </div>
+                      {open && <span aria-hidden className="text-2xl text-ink-muted">›</span>}
+                    </div>
+                  </Pieza>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )}
+
+      {!planningFirst && timelineBlock}
+
+      {pendingElements.length > 0 && !planningFirst && event.status !== "closed" && (
         <Link href={`${base}/${planning.gate ? "planificacion" : "aprobaciones"}`} className="mt-3 block rounded-card border border-gold-300/50 bg-surface-100 px-4 py-3 text-sm">
           <span className="block font-semibold text-gold-300">
             {planning.gate
@@ -167,6 +221,13 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
         {isTeam ? "Bitácora" : "Minuto a minuto"}
       </SectionTitle>
       <LogList entries={log} timeZone={event.timezone} config={criticality} />
+
+      {planningFirst && (
+        <>
+          <SectionTitle>Timeline · se abre con la planificación completa</SectionTitle>
+          <div className="opacity-70">{timelineBlock}</div>
+        </>
+      )}
 
       {!isTeam && evidences.length > 0 && (
         <>

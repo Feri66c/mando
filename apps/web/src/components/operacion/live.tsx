@@ -48,12 +48,11 @@ export function RealtimeRefresh({ eventId }: { eventId: string }) {
     };
   }, [eventId, router]);
 
+  // Norma del semáforo: verde en línea, amarillo conectando, rojo sin conexión. Siempre con su texto.
+  const tone = state === "live" ? "var(--ok)" : state === "offline" ? "var(--critical)" : "var(--gold-300)";
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ink-muted" aria-live="polite">
-      <span
-        aria-hidden
-        className={`size-2 rounded-full ${state === "live" ? "bg-[#4fbf8b]" : state === "offline" ? "bg-[#ff7a5c]" : "bg-ice-500"}`}
-      />
+    <span className="senal" data-vivo style={{ "--tono": tone } as React.CSSProperties} aria-live="polite">
+      <span aria-hidden className="senal-punto" />
       {state === "live" ? "En línea" : state === "offline" ? "Sin conexión" : "Conectando"}
     </span>
   );
