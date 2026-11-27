@@ -143,6 +143,13 @@ export async function getEventTemplate(eventId: string) {
   return { template: parseTemplate(template), createdByName };
 }
 
+/** Partidas de presupuesto que sugiere el armado de un evento personalizado (decisión 83). */
+export async function getCustomBudgetParts(eventId: string): Promise<string[]> {
+  const { template } = await fetchEventTemplate(await requireClient(), eventId);
+  const parts = template?.partidas;
+  return Array.isArray(parts) ? parts.map(String).filter(Boolean) : [];
+}
+
 // ---- Méritos, cierre y citados ----
 
 /** Estrellas del evento: la base da los números y la cuenta se hace con config/meritos.json. */

@@ -14,8 +14,8 @@
     { "clave": "eventualidades", "nombre": "Eventualidades" }
   ],
   "documentos": [
-    { "clave": "sctr", "titulo": "SCTR o seguro de vida del equipo", "categoria": "seguridad", "plazo_dias": -3, "no_negociable": true, "tipos": ["sampling", "centro-comercial", "fiesta-corporativa", "feria", "concierto"] },
-    { "clave": "epp", "titulo": "EPP: equipos de protección personal", "categoria": "seguridad", "plazo_dias": -3, "no_negociable": true, "tipos": ["sampling", "centro-comercial", "fiesta-corporativa", "feria", "concierto"] },
+    { "clave": "sctr", "titulo": "SCTR o seguro de vida del equipo", "categoria": "seguridad", "plazo_dias": -3, "no_negociable": true, "tipos": ["sampling", "centro-comercial", "fiesta-corporativa", "feria", "concierto", "personalizado"] },
+    { "clave": "epp", "titulo": "EPP: equipos de protección personal", "categoria": "seguridad", "plazo_dias": -3, "no_negociable": true, "tipos": ["sampling", "centro-comercial", "fiesta-corporativa", "feria", "concierto", "personalizado"] },
     { "clave": "plan-seguridad", "titulo": "Plan de seguridad y evacuación", "categoria": "seguridad", "plazo_dias": -5, "no_negociable": true, "tipos": ["feria", "concierto"] },
     { "clave": "permiso-municipal", "titulo": "Permiso municipal", "categoria": "permisos", "plazo_dias": -5, "no_negociable": true, "tipos": ["sampling", "feria", "concierto"] },
     { "clave": "carta-locacion", "titulo": "Carta o autorización de la locación", "categoria": "permisos", "plazo_dias": -3, "no_negociable": true, "tipos": ["sampling", "centro-comercial", "fiesta-corporativa", "feria"] },

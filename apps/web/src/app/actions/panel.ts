@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isVisibility } from "@mando/core/command";
 import { DEFAULT_CARGOS, getTemplate, parseTemplate, validateTemplate } from "@mando/core/event-types";
 import { withDocuments } from "@mando/core/requirements";
+import { CUSTOM_KIND, checkCustom, composeCustomTemplate } from "@mando/core/custom-event";
 import { pickZone, zonedDateTimeToIso } from "@mando/core/time";
 import { DEFAULT_CRITICALITY } from "@mando/core/default-config";
 
@@ -34,8 +35,21 @@ async function db() {
 
 /** Crea el evento con las piezas de su tipo y lleva al productor general a armar el equipo. */
 export async function createEvent(_prev: PanelState, formData: FormData): Promise<PanelState> {
-  const template = getTemplate(text(formData, "tipo"));
-  if (!template) return { ok: false, error: "Elige el tipo de evento." };
+  const kind = text(formData, "tipo");
+  let full;
+  if (kind === CUSTOM_KIND) {
+    // Evento personalizado: el nombre del tipo y los componentes marcados arman la plantilla.
+    const typeName = text(formData, "nombre_tipo");
+    const keys = formData.getAll("componente").map(String);
+    const problem = checkCustom(typeName, keys);
+    if (problem) return { ok: false, error: problem };
+    full = composeCustomTemplate(typeName, keys);
+  } else {
+    const found = getTemplate(kind);
+    if (!found) return { ok: false, error: "Elige el tipo de evento." };
+    full = withDocuments(found); // la plantilla viaja con su lista de documentos del expediente
+  }
+  const template = full;
   const problems = validateTemplate(template);
   if (problems.length > 0) return { ok: false, error: `La plantilla de ${template.nombre} tiene un problema: ${problems[0]}` };
 
@@ -57,7 +71,7 @@ export async function createEvent(_prev: PanelState, formData: FormData): Promis
       p_venue: text(formData, "lugar"),
       p_timezone: zone,
       p_key_time: keyTime,
-      p_template: withDocuments(template), // la plantilla viaja con su lista de documentos del expediente
+      p_template: template,
       p_criticality: DEFAULT_CRITICALITY,
       p_brief: text(formData, "brief") || null,
     });
