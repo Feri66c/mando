@@ -6,8 +6,14 @@ import { PieceChain, TierMeter } from "@/components/panel/kit";
 import { buttonPrimary, inputClass } from "@/components/operacion/ui";
 import type { EventTemplate, TierKey } from "@mando/core/event-types";
 import { DEFAULT_TIMEZONE, ZONE_OPTIONS, zoneLabel } from "@mando/core/time";
-import { CUSTOM_INFO, CUSTOM_KIND, composeCustomTemplate, pickModules } from "@mando/core/custom-event";
+import {
+  CUSTOM_INFO,
+  CUSTOM_KIND,
+  composeCustomTemplate,
+  pickModules,
+} from "@mando/core/custom-event";
 import { CustomBuilder, CustomSummary } from "./custom-builder";
+import type { SavedCustomType } from "@/lib/data";
 
 const initial: PanelState = { ok: false, error: null };
 const label = "block text-sm font-medium";
@@ -16,10 +22,12 @@ export function NewEventForm({
   organizationId,
   templates,
   tiers,
+  savedTypes = [],
 }: {
   organizationId: string;
   templates: EventTemplate[];
   tiers: Record<TierKey, { nombre: string; descripcion: string }>;
+  savedTypes?: SavedCustomType[];
 }) {
   const [state, action, pending] = useActionState(createEvent, initial);
   const [kind, setKind] = useState(templates[0].clave);
@@ -29,10 +37,22 @@ export function NewEventForm({
   const custom = kind === CUSTOM_KIND;
   const modules = useMemo(() => pickModules([...selected]), [selected]);
   const customTemplate = useMemo(
-    () => composeCustomTemplate(typeName.trim() || CUSTOM_INFO.nombre, [...selected]),
+    () =>
+      composeCustomTemplate(typeName.trim() || CUSTOM_INFO.nombre, [
+        ...selected,
+      ]),
     [typeName, selected],
   );
-  const template: EventTemplate = custom ? customTemplate : (templates.find((t) => t.clave === kind) ?? templates[0]);
+  const template: EventTemplate = custom
+    ? customTemplate
+    : (templates.find((t) => t.clave === kind) ?? templates[0]);
+  const [brief, setBrief] = useState("");
+  const addMany = (keys: string[]) =>
+    setSelected((prev) => new Set([...prev, ...keys]));
+  const load = (name: string, keys: string[]) => {
+    setTypeName(name);
+    setSelected(new Set(keys));
+  };
   const toggle = (key: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
@@ -42,17 +62,24 @@ export function NewEventForm({
     });
 
   return (
-    <form action={action} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+    <form
+      action={action}
+      className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
+    >
       <input type="hidden" name="organizacion" value={organizationId} />
 
       <fieldset className="min-w-0">
-        <legend className="font-display text-lg font-semibold">¿Qué tipo de evento es?</legend>
+        <legend className="font-display text-lg font-semibold">
+          ¿Qué tipo de evento es?
+        </legend>
         <div className="mt-3 grid gap-2">
           {templates.map((t) => (
             <label
               key={t.clave}
               className={`flex cursor-pointer items-start gap-3 p-4 transition-colors ${
-                t.clave === kind ? "bg-surface-200 outline outline-2 outline-gold-300" : "bg-surface-100 hover:bg-surface-200"
+                t.clave === kind
+                  ? "bg-surface-200 outline outline-2 outline-gold-300"
+                  : "bg-surface-100 hover:bg-surface-200"
               }`}
             >
               <input
@@ -65,14 +92,21 @@ export function NewEventForm({
               />
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-display text-base font-semibold">{t.nombre}</span>
+                  <span className="font-display text-base font-semibold">
+                    {t.nombre}
+                  </span>
                   <TierMeter tier={t.tamano} label={tiers[t.tamano].nombre} />
                 </span>
-                <span className="mt-1 block text-sm text-ink-muted">{t.descripcion}</span>
+                <span className="mt-1 block text-sm text-ink-muted">
+                  {t.descripcion}
+                </span>
               </span>
             </label>
           ))}
-          <label className="personalizado-opcion" data-on={custom ? "" : undefined}>
+          <label
+            className="personalizado-opcion"
+            data-on={custom ? "" : undefined}
+          >
             <input
               type="radio"
               name="tipo"
@@ -83,23 +117,44 @@ export function NewEventForm({
             />
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-display text-xl font-bold">{CUSTOM_INFO.nombre}</span>
+                <span className="font-display text-xl font-bold">
+                  {CUSTOM_INFO.nombre}
+                </span>
                 <span className="personalizado-sello">Arma el tuyo</span>
               </span>
-              <span className="mt-1 block text-sm text-ink-muted">{CUSTOM_INFO.descripcion}</span>
+              <span className="mt-1 block text-sm text-ink-muted">
+                {CUSTOM_INFO.descripcion}
+              </span>
               {custom && (
                 <span className="mt-2 block">
-                  <TierMeter tier={customTemplate.tamano} label={tiers[customTemplate.tamano].nombre} />
+                  <TierMeter
+                    tier={customTemplate.tamano}
+                    label={tiers[customTemplate.tamano].nombre}
+                  />
                 </span>
               )}
             </span>
           </label>
         </div>
-        {custom && <CustomBuilder typeName={typeName} onTypeName={setTypeName} selected={selected} onToggle={toggle} />}
+        {custom && (
+          <CustomBuilder
+            typeName={typeName}
+            onTypeName={setTypeName}
+            selected={selected}
+            onToggle={toggle}
+            onAdd={addMany}
+            onLoad={load}
+            brief={brief}
+            onBrief={setBrief}
+            savedTypes={savedTypes}
+          />
+        )}
       </fieldset>
 
       <div className="min-w-0 space-y-5">
-        {custom && <CustomSummary modules={modules} template={customTemplate} />}
+        {custom && (
+          <CustomSummary modules={modules} template={customTemplate} />
+        )}
         <section aria-live="polite" className="bg-surface-100 p-4">
           <p className="font-mono text-xs uppercase tracking-[0.16em] text-ink-muted">
             {template.nombre} · {template.piezas.length} piezas
@@ -107,50 +162,90 @@ export function NewEventForm({
           <div className="mt-3">
             <PieceChain pieces={template.piezas} />
           </div>
-          <p className="mt-3 text-xs text-ink-muted">◆ Pieza clave: si se atrasa, mueve la hora que el cliente espera.</p>
+          <p className="mt-3 text-xs text-ink-muted">
+            ◆ Pieza clave: si se atrasa, mueve la hora que el cliente espera.
+          </p>
         </section>
 
         <div className="space-y-1.5">
           <label htmlFor="nombre" className={label}>
             Nombre del evento
           </label>
-          <input id="nombre" name="nombre" required maxLength={120} placeholder="Ferias Nacionales Sodimac · Fecha 1" className={inputClass} />
+          <input
+            id="nombre"
+            name="nombre"
+            required
+            maxLength={120}
+            placeholder="Ferias Nacionales Sodimac · Fecha 1"
+            className={inputClass}
+          />
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <label htmlFor="cliente" className={label}>
               Cliente
             </label>
-            <input id="cliente" name="cliente" maxLength={120} className={inputClass} />
+            <input
+              id="cliente"
+              name="cliente"
+              maxLength={120}
+              className={inputClass}
+            />
           </div>
           <div className="space-y-1.5">
             <label htmlFor="lugar" className={label}>
               Lugar
             </label>
-            <input id="lugar" name="lugar" maxLength={120} className={inputClass} />
+            <input
+              id="lugar"
+              name="lugar"
+              maxLength={120}
+              className={inputClass}
+            />
           </div>
         </div>
         <fieldset>
-          <legend className={label}>Hora clave: {template.hora_clave.toLowerCase()}</legend>
+          <legend className={label}>
+            Hora clave: {template.hora_clave.toLowerCase()}
+          </legend>
           <div className="mt-1.5 grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="fecha" className="sr-only">
                 Fecha
               </label>
-              <input id="fecha" name="fecha" type="date" required className={`${inputClass} font-mono`} />
+              <input
+                id="fecha"
+                name="fecha"
+                type="date"
+                required
+                className={`${inputClass} font-mono`}
+              />
             </div>
             <div>
               <label htmlFor="hora" className="sr-only">
                 Hora
               </label>
-              <input id="hora" name="hora" type="time" required defaultValue="10:00" className={`${inputClass} font-mono`} />
+              <input
+                id="hora"
+                name="hora"
+                type="time"
+                required
+                defaultValue="10:00"
+                className={`${inputClass} font-mono`}
+              />
             </div>
           </div>
           <div className="mt-4 space-y-1.5">
             <label htmlFor="zona" className={label}>
               Hora del evento
             </label>
-            <select id="zona" name="zona" value={zone} onChange={(e) => setZone(e.target.value)} className={inputClass}>
+            <select
+              id="zona"
+              name="zona"
+              value={zone}
+              onChange={(e) => setZone(e.target.value)}
+              className={inputClass}
+            >
               {ZONE_OPTIONS.map((z) => (
                 <option key={z.zona} value={z.zona}>
                   Hora de {z.nombre}
@@ -159,22 +254,41 @@ export function NewEventForm({
             </select>
           </div>
           <p className="mt-1.5 text-xs text-ink-muted">
-            La fecha y la hora de arriba están en hora de {zoneLabel(zone)}. Todo el equipo verá el reloj del evento en esa hora. Las demás piezas se acomodan solas antes y después.
+            La fecha y la hora de arriba están en hora de {zoneLabel(zone)}.
+            Todo el equipo verá el reloj del evento en esa hora. Las demás
+            piezas se acomodan solas antes y después.
           </p>
         </fieldset>
-        <div className="space-y-1.5">
-          <label htmlFor="brief" className={label}>
-            Brief <span className="font-normal text-ink-muted">(opcional)</span>
-          </label>
-          <textarea id="brief" name="brief" rows={3} maxLength={4000} placeholder="Qué se quiere lograr, con qué producto y para quién." className={`${inputClass} py-2`} />
-        </div>
+        {!custom && (
+          <div className="space-y-1.5">
+            <label htmlFor="brief" className={label}>
+              Brief{" "}
+              <span className="font-normal text-ink-muted">(opcional)</span>
+            </label>
+            <textarea
+              id="brief"
+              name="brief"
+              rows={3}
+              maxLength={4000}
+              placeholder="Qué se quiere lograr, con qué producto y para quién."
+              className={`${inputClass} py-2`}
+            />
+          </div>
+        )}
 
         {state.error && (
-          <p role="alert" className="border border-critical/40 bg-critical/10 px-3 py-2 text-sm">
+          <p
+            role="alert"
+            className="border border-critical/40 bg-critical/10 px-3 py-2 text-sm"
+          >
             {state.error}
           </p>
         )}
-        <button type="submit" disabled={pending} className={`${buttonPrimary} w-full`}>
+        <button
+          type="submit"
+          disabled={pending}
+          className={`${buttonPrimary} w-full`}
+        >
           {pending ? "Creando…" : "Crear evento y armar el equipo"}
         </button>
       </div>

@@ -26,6 +26,8 @@ export type CustomModule = {
   piezas: TemplatePiece[];
   no_negociables: string[];
   partidas: string[];
+  /** Palabras del brief que sugieren este componente. */
+  palabras?: string[];
 };
 
 export type CustomBlock = { clave: string; nombre: string; modulos: CustomModule[] };
@@ -143,4 +145,28 @@ export function customSummary(template: ReturnType<typeof composeCustomTemplate>
     piezas: template.piezas.length,
     partidas: template.partidas.length,
   };
+}
+
+function fold(text: string): string {
+  return text.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+/**
+ * Sugerencia de componentes leyendo el brief, por palabras clave del catálogo (config: palabras).
+ * Es la base sin IA: cuando la IA esté conectada, sus sugerencias llegan con la misma forma.
+ * Devuelve cada componente sugerido con la palabra que lo disparó.
+ */
+export function suggestModules(brief: string): { clave: string; palabra: string }[] {
+  const text = ` ${fold(brief)} `;
+  if (text.trim().length === 0) return [];
+  const out: { clave: string; palabra: string }[] = [];
+  for (const m of MODULES) {
+    const hit = (m.palabras ?? []).find((w) => {
+      const f = fold(w);
+      // palabra completa al inicio; admite plurales y derivados al final («estructuras», «importado»)
+      return new RegExp(`(^|[^a-z0-9])${f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`).test(text);
+    });
+    if (hit) out.push({ clave: m.clave, palabra: hit });
+  }
+  return out;
 }

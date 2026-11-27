@@ -155,6 +155,12 @@
             "Técnico",
             "Logística",
             "Imprevistos (5 a 10 %)"
+          ],
+          "palabras": [
+            "presupuesto",
+            "desglose",
+            "partidas",
+            "costos"
           ]
         },
         {
@@ -195,6 +201,12 @@
           "no_negociables": [],
           "partidas": [
             "Proveedores"
+          ],
+          "palabras": [
+            "proveedor",
+            "proveedores",
+            "subcontrat",
+            "tercero"
           ]
         },
         {
@@ -222,6 +234,12 @@
           "no_negociables": [],
           "partidas": [
             "Adelantos"
+          ],
+          "palabras": [
+            "adelanto",
+            "pago a cuenta",
+            "anticipo",
+            "voucher"
           ]
         }
       ]
@@ -266,7 +284,15 @@
           "cargos": [],
           "piezas": [],
           "no_negociables": [],
-          "partidas": []
+          "partidas": [],
+          "palabras": [
+            "salón",
+            "salon",
+            "hotel",
+            "auditorio",
+            "interior",
+            "local cerrado"
+          ]
         },
         {
           "clave": "exterior",
@@ -322,6 +348,15 @@
           "partidas": [
             "Toldos",
             "Grupo electrógeno"
+          ],
+          "palabras": [
+            "calle",
+            "vía pública",
+            "via publica",
+            "parque",
+            "plaza",
+            "exterior",
+            "aire libre"
           ]
         },
         {
@@ -354,7 +389,14 @@
           "cargos": [],
           "piezas": [],
           "no_negociables": [],
-          "partidas": []
+          "partidas": [],
+          "palabras": [
+            "centro comercial",
+            "mall",
+            "plaza comercial",
+            "jockey",
+            "larcomar"
+          ]
         },
         {
           "clave": "recinto-masivo",
@@ -411,6 +453,15 @@
           "partidas": [
             "Seguridad",
             "Ambulancia"
+          ],
+          "palabras": [
+            "estadio",
+            "arena",
+            "masivo",
+            "miles de personas",
+            "aforo",
+            "explanada",
+            "coliseo"
           ]
         },
         {
@@ -452,6 +503,14 @@
           "no_negociables": [],
           "partidas": [
             "Limpieza y residuos"
+          ],
+          "palabras": [
+            "playa",
+            "campo",
+            "bosque",
+            "reserva",
+            "lago",
+            "desierto"
           ]
         },
         {
@@ -497,6 +556,13 @@
             "Pasajes",
             "Hospedaje",
             "Viáticos"
+          ],
+          "palabras": [
+            "gira",
+            "varias ciudades",
+            "provincias",
+            "roadshow",
+            "itinerante"
           ]
         }
       ]
@@ -587,6 +653,14 @@
           "partidas": [
             "Estructuras",
             "Montajistas"
+          ],
+          "palabras": [
+            "estructura",
+            "truss",
+            "tarima",
+            "escenario",
+            "ground support",
+            "andamio"
           ]
         },
         {
@@ -621,6 +695,13 @@
           "no_negociables": [],
           "partidas": [
             "Mobiliario"
+          ],
+          "palabras": [
+            "sin estructura",
+            "módulo",
+            "modulo",
+            "mobiliario",
+            "counter"
           ]
         },
         {
@@ -661,6 +742,14 @@
           "no_negociables": [],
           "partidas": [
             "Fabricación"
+          ],
+          "palabras": [
+            "escenografía",
+            "escenografia",
+            "fabricación",
+            "fabricacion",
+            "render",
+            "set a medida"
           ]
         },
         {
@@ -698,6 +787,13 @@
           "no_negociables": [],
           "partidas": [
             "Pantallas"
+          ],
+          "palabras": [
+            "pantalla",
+            "led",
+            "video wall",
+            "proyección",
+            "proyeccion"
           ]
         },
         {
@@ -743,6 +839,14 @@
           "no_negociables": [],
           "partidas": [
             "Energía"
+          ],
+          "palabras": [
+            "generador",
+            "grupo electrógeno",
+            "grupo electrogeno",
+            "energía",
+            "energia",
+            "tablero eléctrico"
           ]
         },
         {
@@ -793,6 +897,14 @@
           "partidas": [
             "Sonido",
             "Luces"
+          ],
+          "palabras": [
+            "sonido",
+            "luces",
+            "iluminación",
+            "iluminacion",
+            "dj",
+            "audio"
           ]
         }
       ]
@@ -850,6 +962,13 @@
           "partidas": [
             "Modelos",
             "Anfitrionas"
+          ],
+          "palabras": [
+            "modelo",
+            "anfitriona",
+            "promotora",
+            "impulsadora",
+            "casting"
           ]
         },
         {
@@ -892,6 +1011,13 @@
           "no_negociables": [],
           "partidas": [
             "Host"
+          ],
+          "palabras": [
+            "host",
+            "animador",
+            "conductor",
+            "locutor",
+            "maestro de ceremonia"
           ]
         },
         {
@@ -991,6 +1117,14 @@
           "partidas": [
             "Fee del artista",
             "Pasajes y hotel del artista"
+          ],
+          "palabras": [
+            "internacional",
+            "extranjero",
+            "artista invitado",
+            "speaker",
+            "headliner",
+            "visa"
           ]
         },
         {
@@ -1032,7 +1166,15 @@
           "no_negociables": [
             "Menores siempre acompañados y autorizados"
           ],
-          "partidas": []
+          "partidas": [],
+          "palabras": [
+            "niño",
+            "niños",
+            "menor de edad",
+            "menores",
+            "adolescente",
+            "infantil"
+          ]
         },
         {
           "clave": "staff",
@@ -1076,6 +1218,12 @@
           "partidas": [
             "Staff",
             "Alimentación del equipo"
+          ],
+          "palabras": [
+            "staff",
+            "personal de campo",
+            "equipo de campo",
+            "brigada"
           ]
         },
         {
@@ -1110,6 +1258,14 @@
           "no_negociables": [],
           "partidas": [
             "Derechos de autor"
+          ],
+          "palabras": [
+            "música",
+            "musica",
+            "banda",
+            "concierto",
+            "cantante",
+            "apdayc"
           ]
         }
       ]
@@ -1212,6 +1368,14 @@
             "Flete internacional",
             "Aranceles e IGV",
             "Agente de aduanas"
+          ],
+          "palabras": [
+            "importar",
+            "importación",
+            "importacion",
+            "importado",
+            "aduana",
+            "nacionalizar"
           ]
         },
         {
@@ -1244,7 +1408,12 @@
           "cargos": [],
           "piezas": [],
           "no_negociables": [],
-          "partidas": []
+          "partidas": [],
+          "palabras": [
+            "importa el cliente",
+            "importado por el cliente",
+            "nacionalizado"
+          ]
         },
         {
           "clave": "courier",
@@ -1271,6 +1440,12 @@
           "no_negociables": [],
           "partidas": [
             "Courier"
+          ],
+          "palabras": [
+            "courier",
+            "dhl",
+            "fedex",
+            "envío internacional"
           ]
         },
         {
@@ -1346,6 +1521,13 @@
           "partidas": [
             "Garantía SUNAT",
             "Flete de retorno"
+          ],
+          "palabras": [
+            "internamiento",
+            "admisión temporal",
+            "admision temporal",
+            "reexport",
+            "ata carnet"
           ]
         },
         {
@@ -1397,6 +1579,12 @@
           "no_negociables": [],
           "partidas": [
             "Flete de exportación"
+          ],
+          "palabras": [
+            "exportar",
+            "exportación",
+            "exportacion",
+            "embarque"
           ]
         }
       ]
@@ -1465,6 +1653,14 @@
           "no_negociables": [],
           "partidas": [
             "Fletes"
+          ],
+          "palabras": [
+            "carga",
+            "flete",
+            "camión",
+            "camion",
+            "traslado de material",
+            "guía de remisión"
           ]
         },
         {
@@ -1506,6 +1702,14 @@
           "no_negociables": [],
           "partidas": [
             "Movilidad"
+          ],
+          "palabras": [
+            "bus",
+            "buses",
+            "van",
+            "movilidad",
+            "traslado de invitados",
+            "shuttle"
           ]
         },
         {
@@ -1546,6 +1750,14 @@
           "no_negociables": [],
           "partidas": [
             "Almacén"
+          ],
+          "palabras": [
+            "almacén",
+            "almacen",
+            "depósito",
+            "deposito",
+            "bodega",
+            "custodia"
           ]
         }
       ]
@@ -1595,6 +1807,16 @@
           ],
           "partidas": [
             "Producto y degustación"
+          ],
+          "palabras": [
+            "degustación",
+            "degustacion",
+            "comida",
+            "bebida",
+            "alimento",
+            "catering",
+            "cerveza",
+            "licor"
           ]
         },
         {
@@ -1629,6 +1851,14 @@
           "no_negociables": [],
           "partidas": [
             "Premios"
+          ],
+          "palabras": [
+            "sorteo",
+            "premio",
+            "concurso",
+            "rifa",
+            "promoción",
+            "promocion"
           ]
         },
         {
@@ -1672,6 +1902,14 @@
           ],
           "partidas": [
             "Efectos especiales"
+          ],
+          "palabras": [
+            "pirotecnia",
+            "fuegos artificiales",
+            "chispas",
+            "efectos especiales",
+            "co2",
+            "humo"
           ]
         },
         {
@@ -1711,6 +1949,10 @@
           "no_negociables": [],
           "partidas": [
             "Drones"
+          ],
+          "palabras": [
+            "dron",
+            "drones"
           ]
         },
         {
@@ -1758,6 +2000,15 @@
           "no_negociables": [],
           "partidas": [
             "Producción audiovisual"
+          ],
+          "palabras": [
+            "streaming",
+            "transmisión",
+            "transmision",
+            "en vivo por",
+            "grabación",
+            "grabacion",
+            "redes sociales"
           ]
         }
       ]
