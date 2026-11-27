@@ -17,12 +17,12 @@ export function Logo({ variant = "oscuro", className = "" }: { variant?: "oscuro
 }
 
 /** Cabecera navy de las pantallas con sesión. El oro del logo es el único acento de la pantalla. */
-export function AppHeader({ label, userName }: { label: string; userName: string }) {
+export function AppHeader({ label, userName }: { label?: string; userName: string }) {
   return (
     <header className="text-ink-inverse">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <Link href="/eventos" className="flex items-center gap-3" aria-label="Ir a Mis eventos">
-          <Logo className="h-7 w-auto" />
+          <Logo className="h-11 w-auto sm:h-12" />
         </Link>
         <form action={signOut} className="flex items-center gap-3">
           <span className="hidden text-sm text-ice-300 sm:inline">{userName}</span>
@@ -34,9 +34,11 @@ export function AppHeader({ label, userName }: { label: string; userName: string
           </button>
         </form>
       </div>
-      <div className="mx-auto max-w-3xl px-4 pb-3">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-ice-300">MANDO · {label}</p>
-      </div>
+      {label && (
+        <div className="mx-auto max-w-3xl px-4 pb-3">
+          <p className="font-mono text-xs uppercase tracking-[0.18em] text-ice-300">{label}</p>
+        </div>
+      )}
     </header>
   );
 }

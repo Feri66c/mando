@@ -381,7 +381,7 @@
           "visible_cliente": true
         },
         {
-          "titulo": "Diseño aprobado",
+          "titulo": "Aprobación de diseño",
           "detalle": "Planos firmados por el recinto",
           "inicio_min": -10080,
           "duracion_min": 60,
@@ -677,7 +677,7 @@
           "visible_cliente": true
         },
         {
-          "titulo": "Publicado",
+          "titulo": "Publicación",
           "detalle": "Enlace de YouTube e informe al cliente",
           "inicio_min": 4320,
           "duracion_min": 60,

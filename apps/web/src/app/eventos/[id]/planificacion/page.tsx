@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pieza } from "@/components/operacion/pieza";
 import { Semaforo } from "@/components/operacion/semaforo";
 import { PageTitle } from "@/components/operacion/ui";
 import { PLANNING_ELEMENTS, planningProgress, planningReady } from "@mando/core/planning";
@@ -25,40 +26,34 @@ export default async function PlanningPage({ params }: { params: Promise<{ id: s
     <>
       <PageTitle aside={<span className="font-mono text-sm text-ink-muted">{progress.ready} de {progress.total}</span>}>Planificación</PageTitle>
       <p className="mb-3 mt-1 text-sm text-ink-muted">
-        Los 5 elementos del evento. Se pueden avanzar en paralelo. Con los cinco completos se desbloquea el timeline.
+        Los 5 elementos del evento. Entra a cualquiera, en el orden que quieras. Con los cinco completos se desbloquea el timeline.
       </p>
       <div className="rounded-card bg-surface-100 p-4">
         <Semaforo elements={planning.elements} />
         <p className="mt-2 text-sm text-ink-muted">Lo obligatorio desbloquea el reto. El resto se completa hasta el plazo que fija el backend.</p>
       </div>
 
-      <ol className="mt-4 grid gap-2" aria-label="Elementos de la planificación">
+      <ol className="mt-4 grid gap-2.5" aria-label="Elementos de la planificación">
         {PLANNING_ELEMENTS.map((e, i) => {
           const s = planning.elements.find((x) => x.key === e.clave);
           const done = Boolean(s?.ready);
-          const body = (
-            <div className="flex items-start gap-3">
-              <span aria-hidden="true" className={`grid size-10 shrink-0 place-items-center font-mono text-lg font-semibold ${done ? "bg-gold-300 text-navy-950" : "bg-surface-200 text-ink"}`}>
-                {done ? "✓" : i + 1}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="font-display text-lg font-semibold leading-snug">{e.nombre}</p>
-                <p className="text-sm text-ink-muted">{e.descripcion}</p>
-                <p className={`mt-1 font-mono text-xs font-semibold uppercase tracking-wider ${done ? "text-[#8fe0b8]" : "text-gold-300"}`}>
-                  {done ? "Completo" : (s?.missing ?? []).join(" · ") || "Pendiente"}
-                </p>
-              </div>
-            </div>
-          );
           return (
             <li key={e.clave}>
-              {canOpen(e.clave) ? (
-                <Link href={`/eventos/${id}/${e.ruta}`} aria-label={`${e.nombre}: ${done ? "completo" : "pendiente"}`} className="block rounded-card bg-surface-100 p-4 hover:bg-surface-200">
-                  {body}
-                </Link>
-              ) : (
-                <div className="rounded-card bg-surface-100 p-4">{body}</div>
-              )}
+              <Pieza href={canOpen(e.clave) ? `/eventos/${id}/${e.ruta}` : undefined} label={`${e.nombre}: ${done ? "completo" : "pendiente"}`} done={done}>
+                <div className="flex items-start gap-3.5">
+                  <span aria-hidden="true" className="pieza-numero">
+                    {done ? "✓" : i + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display text-xl font-semibold leading-snug">{e.nombre}</p>
+                    <p className="text-sm text-ink-muted">{e.descripcion}</p>
+                    <p className={`mt-1.5 font-mono text-[13px] font-semibold uppercase tracking-wider ${done ? "text-ok" : "text-gold-300"}`}>
+                      {done ? "Completo" : (s?.missing ?? []).join(" · ") || "Pendiente"}
+                    </p>
+                  </div>
+                  {canOpen(e.clave) && <span aria-hidden className="self-center text-2xl text-ink-muted">›</span>}
+                </div>
+              </Pieza>
             </li>
           );
         })}

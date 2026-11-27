@@ -10,6 +10,7 @@ import {
   type CierreState,
 } from "@/app/actions/cierre";
 import { MAX_EVIDENCE_BYTES, requirementPath, sha256Hex } from "@mando/core/evidence";
+import { SWORN_STATEMENT } from "@mando/core/requirements";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import { buttonGhost, buttonPrimary, buttonSecondary, inputClass } from "./ui";
 
@@ -39,6 +40,7 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
   const fileRef = useRef<HTMLInputElement>(null);
   const [note, setNote] = useState("");
   const [open, setOpen] = useState(false);
+  const [swearing, setSwearing] = useState(false);
   const [state, setState] = useState<CierreState & { working?: string }>(INITIAL);
 
   async function save(file: File | null) {
@@ -61,7 +63,8 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
         throw new Error("Elige el archivo o escribe el dato.");
       }
       setState({ ...INITIAL, working: "Registrando…" });
-      const result = await completeRequirementAction({ requirementId, filePath, fileName: file?.name ?? null, sha256: sha, note });
+      // Llega aquí solo después de aceptar la declaración jurada en pantalla.
+      const result = await completeRequirementAction({ requirementId, filePath, fileName: file?.name ?? null, sha256: sha, note, sworn: true });
       setState(result);
       if (result.ok) {
         setNote("");
@@ -87,7 +90,7 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
         onChange={(e) => void save(e.target.files?.[0] ?? null)}
       />
       <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={() => fileRef.current?.click()} aria-label={`${done ? "Reemplazar" : "Subir"}: ${title}`} className={done ? buttonGhost : buttonPrimary}>
+        <button type="button" disabled={busy} onClick={() => setSwearing(true)} aria-label={`${done ? "Reemplazar" : "Subir"}: ${title}`} className={done ? buttonGhost : buttonPrimary}>
           {done ? "Reemplazar archivo" : "Subir documento"}
         </button>
         {!done && (
@@ -102,9 +105,33 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
             Dato de «{title}»
           </label>
           <textarea id={`dato-${requirementId}`} rows={2} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} className={`${inputClass} mt-1.5 py-2`} />
+          <p className="mt-2 text-xs text-ink-muted">{SWORN_STATEMENT}</p>
           <button type="button" disabled={busy} onClick={() => void save(null)} className={`${buttonSecondary} mt-2`}>
-            Guardar dato
+            Declaro y guardo el dato
           </button>
+        </div>
+      )}
+      {swearing && (
+        <div className="aviso-fondo" role="dialog" aria-modal="true" aria-labelledby={`jurada-${requirementId}`}>
+          <div className="aviso">
+            <p className="aviso-eyebrow">Declaración jurada</p>
+            <p id={`jurada-${requirementId}`} className="aviso-titulo">{title}</p>
+            <p className="aviso-texto">{SWORN_STATEMENT}</p>
+            <button
+              type="button"
+              autoFocus
+              onClick={() => {
+                setSwearing(false);
+                fileRef.current?.click();
+              }}
+              className={`${buttonPrimary} w-full`}
+            >
+              Declaro y elijo el archivo
+            </button>
+            <button type="button" onClick={() => setSwearing(false)} className={`${buttonGhost} mt-2 w-full`}>
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
       {state.working && (
@@ -167,6 +194,8 @@ export function RequirementPlanForm({
   ownerId,
   dueDate,
   team,
+  ownerLocked = false,
+  maxDate,
 }: {
   requirementId: string;
   title: string;
@@ -174,6 +203,10 @@ export function RequirementPlanForm({
   ownerId: string | null;
   dueDate: string;
   team: { id: string; name: string }[];
+  /** Ya tiene responsable y quien mira no es backend: no puede cambiarlo. */
+  ownerLocked?: boolean;
+  /** Fecha tope (48 horas antes del evento), para los documentos previos. */
+  maxDate?: string;
 }) {
   const [state, action, pending] = useActionState(planRequirementAction, INITIAL);
   return (
@@ -186,7 +219,8 @@ export function RequirementPlanForm({
           <label htmlFor={`resp-${requirementId}`} className="block font-medium">
             Quién lo sube
           </label>
-          <select id={`resp-${requirementId}`} name="owner" defaultValue={ownerId ?? ""} aria-label={`Quién sube ${title}`} className={`${inputClass} mt-1`}>
+          {ownerLocked && <input type="hidden" name="owner" value={ownerId ?? ""} />}
+          <select id={`resp-${requirementId}`} name={ownerLocked ? undefined : "owner"} disabled={ownerLocked} defaultValue={ownerId ?? ""} aria-label={`Quién sube ${title}`} className={`${inputClass} mt-1`}>
             <option value="">Quien lo suba queda como responsable</option>
             {team.map((m) => (
               <option key={m.id} value={m.id}>
@@ -194,12 +228,18 @@ export function RequirementPlanForm({
               </option>
             ))}
           </select>
+          <p className="mt-1 text-xs text-ink-muted">
+            {ownerLocked
+              ? "La línea legal no se quiebra: al responsable solo lo cambia el backend."
+              : "Elige bien: una vez asignado, solo esa persona sube el documento y solo el backend puede cambiarla."}
+          </p>
         </div>
         <div>
           <label htmlFor={`plazo-${requirementId}`} className="block font-medium">
             Plazo
           </label>
-          <input id={`plazo-${requirementId}`} name="fecha" type="date" defaultValue={dueDate} aria-label={`Plazo de ${title}`} className={`${inputClass} mt-1 font-mono`} />
+          <input id={`plazo-${requirementId}`} name="fecha" type="date" defaultValue={dueDate} max={maxDate} aria-label={`Plazo de ${title}`} className={`${inputClass} mt-1 font-mono`} />
+          {maxDate && <p className="mt-1 text-xs text-ink-muted">Tope: 48 horas antes del evento.</p>}
         </div>
         <button type="submit" disabled={pending} className={`${buttonSecondary} justify-self-start`}>
           {pending ? "Guardando…" : "Guardar"}

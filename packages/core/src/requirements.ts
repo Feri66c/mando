@@ -17,11 +17,29 @@ export type DocumentSpec = {
   tipos: "todos" | string[];
 };
 
-type Config = { categorias: { clave: RequirementCategory; nombre: string }[]; documentos: DocumentSpec[] };
+type Config = { tope_horas_antes: number; presion_dias: number[]; declaracion_jurada: string; categorias: { clave: RequirementCategory; nombre: string }[]; documentos: DocumentSpec[] };
 const CONFIG = config as unknown as Config;
 
 export const REQUIREMENT_CATEGORIES = CONFIG.categorias;
 export const DOCUMENT_CATALOG: readonly DocumentSpec[] = CONFIG.documentos;
+/** Tope de los documentos previos al evento: horas antes de la hora clave (decisión 74). */
+export const REQUIREMENT_CAP_HOURS = CONFIG.tope_horas_antes;
+export const PRESSURE_DAYS: readonly number[] = CONFIG.presion_dias;
+/** Lo que declara quien sube un documento (decisión 75). */
+export const SWORN_STATEMENT = CONFIG.declaracion_jurada;
+
+/** Fecha tope de los documentos: 48 horas antes de la hora clave. */
+export function requirementCap(startsAt: string | null): string | null {
+  if (!startsAt) return null;
+  return new Date(new Date(startsAt).getTime() - REQUIREMENT_CAP_HOURS * 3_600_000).toISOString();
+}
+
+/** Cuenta regresiva al tope, en partes. Negativo = ya pasó. */
+export function countdown(toIso: string, now: Date): { past: boolean; days: number; hours: number; minutes: number; seconds: number } {
+  const ms = new Date(toIso).getTime() - now.getTime();
+  const total = Math.floor(Math.abs(ms) / 1000);
+  return { past: ms < 0, days: Math.floor(total / 86_400), hours: Math.floor((total % 86_400) / 3600), minutes: Math.floor((total % 3600) / 60), seconds: total % 60 };
+}
 
 export function categoryName(key: string): string {
   return CONFIG.categorias.find((c) => c.clave === key)?.nombre ?? key;
@@ -35,11 +53,14 @@ export function documentsFor(kind: string): DocumentSpec[] {
 /** La plantilla que se guarda en el evento: la del tipo más su lista de documentos y sus grupos de aprobación. */
 export function withDocuments<T extends Pick<EventTemplate, "clave">>(
   template: T,
-): T & { documentos: Omit<DocumentSpec, "tipos">[]; aprobaciones: { clave: string; prefijo: string }[]; tecnica: ReturnType<typeof techItemsFor>; planificacion: true } {
+): T & { documentos: Omit<DocumentSpec, "tipos">[]; aprobaciones: { clave: string; prefijo: string }[]; tecnica: ReturnType<typeof techItemsFor>; planificacion: true; tope_documentos_horas: number; presion_dias: number[] } {
   return {
     ...template,
     // Los 5 elementos: el evento nace con el timeline bloqueado hasta completarlos (config/planificacion.json).
     planificacion: true,
+    // El tope de los documentos y los avisos de presión viajan con el evento (config/expediente.json).
+    tope_documentos_horas: CONFIG.tope_horas_antes,
+    presion_dias: [...CONFIG.presion_dias],
     tecnica: techItemsFor(template.clave),
     // Grupos que el cliente aprueba antes de empezar (config/aprobaciones.json).
     aprobaciones: approvalGroupsFor(template.clave).map((clave) => ({ clave, prefijo: approvalGroup(clave)?.prefijo ?? "X" })),
@@ -109,6 +130,10 @@ export function validateCatalog(): string[] {
     keys.add(d.clave);
     if (!CONFIG.categorias.some((c) => c.clave === d.categoria)) problems.push(`Categoría desconocida en ${d.clave}.`);
     if (!Number.isInteger(d.plazo_dias)) problems.push(`Plazo inválido en ${d.clave}.`);
+    if (d.plazo_dias <= 0 && d.plazo_dias * 24 > -CONFIG.tope_horas_antes) problems.push(`${d.clave} vence después del tope de ${CONFIG.tope_horas_antes} horas.`);
   }
+  if (!(CONFIG.tope_horas_antes > 0)) problems.push("El tope de horas debe ser mayor que cero.");
+  if (CONFIG.presion_dias.length === 0 || CONFIG.presion_dias.some((d) => !Number.isInteger(d) || d <= 0)) problems.push("Los días de presión deben ser enteros mayores que cero.");
+  if (!CONFIG.declaracion_jurada.trim()) problems.push("Falta el texto de la declaración jurada.");
   return problems;
 }

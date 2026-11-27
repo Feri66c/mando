@@ -1,6 +1,17 @@
 // Regla 10: en la base todo está en UTC; en pantalla se muestra en la zona horaria del evento.
 
+import zones from "../../../config/zonas-horarias.json";
+
 export const DEFAULT_TIMEZONE = "America/Lima";
+
+/** Zonas que la torre puede elegir al crear un evento (config/zonas-horarias.json). */
+export type ZoneOption = { zona: string; nombre: string };
+export const ZONE_OPTIONS: readonly ZoneOption[] = zones.zonas;
+
+/** La zona elegida en el formulario, solo si está en la lista; si no, Lima. */
+export function pickZone(value: string | null | undefined): string {
+  return ZONE_OPTIONS.some((z) => z.zona === value) ? (value as string) : DEFAULT_TIMEZONE;
+}
 const LOCALE = "es-PE";
 
 function safeZone(timeZone: string | null | undefined): string {
@@ -42,9 +53,11 @@ export function formatEventRange(startIso: string | null, endIso: string | null,
   return `${start} – ${formatTime(endIso, timeZone)}`;
 }
 
-/** Nombre corto de la zona para mostrar junto a las horas: "America/Lima" → "Lima". */
+/** Nombre de la zona para mostrar junto a las horas: "America/Bogota" → "Colombia"; si no está en la lista, su ciudad. */
 export function zoneLabel(timeZone?: string | null): string {
   const zone = safeZone(timeZone);
+  const known = ZONE_OPTIONS.find((z) => z.zona === zone);
+  if (known) return known.nombre;
   return zone.split("/").pop()!.replace(/_/g, " ");
 }
 

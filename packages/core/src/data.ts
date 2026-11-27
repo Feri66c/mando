@@ -599,13 +599,16 @@ export type Requirement = {
   fileUrl: string | null;
   note: string | null;
   doneAt: string | null;
+  /** Quién lo subió y cuándo lo visó bajo declaración jurada. */
+  doneByName: string | null;
+  swornAt: string | null;
 };
 
 /** Documentos del expediente, con enlace firmado de corta duración para los que ya tienen archivo. */
 export async function fetchRequirements(client: SupabaseClient, eventId: string): Promise<Requirement[]> {
   const { data, error } = await client
     .from("event_requirements")
-    .select("id, key, category, title, mandatory, due_at, status, owner_id, file_path, file_name, note, done_at, owner:profiles!event_requirements_owner_id_fkey (full_name)")
+    .select("id, key, category, title, mandatory, due_at, status, owner_id, file_path, file_name, note, done_at, sworn_at, owner:profiles!event_requirements_owner_id_fkey (full_name), signer:profiles!event_requirements_done_by_fkey (full_name)")
     .eq("event_id", eventId)
     .order("sort_order", { ascending: true });
   if (error) throw new Error(`No se pudo leer el expediente: ${error.message}`);
@@ -630,6 +633,8 @@ export async function fetchRequirements(client: SupabaseClient, eventId: string)
     fileUrl: r.file_path ? (urls.get(r.file_path as string) ?? null) : null,
     note: (r.note as string | null) ?? null,
     doneAt: (r.done_at as string | null) ?? null,
+    doneByName: (first(r.signer) as { full_name: string | null } | null)?.full_name ?? null,
+    swornAt: (r.sworn_at as string | null) ?? null,
   }));
 }
 

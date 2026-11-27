@@ -5,6 +5,7 @@ import { createEvent, type PanelState } from "@/app/actions/panel";
 import { PieceChain, TierMeter } from "@/components/panel/kit";
 import { buttonPrimary, inputClass } from "@/components/operacion/ui";
 import type { EventTemplate, TierKey } from "@mando/core/event-types";
+import { DEFAULT_TIMEZONE, ZONE_OPTIONS, zoneLabel } from "@mando/core/time";
 
 const initial: PanelState = { ok: false, error: null };
 const label = "block text-sm font-medium";
@@ -21,6 +22,7 @@ export function NewEventForm({
   const [state, action, pending] = useActionState(createEvent, initial);
   const [kind, setKind] = useState(templates[0].clave);
   const template = templates.find((t) => t.clave === kind) ?? templates[0];
+  const [zone, setZone] = useState(DEFAULT_TIMEZONE);
 
   return (
     <form action={action} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -103,7 +105,21 @@ export function NewEventForm({
               <input id="hora" name="hora" type="time" required defaultValue="10:00" className={`${inputClass} font-mono`} />
             </div>
           </div>
-          <p className="mt-1.5 text-xs text-ink-muted">Hora de Lima. Las demás piezas se acomodan solas antes y después.</p>
+          <div className="mt-4 space-y-1.5">
+            <label htmlFor="zona" className={label}>
+              Hora del evento
+            </label>
+            <select id="zona" name="zona" value={zone} onChange={(e) => setZone(e.target.value)} className={inputClass}>
+              {ZONE_OPTIONS.map((z) => (
+                <option key={z.zona} value={z.zona}>
+                  Hora de {z.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+          <p className="mt-1.5 text-xs text-ink-muted">
+            La fecha y la hora de arriba están en hora de {zoneLabel(zone)}. Todo el equipo verá el reloj del evento en esa hora. Las demás piezas se acomodan solas antes y después.
+          </p>
         </fieldset>
         <div className="space-y-1.5">
           <label htmlFor="brief" className={label}>

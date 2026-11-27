@@ -1,0 +1,10 @@
+{
+  "_nota": "Último minuto (decisión 80): lo que llega a última hora. Cada tipo queda anotado en la bitácora con su nombre. «ir_a» es la pantalla donde después se completa el cambio, si la hay.",
+  "tipos": [
+    { "clave": "permiso", "nombre": "Nuevo permiso o documento", "ejemplo": "Llegó el permiso de la junta de vecinos", "ir_a": "expediente" },
+    { "clave": "personal", "nombre": "Cambio en el personal", "ejemplo": "Ya no va el chofer 1, va el chofer 2", "ir_a": "personal" },
+    { "clave": "pago", "nombre": "Pago a cuenta de un proveedor", "ejemplo": "Adelanto de S/ 500 a sonido, aquí está el voucher", "ir_a": null },
+    { "clave": "tecnico", "nombre": "Cambio técnico", "ejemplo": "Se cambió el proveedor de pantallas", "ir_a": "tecnico" },
+    { "clave": "otro", "nombre": "Otra cosa de último minuto", "ejemplo": "El cliente pidió mover el ingreso de invitados", "ir_a": null }
+  ]
+}

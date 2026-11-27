@@ -1,11 +1,35 @@
 import { describe, expect, it } from "vitest";
 import { EVENT_TEMPLATES, getTemplate } from "@mando/core/event-types";
-import { documentsFor, dueLabel, dueState, requirementReminder, validateCatalog, withDocuments } from "@mando/core/requirements";
+import { LAST_MINUTE_KINDS, validateLastMinute } from "@mando/core/evidence";
+import { PRESSURE_DAYS, REQUIREMENT_CAP_HOURS, SWORN_STATEMENT, countdown, documentsFor, dueLabel, dueState, requirementCap, requirementReminder, validateCatalog, withDocuments } from "@mando/core/requirements";
 
 describe("expediente (config/expediente.json)", () => {
   it("el catálogo es válido y todo tipo de evento tiene documentos", () => {
     expect(validateCatalog()).toEqual([]);
     for (const t of EVENT_TEMPLATES) expect(documentsFor(t.clave).length).toBeGreaterThan(4);
+  });
+
+  it("el tope es 48 horas antes de la hora clave y viaja con la plantilla del evento", () => {
+    expect(REQUIREMENT_CAP_HOURS).toBe(48);
+    expect(requirementCap("2026-12-06T15:00:00Z")).toBe("2026-12-04T15:00:00.000Z");
+    expect(requirementCap(null)).toBeNull();
+    const t = withDocuments(getTemplate("sampling")!);
+    expect(t.tope_documentos_horas).toBe(48);
+    expect(t.presion_dias).toEqual([...PRESSURE_DAYS]);
+    // Ningún documento previo al evento vence dentro de las últimas 48 horas.
+    for (const tpl of EVENT_TEMPLATES) for (const d of documentsFor(tpl.clave)) if (d.plazo_dias <= 0) expect(d.plazo_dias).toBeLessThanOrEqual(-2);
+    expect(SWORN_STATEMENT).toMatch(/bajo juramento/);
+  });
+
+  it("la cuenta regresiva separa días, horas, minutos y segundos, y avisa si ya pasó", () => {
+    const now = new Date("2026-12-01T00:00:00Z");
+    expect(countdown("2026-12-03T01:02:03Z", now)).toEqual({ past: false, days: 2, hours: 1, minutes: 2, seconds: 3 });
+    expect(countdown("2026-11-30T23:00:00Z", now)).toEqual({ past: true, days: 0, hours: 1, minutes: 0, seconds: 0 });
+  });
+
+  it("los tipos de último minuto son válidos", () => {
+    expect(validateLastMinute()).toEqual([]);
+    expect(LAST_MINUTE_KINDS.map((k) => k.clave)).toEqual(expect.arrayContaining(["permiso", "personal", "pago"]));
   });
 
   it("cada tipo recibe lo suyo: el concierto pide permiso municipal; el podcast, uso de imagen y no pide permiso", () => {

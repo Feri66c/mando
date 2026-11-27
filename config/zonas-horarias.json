@@ -1,0 +1,17 @@
+{
+  "_nota": "Zonas horarias que la torre puede elegir al crear un evento. «zona» es el nombre oficial (IANA); «nombre» es lo que se lee en pantalla junto al reloj.",
+  "por_defecto": "America/Lima",
+  "zonas": [
+    { "zona": "America/Lima", "nombre": "Lima" },
+    { "zona": "America/Bogota", "nombre": "Colombia" },
+    { "zona": "America/Guayaquil", "nombre": "Ecuador" },
+    { "zona": "America/Argentina/Buenos_Aires", "nombre": "Argentina" },
+    { "zona": "America/Santiago", "nombre": "Chile" },
+    { "zona": "America/La_Paz", "nombre": "Bolivia" },
+    { "zona": "America/Sao_Paulo", "nombre": "Brasil" },
+    { "zona": "America/Mexico_City", "nombre": "México" },
+    { "zona": "America/Panama", "nombre": "Panamá" },
+    { "zona": "America/New_York", "nombre": "Miami y Nueva York" },
+    { "zona": "Europe/Madrid", "nombre": "España" }
+  ]
+}

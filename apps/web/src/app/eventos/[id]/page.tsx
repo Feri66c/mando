@@ -2,13 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertCard, EvidenceGrid, LogList } from "@/components/operacion/blocks";
+import { Pieza } from "@/components/operacion/pieza";
+import { Semaforo } from "@/components/operacion/semaforo";
+import { EventCountdown } from "@/components/operacion/plazo";
+import { UltimoMinuto } from "@/components/operacion/ultimo-minuto";
 import { MomentButtons } from "@/components/operacion/momento";
 import { Empty, SectionTitle, StatusChip, buttonPrimary } from "@/components/operacion/ui";
 import { PLANNING_ELEMENTS, planningProgress } from "@mando/core/planning";
 import { nowAndNext } from "@mando/core/route";
-import { formatEventRange, formatTime } from "@mando/core/time";
+import { formatDate, formatTime } from "@mando/core/time";
 import { Express } from "./express";
-import { getAlerts, getClientNotices, getEventContext, getPlanning, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
+import { getAlerts, getBrief, getClientNotices, getEventContext, getPlanning, getEvidences, getLog, getRouteItems, type RouteItem } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Hoy" };
 
@@ -49,12 +53,13 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
       />
     );
   }
-  const [items, alerts, log, evidences, planning] = await Promise.all([
+  const [items, alerts, log, evidences, planning, brief] = await Promise.all([
     getRouteItems(id),
     getAlerts(id),
     getLog(id, isTeam ? 6 : 12),
     isTeam ? Promise.resolve([]) : getEvidences(id),
     getPlanning(id),
+    getBrief(id, ctx.user.id),
   ]);
   // Eventos con candado: los 5 elementos. Eventos anteriores: solo las aprobaciones del cliente.
   const pendingElements = PLANNING_ELEMENTS.filter((e) => (planning.gate || e.clave === "aprobaciones") && !planning.elements.find((s) => s.key === e.clave)?.ready);
@@ -71,18 +76,22 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
     { label: "Momento crítico", href: `${base}/momentos#nuevo`, icon: <><path d="M12 2.5 L21.5 12 L12 21.5 L2.5 12 Z" /><path d="M12 8 V12.5 H15.5" /></> },
   ];
 
-  return (
+  // Con la planificación incompleta, lo primero es la planificación; el timeline baja al final (decisión 71).
+  const planningFirst = planning.gate && pendingElements.length > 0 && event.status !== "closed";
+  const timelineBlock = (
     <>
-      <h1 className="sr-only">Hoy</h1>
       <section aria-label="Avance del evento">
-        <div className="flex items-baseline justify-between gap-3">
-          <span className="etiqueta-mando text-ice-300">
-            {stages.length > 0 ? `Etapa ${Math.min(doneCount + 1, stages.length)} de ${stages.length}` : "Sin hoja de ruta"}
-          </span>
-          <span className="font-mono text-[11px] tracking-wide text-ink">{formatEventRange(event.startsAt, event.endsAt, event.timezone)}</span>
-        </div>
+        <p className="font-display text-xl font-bold uppercase tracking-[0.06em] text-ice-300">
+          {stages.length > 0 ? (
+            <>
+              Etapa <span className="luz-blanca font-mono text-2xl">{Math.min(doneCount + 1, stages.length)}</span> de {stages.length}
+            </>
+          ) : (
+            "Sin hoja de ruta"
+          )}
+        </p>
         {stages.length > 0 && (
-          <div aria-hidden className="mt-2 flex gap-[3px]">
+          <div aria-hidden className="mt-2.5 flex gap-[3px]">
             {stages.map((i) => (
               <span key={i.id} className="tramo" data-estado={i.status === "done" ? "hecho" : current?.id === i.id ? "ahora" : "falta"} />
             ))}
@@ -108,26 +117,9 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      {pendingElements.length > 0 && event.status !== "closed" && (
-        <Link href={`${base}/${planning.gate ? "planificacion" : "aprobaciones"}`} className="mt-3 block rounded-card border border-gold-300/50 bg-surface-100 px-4 py-3 text-sm">
-          <span className="block font-semibold text-gold-300">
-            {planning.gate
-              ? `Planificación: ${progress.ready} de ${progress.total}. El timeline sigue bloqueado`
-              : isTeam
-                ? "Falta la aprobación del cliente para empezar"
-                : "Tienes elementos por aprobar"}
-          </span>
-          <span className="block text-ink-muted">
-            {pendingElements
-              .map((e) => (planning.gate ? `${e.nombre}: ` : "") + (planning.elements.find((s) => s.key === e.clave)?.missing ?? []).join(", "))
-              .join(" · ")}
-          </span>
-        </Link>
-      )}
-
       {isTeam && (
         <>
-          <SectionTitle>Acciones rápidas</SectionTitle>
+          <SectionTitle>En el evento</SectionTitle>
           <div className="grid grid-cols-4 gap-1.5">
             {quick.map((q) => (
               <Link key={q.label} href={q.href} className="flex min-h-[78px] flex-col items-center justify-center gap-1.5 text-center text-[12.5px] font-medium leading-tight">
@@ -145,28 +137,190 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
 
       {isTeam && event.status !== "closed" && (
         <>
-          <SectionTitle>Para el cierre</SectionTitle>
+          <SectionTitle>Efecto wow y eventualidades</SectionTitle>
           <MomentButtons eventId={id} />
         </>
       )}
 
-      <SectionTitle href={`${base}/alertas`} linkLabel="Ver alertas">
-        {isTeam ? "Alertas activas" : "Alertas"}
-      </SectionTitle>
-      {active.length === 0 ? (
-        <Empty>{isTeam ? "Sin alertas activas." : "Sin alertas. Todo marcha según lo previsto."}</Empty>
-      ) : (
-        <ul className="grid gap-2">
-          {active.slice(0, 3).map((a) => (
-            <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} />
-          ))}
-        </ul>
+    </>
+  );
+  // Red flag = nivel 4 o más; ámbar = niveles 2 y 3: «verifica, te queda poco tiempo».
+  const redFlags = active.filter((a) => a.level >= 4);
+  const amber = active.filter((a) => a.level >= 2 && a.level < 4);
+  const rest = active.filter((a) => a.level < 2);
+  // Puntos del brief: la sinopsis (o el resumen) partida en frases cortas. Con la IA conectada, aquí irá su lectura.
+  const briefPoints = (brief?.synopsis || brief?.summary || "")
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, 4);
+
+  return (
+    <>
+      <h1 className="sr-only">Hoy</h1>
+      {planningFirst && (
+        <section aria-label="Planificación" className="mb-6">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-2xl font-bold">Planificación</h2>
+            <span className="luz-blanca font-mono text-xl font-semibold">
+              {progress.ready} de {progress.total}
+            </span>
+          </div>
+          <p className="mt-1 text-sm text-ink-muted">Lo primero. Entra a cualquiera de las piezas, en el orden que quieras.</p>
+          <div className="mt-3">
+            <Semaforo elements={planning.elements} />
+          </div>
+          <ol className="mt-4 grid gap-2.5">
+            {PLANNING_ELEMENTS.map((e, i) => {
+              const s = planning.elements.find((x) => x.key === e.clave);
+              const done = Boolean(s?.ready);
+              const open = e.clave !== "presupuesto" || (event.level !== null && event.level <= 2);
+              return (
+                <li key={e.clave}>
+                  <Pieza href={open ? `${base}/${e.ruta}` : undefined} label={`${e.nombre}: ${done ? "completo" : "pendiente"}`} done={done}>
+                    <div className="flex items-center gap-3.5">
+                      <span aria-hidden className="pieza-numero">
+                        {done ? "✓" : i + 1}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-display text-xl font-semibold leading-snug">{e.nombre}</p>
+                        <p className={`mt-0.5 font-mono text-[13px] font-semibold uppercase tracking-wider ${done ? "text-ok" : "text-gold-300"}`}>
+                          {done ? "Completo" : (s?.missing ?? []).join(" · ") || "Pendiente"}
+                        </p>
+                      </div>
+                      {open && <span aria-hidden className="text-2xl text-ink-muted">›</span>}
+                    </div>
+                  </Pieza>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
       )}
+
+      {!planningFirst && timelineBlock}
+
+      {pendingElements.length > 0 && !planningFirst && event.status !== "closed" && (
+        <Link href={`${base}/${planning.gate ? "planificacion" : "aprobaciones"}`} className="mt-3 block rounded-card border border-gold-300/50 bg-surface-100 px-4 py-3 text-sm">
+          <span className="block font-semibold text-gold-300">
+            {planning.gate
+              ? `Planificación: ${progress.ready} de ${progress.total}. El timeline sigue bloqueado`
+              : isTeam
+                ? "Falta la aprobación del cliente para empezar"
+                : "Tienes elementos por aprobar"}
+          </span>
+          <span className="block text-ink-muted">
+            {pendingElements
+              .map((e) => (planning.gate ? `${e.nombre}: ` : "") + (planning.elements.find((s) => s.key === e.clave)?.missing ?? []).join(", "))
+              .join(" · ")}
+          </span>
+        </Link>
+      )}
+
+      {isTeam && event.status !== "closed" && (
+        <div className="mt-5">
+          <UltimoMinuto eventId={id} />
+        </div>
+      )}
+
+      {redFlags.length > 0 && (
+        <section aria-label="Red flags" className="red-flag mt-6">
+          <div className="red-flag-titulo">
+            <span aria-hidden className="bandera" />
+            <h2>
+              Red flag{redFlags.length > 1 ? "s" : ""} <span className="font-mono">· {redFlags.length}</span>
+            </h2>
+            <span aria-hidden className="bandera" />
+          </div>
+          <ul className="mt-3 grid gap-2">
+            {redFlags.slice(0, 4).map((a) => (
+              <li key={a.id}>
+                <Link href={`${base}/alertas`} className="red-flag-item">
+                  <span className="block font-display text-lg font-bold leading-snug">{a.title}</span>
+                  {a.detail && <span className="mt-0.5 block text-sm opacity-85">{a.detail}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {redFlags.length > 4 && (
+            <Link href={`${base}/alertas`} className="mt-2 block text-sm font-semibold underline underline-offset-4">
+              Ver las {redFlags.length} red flags
+            </Link>
+          )}
+        </section>
+      )}
+
+      {amber.length > 0 && (
+        <section aria-label="Verifica" className="ambar mt-4">
+          <div className="ambar-titulo">
+            <h2>Verifica · te queda poco tiempo</h2>
+            <span className="font-mono">{amber.length}</span>
+          </div>
+          <ul className="mt-2 grid gap-1.5">
+            {amber.slice(0, 3).map((a) => (
+              <li key={a.id}>
+                <Link href={`${base}/alertas`} className="ambar-item">
+                  <span className="font-semibold">{a.title}</span>
+                  {a.detail && <span className="block text-sm text-ink-muted">{a.detail}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {amber.length > 3 && (
+            <Link href={`${base}/alertas`} className="mt-2 block text-sm font-semibold text-gold-300 underline underline-offset-4">
+              Ver las {amber.length}
+            </Link>
+          )}
+        </section>
+      )}
+
+      {event.startsAt && event.status !== "closed" && (
+        <EventCountdown startsAt={event.startsAt} label={`El evento empieza el ${formatDate(event.startsAt, event.timezone)} a las ${formatTime(event.startsAt, event.timezone)}.`} />
+      )}
+
+      {brief && (brief.synopsis || brief.summary) && (
+        <section aria-label="Brief" className="mt-6">
+          <SectionTitle href={`/bienvenida/${id}`} linkLabel="Ver el brief">
+            Puntos del brief
+          </SectionTitle>
+          <div className="brief-puntos">
+            <ul>
+              {briefPoints.map((p, i) => (
+                <li key={i}>{p}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {rest.length > 0 || active.length === 0 ? (
+        <>
+          <SectionTitle href={`${base}/alertas`} linkLabel="Ver alertas">
+            {active.length === 0 ? "Alertas" : "Otras alertas"}
+          </SectionTitle>
+          {active.length === 0 ? (
+            <Empty>Sin alertas activas.</Empty>
+          ) : (
+            <ul className="grid gap-2">
+              {rest.slice(0, 3).map((a) => (
+                <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} />
+              ))}
+            </ul>
+          )}
+        </>
+      ) : null}
 
       <SectionTitle href={`${base}/bitacora`} linkLabel="Bitácora completa">
         {isTeam ? "Bitácora" : "Minuto a minuto"}
       </SectionTitle>
       <LogList entries={log} timeZone={event.timezone} config={criticality} />
+
+      {planningFirst && (
+        <>
+          <SectionTitle>Timeline · se abre con la planificación completa</SectionTitle>
+          <div className="pointer-events-none opacity-60" aria-disabled="true">{timelineBlock}</div>
+        </>
+      )}
 
       {!isTeam && evidences.length > 0 && (
         <>
