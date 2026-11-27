@@ -95,10 +95,12 @@ export async function completeRequirementAction(input: {
   fileName: string | null;
   sha256: string | null;
   note: string;
+  /** La persona confirmó la declaración jurada en pantalla. */
+  sworn: boolean;
 }): Promise<CierreState> {
   return run(
     "complete_requirement",
-    { p_requirement: input.requirementId, p_file_path: input.filePath, p_file_name: input.fileName, p_sha256: input.sha256, p_note: input.note.trim() || null },
+    { p_requirement: input.requirementId, p_file_path: input.filePath, p_file_name: input.fileName, p_sha256: input.sha256, p_note: input.note.trim() || null, p_sworn: input.sworn },
     "Guardado en el expediente.",
   );
 }

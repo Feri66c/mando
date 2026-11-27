@@ -1,12 +1,12 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Logo } from "@/components/brand";
 import { ClockRules, LiveClock, RealtimeRefresh } from "@/components/operacion/live";
+import { EventBack, Mesa, TapSounds, type MesaPiece } from "@/components/operacion/mesa";
 import { BottomNav, PlusButton } from "@/components/operacion/nav";
 import { ROLE_LABEL } from "@mando/core/labels";
 import { formatEventRange, zoneLabel } from "@mando/core/time";
 import { modalityBadge } from "@mando/core/command";
-import { getAlerts, getBrands, getEventContext } from "@/lib/data";
+import { PLANNING_ELEMENTS } from "@mando/core/planning";
+import { getAlerts, getBrands, getEventContext, getPlanning } from "@/lib/data";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -18,7 +18,16 @@ export default async function EventLayout({ children, params }: { children: Reac
   if (!ctx) notFound(); // no es miembro: para la base de datos, el evento no existe
   const { user, event, isTeam } = ctx;
   if (!event.welcomedAt) redirect(`/bienvenida/${id}`); // primero la bienvenida: ahí toma el mando
-  const [alerts, brands] = await Promise.all([getAlerts(id), getBrands(id)]);
+  const [alerts, brands, planning] = await Promise.all([getAlerts(id), getBrands(id), getPlanning(id)]);
+  // La mesa: las cinco piezas a la mano. El presupuesto solo lo abren los niveles 1 y 2 y el cliente.
+  const canSeeBudget = !isTeam || (event.level !== null && event.level <= 2);
+  const pieces: MesaPiece[] = PLANNING_ELEMENTS.map((e) => ({
+    key: e.clave,
+    name: e.nombre,
+    route: e.ruta,
+    done: Boolean(planning.elements.find((s) => s.key === e.clave)?.ready),
+    open: isTeam ? e.clave !== "presupuesto" || canSeeBudget : e.clave === "presupuesto" || e.clave === "aprobaciones",
+  }));
   const openAlerts = alerts.filter((a) => a.status === "open").length;
   const badge = modalityBadge(event.modality, event.agencyName);
   const firstName = user.fullName.split(" ")[0];
@@ -28,10 +37,7 @@ export default async function EventLayout({ children, params }: { children: Reac
     <div className="tema-operacion min-h-dvh pb-44">
       <header className="mx-auto max-w-2xl px-5 pb-2 pt-[max(1.1rem,env(safe-area-inset-top))]">
         <div className="flex items-center justify-between gap-3">
-          <Link href="/eventos" className="flex min-h-11 items-center gap-3" aria-label="Volver a Mis eventos">
-            <span aria-hidden className="text-lg text-ink-muted">←</span>
-            <Logo className="h-10 w-auto" />
-          </Link>
+          <EventBack eventId={id} />
           <RealtimeRefresh eventId={id} />
         </div>
         <p className="mt-3 font-mono text-[13px] uppercase tracking-[0.08em] text-[#a9bdd6]">
@@ -70,7 +76,11 @@ export default async function EventLayout({ children, params }: { children: Reac
           </ul>
         )}
       </header>
+      <div className="mx-auto max-w-2xl px-5">
+        <Mesa eventId={id} pieces={pieces} />
+      </div>
       <main className="mx-auto max-w-2xl px-5 pt-3">{children}</main>
+      <TapSounds />
       <BottomNav eventId={id} openAlerts={isTeam ? openAlerts : 0} client={!isTeam} />
       {isTeam && <PlusButton eventId={id} />}
       {isTeam && <ClockRules eventId={id} />}

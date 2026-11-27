@@ -342,11 +342,14 @@ describe("Lista de ingreso y responsable", () => {
       // A la coordinadora le asignaron uno: ve ese y ningún otro.
       expect((await coord("select id from event_requirements where event_id = $1", [EVENT])).rows.map((r) => r.id)).toEqual([hers]);
       // El que nadie tenía asignado queda a nombre de quien lo sube.
-      await producer("select public.complete_requirement($1, null, null, null, 'Entregado en mano')", [free]);
+      await producer("select public.complete_requirement($1, null, null, null, 'Entregado en mano', true)", [free]);
       expect((await backend("select owner_id from event_requirements where id = $1", [free])).rows[0].owner_id).toBe(USERS.producer);
-      // El asignado conserva a su responsable aunque lo suba otra persona.
-      await producer("select public.complete_requirement($1, null, null, null, 'Lo subí por ella')", [hers]);
-      expect((await backend("select owner_id from event_requirements where id = $1", [hers])).rows[0].owner_id).toBe(COORD);
+      // El asignado solo lo sube su responsable: la línea legal no se quiebra (decisión 76).
+      await db.query("savepoint linea");
+      await expect(producer("select public.complete_requirement($1, null, null, null, 'Lo subí por ella', true)", [hers])).rejects.toThrow(/Solo esa persona lo sube/);
+      await db.query("rollback to savepoint linea");
+      await coord("select public.complete_requirement($1, null, null, null, 'Plan entregado', true)", [hers]);
+      expect((await backend("select owner_id, status from event_requirements where id = $1", [hers])).rows[0]).toEqual({ owner_id: COORD, status: "done" });
     });
   });
 });

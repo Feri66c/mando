@@ -1,3 +1,4 @@
+import lastMinute from "../../../config/ultimo-minuto.json";
 import type { EvidenceKind } from "./labels";
 
 /** Tipo de evidencia según el archivo. */
@@ -40,4 +41,22 @@ export function approvalPath(eventId: string, fileId: string, fileName: string):
 /** Ruta de la foto o de la copia del DNI de una persona: personas/<organización>/<foto|dni>/<id>.<extensión>. */
 export function personFilePath(organizationId: string, kind: "foto" | "dni", fileId: string, fileName: string): string {
   return `personas/${organizationId}/${kind}/${fileId}.${safeExtension(fileName)}`;
+}
+
+// ---- Último minuto (decisión 80) ----
+
+export type LastMinuteKind = { clave: string; nombre: string; ejemplo: string; ir_a: string | null };
+export const LAST_MINUTE_KINDS: readonly LastMinuteKind[] = lastMinute.tipos;
+
+export function validateLastMinute(): string[] {
+  const problems: string[] = [];
+  const keys = new Set<string>();
+  for (const k of LAST_MINUTE_KINDS) {
+    if (!/^[a-z][a-z0-9-]{1,30}$/.test(k.clave)) problems.push(`Clave inválida: ${k.clave}.`);
+    if (keys.has(k.clave)) problems.push(`Tipo repetido: ${k.clave}.`);
+    keys.add(k.clave);
+    if (!k.nombre.trim() || k.nombre.length > 60) problems.push(`Nombre inválido en ${k.clave}.`);
+  }
+  if (LAST_MINUTE_KINDS.length === 0) problems.push("Falta al menos un tipo de último minuto.");
+  return problems;
 }

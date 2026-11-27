@@ -6,6 +6,7 @@
 
 import { refresh } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { LAST_MINUTE_KINDS } from "@mando/core/evidence";
 import { templateByKey } from "@mando/core/templates";
 
 export type ActionState = { ok: boolean; error: string | null; message?: string | null; momentId?: string };
@@ -211,6 +212,32 @@ export async function markMomentAction(input: {
       p_captured_at: input.capturedAt ?? null,
     },
     input.tag === "wow" ? "Momento wow guardado. Ya lo ve el cliente." : "Eventualidad anotada. Queda para el cierre.",
+  );
+}
+
+/** Último minuto: lo que llegó a última hora, con su comprobante si lo hay. Queda en la bitácora. */
+export async function lastMinuteAction(input: {
+  eventId: string;
+  kind: string;
+  note: string;
+  filePath?: string | null;
+  sha256?: string | null;
+  capturedAt?: string | null;
+}): Promise<ActionState> {
+  const kind = LAST_MINUTE_KINDS.find((k) => k.clave === input.kind);
+  if (!kind) return { ok: false, error: "Elige qué quieres ingresar de último minuto." };
+  return run(
+    "last_minute",
+    {
+      p_event: input.eventId,
+      p_kind: kind.clave,
+      p_label: kind.nombre,
+      p_note: input.note.trim(),
+      p_file_path: input.filePath ?? null,
+      p_sha256: input.sha256 ?? null,
+      p_captured_at: input.capturedAt ?? null,
+    },
+    "Anotado en la bitácora como último minuto.",
   );
 }
 

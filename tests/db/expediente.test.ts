@@ -68,7 +68,7 @@ async function errorOf(q: Q, sql: string, params?: unknown[]): Promise<string | 
 const reqs = async (q: Q, event = EVENT) =>
   (await q("select id, key, title, status, mandatory, due_at, owner_id from event_requirements where event_id = $1 order by sort_order", [event])).rows;
 const byKey = async (q: Q, key: string) => (await reqs(q)).find((r) => r.key === key)!;
-const COMPLETE = "select public.complete_requirement($1, $2, $3, $4, $5)";
+const COMPLETE = "select public.complete_requirement($1, $2, $3, $4, $5, true)";
 const STATUS = "select public.set_requirement_status($1, $2, $3)";
 const alertsOf = async (q: Q, id: string) =>
   (await q("select level, status, title, detail, visible_to_viewer from alerts where rule_key = 'documento_pendiente' and entity_id = $1", [id])).rows;
