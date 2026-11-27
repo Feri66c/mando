@@ -143,6 +143,20 @@ export async function getEventTemplate(eventId: string) {
   return { template: parseTemplate(template), createdByName };
 }
 
+export type SavedCustomType = { id: string; name: string; modules: string[] };
+
+/** Tipos personalizados guardados por la organización (decisión 84). Si la base aún no los tiene, lista vacía. */
+export async function getCustomTypes(organizationId: string): Promise<SavedCustomType[]> {
+  const supabase = await requireClient();
+  const { data, error } = await supabase
+    .from("custom_event_types")
+    .select("id, name, modules")
+    .eq("organization_id", organizationId)
+    .order("name");
+  if (error || !data) return [];
+  return data.map((r) => ({ id: String(r.id), name: String(r.name), modules: (r.modules as string[]) ?? [] }));
+}
+
 /** Partidas de presupuesto que sugiere el armado de un evento personalizado (decisión 83). */
 export async function getCustomBudgetParts(eventId: string): Promise<string[]> {
   const { template } = await fetchEventTemplate(await requireClient(), eventId);

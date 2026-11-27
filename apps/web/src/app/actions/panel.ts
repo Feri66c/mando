@@ -37,6 +37,7 @@ async function db() {
 export async function createEvent(_prev: PanelState, formData: FormData): Promise<PanelState> {
   const kind = text(formData, "tipo");
   let full;
+  let saveAs: { name: string; modules: string[] } | null = null;
   if (kind === CUSTOM_KIND) {
     // Evento personalizado: el nombre del tipo y los componentes marcados arman la plantilla.
     const typeName = text(formData, "nombre_tipo");
@@ -44,6 +45,7 @@ export async function createEvent(_prev: PanelState, formData: FormData): Promis
     const problem = checkCustom(typeName, keys);
     if (problem) return { ok: false, error: problem };
     full = composeCustomTemplate(typeName, keys);
+    if (formData.get("guardar_tipo") === "1") saveAs = { name: typeName, modules: full.modulos };
   } else {
     const found = getTemplate(kind);
     if (!found) return { ok: false, error: "Elige el tipo de evento." };
@@ -77,10 +79,29 @@ export async function createEvent(_prev: PanelState, formData: FormData): Promis
     });
     if (error) throw error;
     eventId = data as string;
+    if (saveAs) {
+      // Guardar el tipo no detiene el evento: si falla, el evento ya existe igual.
+      await supabase.rpc("save_custom_event_type", { p_org: org, p_name: saveAs.name, p_modules: saveAs.modules });
+    }
   } catch (e) {
     return { ok: false, error: friendly(e) };
   }
   redirect(`/panel/${eventId}?creado=1`);
+}
+
+/** Borra un tipo personalizado guardado. Los eventos ya creados con él no cambian. */
+export async function deleteCustomType(_prev: PanelState, formData: FormData): Promise<PanelState> {
+  const id = text(formData, "tipo_guardado");
+  if (!UUID.test(id)) return { ok: false, error: "Tipo desconocido." };
+  try {
+    const supabase = await db();
+    const { error } = await supabase.rpc("delete_custom_event_type", { p_id: id });
+    if (error) throw error;
+  } catch (e) {
+    return { ok: false, error: friendly(e) };
+  }
+  refresh();
+  return { ok: true, error: null, message: "Tipo borrado." };
 }
 
 /** Invita a una persona con su cargo. El cargo elegido define su rol y su nivel en la jerarquía. */

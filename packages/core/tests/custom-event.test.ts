@@ -79,3 +79,26 @@ describe("catálogo del evento personalizado", () => {
     expect(load.find((l) => l.area.clave === "tecnico")?.count).toBe(0);
   });
 });
+
+describe("sugerencias desde el brief", () => {
+  it("lee el brief y sugiere componentes con la palabra que los disparó", async () => {
+    const { suggestModules } = await import("../src/custom-event");
+    const s = suggestModules(
+      "Lanzamiento en el Estadio Nacional con un artista internacional, pantallas LED, estructuras de truss, " +
+        "equipos en admisión temporal que se reexportan, degustación de cerveza y un sorteo.",
+    );
+    const keys = s.map((x) => x.clave);
+    expect(keys).toEqual(
+      expect.arrayContaining(["recinto-masivo", "talento-internacional", "pantallas", "con-estructuras", "internamiento", "alimentos", "sorteos"]),
+    );
+    expect(keys).not.toContain("drones");
+    expect(s.find((x) => x.clave === "recinto-masivo")?.palabra).toBe("estadio");
+  });
+
+  it("sin brief no sugiere nada y no confunde palabras dentro de otras", async () => {
+    const { suggestModules } = await import("../src/custom-event");
+    expect(suggestModules("  ")).toEqual([]);
+    expect(suggestModules("Un evento con buena energía del equipo").map((x) => x.clave)).toContain("energia");
+    expect(suggestModules("Reunión de directorio").map((x) => x.clave)).not.toContain("drones");
+  });
+});

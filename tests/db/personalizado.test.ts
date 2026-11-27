@@ -104,4 +104,28 @@ describe("evento personalizado", () => {
       expect(await errorOf(asUser(USERS.producer), CREATE, [ORG, JSON.stringify(template)])).not.toBeNull();
     });
   });
+
+  it("el productor general guarda su tipo, lo actualiza por nombre y lo borra; nadie más lo ve ni lo escribe", async () => {
+    await scenario(async ({ admin, asUser }) => {
+      const backend = asUser(USERS.backend);
+      const id = (await backend("select public.save_custom_event_type($1, '  Gira   con activos ', $2) as id", [ORG, ["internamiento", "gira", "gira", "MAL dato"]])).rows[0].id;
+      const row = (await admin("select name, modules from custom_event_types where id = $1", [id])).rows[0];
+      expect(row).toEqual({ name: "Gira con activos", modules: ["gira", "internamiento"] });
+
+      const again = (await backend("select public.save_custom_event_type($1, 'gira con activos', $2) as id", [ORG, ["carga"]])).rows[0].id;
+      expect(again).toBe(id);
+      expect((await admin("select modules from custom_event_types where id = $1", [id])).rows[0].modules).toEqual(["carga"]);
+
+      expect((await backend("select id from custom_event_types")).rows).toHaveLength(1);
+      expect((await asUser(USERS.producer)("select id from custom_event_types")).rows).toHaveLength(0);
+      expect(await errorOf(asUser(USERS.producer), "select public.save_custom_event_type($1, 'Mío', $2)", [ORG, ["carga"]])).toMatch(/productor general/);
+      expect(await errorOf(asUser(USERS.producer), "select public.delete_custom_event_type($1)", [id])).toMatch(/productor general/);
+      expect(await errorOf(backend, "insert into custom_event_types (organization_id, name, modules) values ($1, 'Directo', '{carga}')", [ORG])).not.toBeNull();
+      expect(await errorOf(backend, "select public.save_custom_event_type($1, 'Vacío', $2)", [ORG, []])).toMatch(/componente/);
+      expect(await errorOf(backend, "select public.save_custom_event_type($1, 'ab', $2)", [ORG, ["carga"]])).toMatch(/nombre/);
+
+      await backend("select public.delete_custom_event_type($1)", [id]);
+      expect((await admin("select count(*)::int as n from custom_event_types")).rows[0].n).toBe(0);
+    });
+  });
 });

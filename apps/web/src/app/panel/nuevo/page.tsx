@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Eyebrow, PanelShell } from "@/components/panel/kit";
-import { getAdminOrgs, getCurrentUser } from "@/lib/data";
+import { getAdminOrgs, getCurrentUser, getCustomTypes } from "@/lib/data";
 import { EVENT_TEMPLATES, TIERS } from "@mando/core/event-types";
 import { NewEventForm } from "./new-event-form";
 
@@ -12,6 +12,7 @@ export default async function NewEventPage() {
   const user = await getCurrentUser();
   const orgs = await getAdminOrgs(user.id);
   if (orgs.length === 0) redirect("/eventos");
+  const savedTypes = await getCustomTypes(orgs[0].id);
 
   return (
     <PanelShell userName={user.fullName}>
@@ -24,7 +25,7 @@ export default async function NewEventPage() {
         Elige el tipo y MANDO arma las piezas de la hoja de ruta. Después las puedes ajustar.
       </p>
       <div className="mt-8">
-        <NewEventForm organizationId={orgs[0].id} templates={[...EVENT_TEMPLATES]} tiers={TIERS} />
+        <NewEventForm organizationId={orgs[0].id} templates={[...EVENT_TEMPLATES]} tiers={TIERS} savedTypes={savedTypes} />
       </div>
     </PanelShell>
   );
