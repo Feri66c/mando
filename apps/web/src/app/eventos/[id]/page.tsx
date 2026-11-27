@@ -16,6 +16,14 @@ import { getAlerts, getBrief, getClientNotices, getEventContext, getPlanning, ge
 
 export const metadata: Metadata = { title: "Hoy" };
 
+/** «No negociable sin documento: Permiso municipal» → primero el nombre; el motivo va al pie. */
+function flagParts(title: string): { name: string; reason: string | null } {
+  const at = title.indexOf(": ");
+  if (at < 0) return { name: title, reason: null };
+  const reason = title.slice(0, at).replace(/^No negociable\b\s*/i, "No negociable · ").replace(/ · $/, "");
+  return { name: title.slice(at + 2), reason };
+}
+
 function Slot({ item, timeZone }: { item: RouteItem | null; timeZone: string }) {
   if (!item) return <p className="mt-1 text-ink-muted">Nada por ahora.</p>;
   return (
@@ -158,6 +166,37 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
   return (
     <>
       <h1 className="sr-only">Hoy</h1>
+      {redFlags.length > 0 && (
+        <section aria-label="Red flags" className="red-flag mb-6">
+          <div className="red-flag-titulo">
+            <span aria-hidden className="bandera" />
+            <h2>
+              Red flag{redFlags.length > 1 ? "s" : ""} <span className="font-mono">· {redFlags.length}</span>
+            </h2>
+            <span aria-hidden className="bandera" />
+          </div>
+          <ul className="mt-3 grid gap-2">
+            {redFlags.slice(0, 4).map((a) => (
+              <li key={a.id}>
+                <Link href={`${base}/alertas`} className="red-flag-item">
+                  <span aria-hidden className="bandera bandera-chica" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-xl font-bold leading-snug">{flagParts(a.title).name}</span>
+                    {flagParts(a.title).reason && <span className="red-flag-pie">{flagParts(a.title).reason}</span>}
+                    {a.detail && <span className="mt-1 block text-sm opacity-80">{a.detail}</span>}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {redFlags.length > 4 && (
+            <Link href={`${base}/alertas`} className="mt-2 block text-sm font-semibold underline underline-offset-4">
+              Ver las {redFlags.length} red flags
+            </Link>
+          )}
+        </section>
+      )}
+
       {planningFirst && (
         <section aria-label="Planificación" className="mb-6">
           <div className="flex items-baseline justify-between gap-3">
@@ -221,33 +260,6 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
         <div className="mt-5">
           <UltimoMinuto eventId={id} />
         </div>
-      )}
-
-      {redFlags.length > 0 && (
-        <section aria-label="Red flags" className="red-flag mt-6">
-          <div className="red-flag-titulo">
-            <span aria-hidden className="bandera" />
-            <h2>
-              Red flag{redFlags.length > 1 ? "s" : ""} <span className="font-mono">· {redFlags.length}</span>
-            </h2>
-            <span aria-hidden className="bandera" />
-          </div>
-          <ul className="mt-3 grid gap-2">
-            {redFlags.slice(0, 4).map((a) => (
-              <li key={a.id}>
-                <Link href={`${base}/alertas`} className="red-flag-item">
-                  <span className="block font-display text-lg font-bold leading-snug">{a.title}</span>
-                  {a.detail && <span className="mt-0.5 block text-sm opacity-85">{a.detail}</span>}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          {redFlags.length > 4 && (
-            <Link href={`${base}/alertas`} className="mt-2 block text-sm font-semibold underline underline-offset-4">
-              Ver las {redFlags.length} red flags
-            </Link>
-          )}
-        </section>
       )}
 
       {amber.length > 0 && (

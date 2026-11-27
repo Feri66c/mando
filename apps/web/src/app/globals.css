@@ -823,7 +823,7 @@ a.mesa-pieza:active { transform: translateY(2px) scale(0.97); background: color-
 .red-flag-titulo { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .red-flag-titulo h2 { white-space: nowrap; font-family: var(--font-display, inherit); font-size: clamp(1.6rem, 7.6vw, 2.4rem); font-weight: 800; line-height: 1; letter-spacing: 0.04em; text-transform: uppercase; text-shadow: 0 0 16px color-mix(in srgb, var(--critical) 80%, transparent); }
 .bandera { width: 1.7rem; height: 1.4rem; flex: none; background: var(--critical); clip-path: polygon(0 0, 100% 0, 78% 50%, 100% 100%, 0 100%); box-shadow: 0 0 12px var(--critical); transform-origin: left center; }
-.red-flag-item { display: block; padding: 0.7rem 0.8rem; background: rgba(7, 8, 12, 0.55); box-shadow: inset 4px 0 0 var(--critical); }
+.red-flag-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.7rem 0.8rem; background: rgba(7, 8, 12, 0.55); box-shadow: inset 4px 0 0 var(--critical); }
 .ambar { padding: 0.9rem 1rem; background: color-mix(in srgb, var(--gold-300) 7%, #12141c); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--gold-300) 55%, transparent); clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px); }
 .ambar-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; color: var(--gold-300); }
 .ambar-titulo h2 { font-family: var(--font-display, inherit); font-size: 1.3rem; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.03em; }
@@ -848,3 +848,6 @@ a.mesa-pieza:active { transform: translateY(2px) scale(0.97); background: color-
   0%, 100% { transform: skewY(-7deg) scaleX(1); }
   50% { transform: skewY(7deg) scaleX(0.9); }
 }
+
+.bandera-chica { width: 1.35rem; height: 1.1rem; margin-top: 0.3rem; }
+.red-flag-pie { display: inline-block; margin-top: 0.3rem; padding: 0.1rem 0.5rem; font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; background: var(--critical); }
