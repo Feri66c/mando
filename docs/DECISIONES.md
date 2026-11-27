@@ -339,3 +339,11 @@ Fecha: 26 de noviembre de 2026. Que el evento se explique solo: qué cambió, po
 - **Sinopsis con IA:** por ahora la escribe el backend. Generarla sola y resumir un documento largo necesita una llave de IA que carga Fer en Vercel; queda pendiente.
 - **Videos cortos para redes** a partir de los momentos wow: pendiente, depende de un servicio externo.
 - **Proyectos ya instalados:** ejecutar una vez `supabase/migrations/20261212000019_minuto_a_minuto_y_experiencia.sql` en el SQL Editor, después de la migración 18.
+
+# Decisiones de «Mis eventos» · Señales
+
+Fecha: 26 de noviembre de 2026. Pedido de Fer al revisar la app publicada.
+
+| # | Decisión | Qué se decidió |
+| --- | --- | --- |
+| 70 | Cuadros de señal | En «Mis eventos» el logo va más grande y la pantalla se nombra una sola vez. El estado del evento es un cuadro de señal con un pulsador que late siempre mientras el evento no esté cerrado: **programado en verde**, en vivo en rojo, borrador en hielo y cerrado en gris. El rol (Backend, Productor) es un cuadro más grande con filo de luz: amarillo para Backend, hielo para Productor. La fecha va en blanco con luz y las horas en naranja neón. Quien apaga el movimiento en su teléfono ve lo mismo, quieto. |

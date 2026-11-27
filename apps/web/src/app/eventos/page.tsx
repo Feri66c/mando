@@ -16,10 +16,10 @@ export default async function MyEventsPage() {
 
   return (
     <>
-      <AppHeader label="Mis eventos" userName={user.fullName} />
+      <AppHeader userName={user.fullName} />
       <main className="mx-auto max-w-3xl px-4 py-6">
-        <h1 className="font-display text-[28px] font-bold leading-none">Mis eventos</h1>
-        <p className="mt-1 text-sm text-ink-muted">Hola, {user.fullName}. Elige el evento que vas a controlar.</p>
+        <h1 className="font-display text-[32px] font-bold leading-none">Mis eventos</h1>
+        <p className="mt-2 text-base text-ink-muted">Hola, {user.fullName}. Elige el evento que vas a controlar.</p>
         {canCreate && (
           <Link
             href="/panel"
@@ -39,9 +39,11 @@ export default async function MyEventsPage() {
         ) : (
           <ul className="mt-6 space-y-3">
             {events.map((event) => {
+              // «vie, 20 nov. 2026 · 10:00 – 20:00»: la fecha va en blanco con luz y las horas en naranja neón.
+              const when = formatEventRange(event.startsAt, event.endsAt, event.timezone).split(" · ");
               const body = (
                 <>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <EventStatusText status={event.status} />
                     <RolePill role={event.role} />
                   </div>
@@ -52,9 +54,15 @@ export default async function MyEventsPage() {
                   )}
                   {event.role !== "viewer" && <p className="font-display text-xl font-bold uppercase tracking-wide text-gold-500">{event.title ?? ROLE_LABEL[event.role]}</p>}
                   <h2 className="mt-2 font-display text-lg font-semibold leading-snug">{event.name}</h2>
-                  <p className="mt-1 font-mono text-sm text-navy-600">
-                    {formatEventRange(event.startsAt, event.endsAt, event.timezone)}{" "}
-                    <span className="text-ink-muted">· hora de {zoneLabel(event.timezone)}</span>
+                  <p className="mt-2 font-mono text-base font-medium">
+                    {when.length > 1 ? (
+                      <>
+                        <span className="luz-blanca">{when[0]}</span> <span className="luz-naranja">· {when.slice(1).join(" · ")}</span>
+                      </>
+                    ) : (
+                      <span className="luz-blanca">{when[0]}</span>
+                    )}
+                    <span className="block text-sm font-normal text-ink-muted">hora de {zoneLabel(event.timezone)}</span>
                   </p>
                   <p className="mt-1 text-sm text-ink-muted">
                     {[event.venueName, event.clientName].filter(Boolean).join(" · ")}

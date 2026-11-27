@@ -2,31 +2,29 @@ import { EVENT_STATUS_LABEL, ITEM_STATUS_LABEL, ROLE_LABEL, type EventRole, type
 
 // Regla 8: todo estado lleva su palabra; el color solo acompaña.
 
+/** Cuadro de señal del rol: grande y con filo de luz, para saber de un vistazo con qué mando entras. */
 export function RolePill({ role }: { role: EventRole }) {
-  const style =
-    role === "backend"
-      ? "bg-navy-800 text-ink-inverse"
-      : role === "producer"
-        ? "bg-ice-100 text-navy-800"
-        : "border border-line bg-surface-100 text-ink-muted";
+  const tone = role === "backend" ? "var(--gold-300)" : role === "producer" ? "var(--ice-300)" : "var(--ink-muted)";
   return (
-    <span className={`inline-flex items-center rounded-chip px-2 py-0.5 text-xs font-semibold ${style}`}>
+    <span className="senal senal-rol" style={{ "--tono": tone } as React.CSSProperties}>
       {ROLE_LABEL[role]}
     </span>
   );
 }
 
-const EVENT_STATUS_DOT: Record<EventStatus, string> = {
-  draft: "bg-ice-300",
-  planned: "bg-navy-600",
-  live: "bg-critical",
-  closed: "bg-ink-muted",
+// Programado es verde (listo para salir), en vivo rojo, borrador hielo y cerrado gris.
+const EVENT_STATUS_TONE: Record<EventStatus, string> = {
+  draft: "var(--ice-300)",
+  planned: "var(--ok)",
+  live: "var(--critical)",
+  closed: "var(--ink-muted)",
 };
 
+/** Cuadro de señal del estado: un pulsador que late siempre mientras el evento no esté cerrado. */
 export function EventStatusText({ status }: { status: EventStatus }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-      <span aria-hidden className={`size-2 rounded-full ${EVENT_STATUS_DOT[status]}`} />
+    <span className="senal" data-vivo={status === "closed" ? undefined : ""} style={{ "--tono": EVENT_STATUS_TONE[status] } as React.CSSProperties}>
+      <span aria-hidden className="senal-punto" />
       {EVENT_STATUS_LABEL[status]}
     </span>
   );
