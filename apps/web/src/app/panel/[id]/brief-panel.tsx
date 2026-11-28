@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState, useTransition } from "react";
 import { answerBriefDoubt, saveBrief, type BriefState } from "@/app/actions/brief";
+import { writeSynopsis } from "@/app/actions/ia";
 import { buttonPrimary, inputClass } from "@/components/operacion/ui";
 import type { BriefDoubt } from "@mando/core/data";
 import { BRIEF_MAX_CHARS, SYNOPSIS_MAX_CHARS } from "@mando/core/experience";
@@ -25,6 +26,24 @@ export function BriefForm({
   const [chars, setChars] = useState((brief?.summary ?? "").length);
   const [doc, setDoc] = useState<{ path: string; name: string } | null>(null);
   const [upload, setUpload] = useState<{ busy: boolean; error: string | null }>({ busy: false, error: null });
+  const formRef = useRef<HTMLFormElement>(null);
+  const synopsisRef = useRef<HTMLTextAreaElement>(null);
+  const [ai, setAi] = useState<{ error: string | null; done: boolean }>({ error: null, done: false });
+  const [writing, startWriting] = useTransition();
+
+  /** La IA lee el brief escrito (aunque aún no esté guardado) y propone la sinopsis. */
+  function draftSynopsis() {
+    const form = formRef.current;
+    if (!form) return;
+    const value = (n: string) => String(new FormData(form).get(n) ?? "");
+    setAi({ error: null, done: false });
+    startWriting(async () => {
+      const r = await writeSynopsis({ brief: value("resumen"), objective: value("objetivo"), attendees: value("asistentes") });
+      if (!r.ok) return setAi({ error: r.error, done: false });
+      if (synopsisRef.current) synopsisRef.current.value = r.synopsis;
+      setAi({ error: null, done: true });
+    });
+  }
 
   /** El documento se sube directo al cubo privado, en la carpeta del brief de este evento. */
   async function attach(file: File | null) {
@@ -44,7 +63,7 @@ export function BriefForm({
   }
 
   return (
-    <form action={action} className="space-y-4">
+    <form ref={formRef} action={action} className="space-y-4">
       <input type="hidden" name="evento" value={eventId} />
       {doc && (
         <>
@@ -56,7 +75,20 @@ export function BriefForm({
         <label htmlFor="brief-sinopsis" className={label}>
           Sinopsis
         </label>
-        <textarea id="brief-sinopsis" name="sinopsis" rows={2} maxLength={SYNOPSIS_MAX_CHARS} defaultValue={brief?.synopsis ?? ""} className={`${inputClass} py-2`} placeholder="Lo esencial en dos o tres líneas. Es lo primero que lee cada persona." />
+        <textarea ref={synopsisRef} id="brief-sinopsis" name="sinopsis" rows={3} maxLength={SYNOPSIS_MAX_CHARS} defaultValue={brief?.synopsis ?? ""} className={`${inputClass} py-2`} placeholder="Lo esencial en dos o tres líneas. Es lo primero que lee cada persona." />
+        <button type="button" onClick={draftSynopsis} disabled={writing} className="leer-brief">
+          {writing ? "La IA está escribiendo…" : "Escribir la sinopsis con IA"}
+        </button>
+        {ai.error && (
+          <p role="alert" className="border border-critical/40 bg-critical/10 px-3 py-2 text-sm">
+            {ai.error}
+          </p>
+        )}
+        {ai.done && (
+          <p role="status" className="text-sm text-ink-muted">
+            La IA escribió la sinopsis con el brief de abajo. Revísala y corrígela antes de guardar.
+          </p>
+        )}
       </div>
       <div className="space-y-1.5">
         <div className="flex items-baseline justify-between gap-3">
