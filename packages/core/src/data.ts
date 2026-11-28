@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CriticalityConfig } from "./criticality";
 import type { Talent } from "./talents";
 import { EXPERIENCE_TOLERANCE_MIN, type ChangeOrigin, type ExperienceData, type MinuteRow, type MomentTag } from "./experience";
-import { isVisibility, type AccessRow, type BrandKind, type ChainMember, type EmergencyKind, type EmergencyWindow, type Visibility } from "./command";
+import { isVisibility, type AccessRow, type BrandKind, type ChainMember, type EmergencyKind, type EmergencyWindow, type RequestStatus, type Visibility } from "./command";
 import {
   isEventRole,
   type AlertStatus,
@@ -1083,6 +1083,98 @@ export async function fetchBrands(client: SupabaseClient, eventId: string): Prom
     kind: r.kind as BrandKind,
     name: r.name as string,
     logoUrl: r.file_path ? (urls.get(r.file_path as string) ?? null) : null,
+  }));
+}
+
+/** Logo de la marca del cliente para la tarjeta de cada evento: la primera marca «cliente» con logo. */
+export async function fetchCardBrands(client: SupabaseClient, eventIds: string[]): Promise<Record<string, { name: string; logoUrl: string | null }>> {
+  if (eventIds.length === 0) return {};
+  const { data, error } = await client
+    .from("event_brands")
+    .select("event_id, name, file_path, sort_order")
+    .in("event_id", eventIds)
+    .eq("kind", "cliente")
+    .order("sort_order", { ascending: true });
+  if (error) return {};
+  const pick = new Map<string, { name: string; path: string | null }>();
+  for (const r of data ?? []) {
+    const cur = pick.get(r.event_id as string);
+    // Gana la primera con logo; si ninguna tiene, la primera por orden.
+    if (!cur || (!cur.path && r.file_path)) pick.set(r.event_id as string, { name: r.name as string, path: (r.file_path as string | null) ?? null });
+  }
+  const paths = [...pick.values()].map((v) => v.path).filter((p): p is string => Boolean(p));
+  const urls = new Map<string, string>();
+  if (paths.length > 0) {
+    const { data: signed } = await client.storage.from("evidences").createSignedUrls(paths, 60 * 60);
+    for (const s of signed ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  }
+  const out: Record<string, { name: string; logoUrl: string | null }> = {};
+  for (const [id, v] of pick) out[id] = { name: v.name, logoUrl: v.path ? (urls.get(v.path) ?? null) : null };
+  return out;
+}
+
+export type OrgBrand = {
+  id: string;
+  name: string;
+  brandName: string | null;
+  parentName: string | null;
+  logoPath: string | null;
+  logoUrl: string | null;
+  isAdmin: boolean;
+};
+
+/** El mando de marca de la persona: «MANDO Momentum». La primera organización donde administra, o donde es miembro. */
+export async function fetchMyOrgBrand(client: SupabaseClient, userId: string): Promise<OrgBrand | null> {
+  const { data, error } = await client
+    .from("organization_members")
+    .select("organization_id, is_admin, organizations (name, brand_name, parent_name, logo_path)")
+    .eq("profile_id", userId);
+  if (error || !data || data.length === 0) return null;
+  const row = [...data].sort((a, b) => Number(b.is_admin) - Number(a.is_admin))[0];
+  const org = first(row.organizations) as { name: string; brand_name: string | null; parent_name: string | null; logo_path: string | null } | null;
+  if (!org) return null;
+  let logoUrl: string | null = null;
+  if (org.logo_path) {
+    const { data: signed } = await client.storage.from("evidences").createSignedUrl(org.logo_path, 60 * 60);
+    logoUrl = signed?.signedUrl ?? null;
+  }
+  return {
+    id: row.organization_id as string,
+    name: org.name,
+    brandName: org.brand_name,
+    parentName: org.parent_name,
+    logoPath: org.logo_path,
+    logoUrl,
+    isAdmin: Boolean(row.is_admin),
+  };
+}
+
+export type OrgRequest = {
+  id: string;
+  title: string;
+  detail: string | null;
+  status: RequestStatus;
+  billable: boolean;
+  quoteNote: string | null;
+  createdAt: string;
+};
+
+/** Pedidos especiales del mando. Solo los ve quien administra la organización. */
+export async function fetchOrgRequests(client: SupabaseClient, orgId: string): Promise<OrgRequest[]> {
+  const { data, error } = await client
+    .from("organization_requests")
+    .select("id, title, detail, status, billable, quote_note, created_at")
+    .eq("organization_id", orgId)
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  return (data ?? []).map((r) => ({
+    id: r.id as string,
+    title: r.title as string,
+    detail: (r.detail as string | null) ?? null,
+    status: r.status as RequestStatus,
+    billable: Boolean(r.billable),
+    quoteNote: (r.quote_note as string | null) ?? null,
+    createdAt: r.created_at as string,
   }));
 }
 

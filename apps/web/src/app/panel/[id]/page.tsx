@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { revokeInvitation } from "@/app/actions/panel";
 import { Eyebrow, LevelBadge, PanelShell, PieceChain, TierMeter } from "@/components/panel/kit";
 import { Card, Empty, buttonGhost, buttonSecondary } from "@/components/operacion/ui";
-import { getAreas, getBrief, getBriefDocuments, getBriefDoubts, getCurrentUser, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
+import { getAreas, getBrief, getBriefDocuments, getBriefDoubts, getCurrentUser, getMyOrgBrand, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
 import { SUGGESTED_AREAS } from "@mando/core/command";
 import { DEFAULT_CARGOS, LEVEL_LABEL, TIERS, invitationMessage, type TierKey } from "@mando/core/event-types";
 import { formatDate, formatTime } from "@mando/core/time";
@@ -52,7 +52,7 @@ export default async function EventTeamPage({
   const linkFor = (email: string) => `${proto}://${host}/ingresar?correo=${encodeURIComponent(email)}`;
 
   return (
-    <PanelShell userName={user.fullName}>
+    <PanelShell userName={user.fullName} brand={await getMyOrgBrand(user.id)}>
       <Link href="/panel" className="text-sm text-ink-muted hover:text-ink">
         ← Panel
       </Link>

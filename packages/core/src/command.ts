@@ -143,6 +143,23 @@ export function brandLogoPath(eventId: string, fileId: string, fileName: string)
   return ext ? `${eventId}/marcas/${fileId}.${ext}` : null;
 }
 
+/** Ruta del logo de una organización en el cubo privado: org/<organización>/logo/<archivo>. */
+export function orgLogoPath(orgId: string, fileId: string, fileName: string): string | null {
+  const ext = /\.(png|jpe?g|webp)$/i.exec(fileName)?.[1]?.toLowerCase();
+  return ext ? `org/${orgId}/logo/${fileId}.${ext}` : null;
+}
+
+/** Estados de un pedido especial de un mando (decisión 95). */
+export const REQUEST_STATUSES = [
+  { clave: "pedido", nombre: "Pedido" },
+  { clave: "cotizado", nombre: "Cotizado" },
+  { clave: "aprobado", nombre: "Aprobado" },
+  { clave: "activo", nombre: "Activo" },
+  { clave: "descartado", nombre: "Descartado" },
+] as const;
+export type RequestStatus = (typeof REQUEST_STATUSES)[number]["clave"];
+export const isRequestStatus = (v: string): v is RequestStatus => REQUEST_STATUSES.some((s) => s.clave === v);
+
 /** Revisa config/cadena-de-mando.json: las claves que la base de datos conoce tienen que estar todas. */
 export function validateCommandConfig(): string[] {
   const problems: string[] = [];

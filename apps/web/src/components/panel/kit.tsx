@@ -1,18 +1,18 @@
 import Link from "next/link";
-import { Logo } from "@/components/brand";
+import { MandoLockup, type MandoBrand } from "@/components/brand";
 import { signOut } from "@/app/actions/auth";
 
 // Piezas visuales del panel y de la bienvenida. Están juntas y aisladas a propósito:
 // cuando se apruebe la nueva dirección visual, se cambia su forma aquí sin tocar la lógica.
 
 /** Marco del panel del productor general: tema oscuro, logo y salida. */
-export function PanelShell({ userName, children }: { userName: string; children: React.ReactNode }) {
+export function PanelShell({ userName, brand, children }: { userName: string; brand?: MandoBrand | null; children: React.ReactNode }) {
   return (
     <div className="tema-operacion min-h-dvh">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
-          <Link href="/panel" className="flex items-center gap-3" aria-label="Ir al panel">
-            <Logo className="h-8 w-auto" />
+          <Link href="/panel" className="flex min-w-0 items-center gap-3" aria-label="Ir al panel">
+            <MandoLockup brand={brand} size="mediano" />
           </Link>
           <nav className="flex items-center gap-2 text-sm">
             <Link href="/eventos" className="min-h-11 content-center px-3 font-medium text-ink-muted hover:text-ink">
