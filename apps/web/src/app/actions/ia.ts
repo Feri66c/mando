@@ -114,3 +114,62 @@ export async function suggestComponents(briefText: string): Promise<SuggestResul
     return { ok: true, source: "palabras", hits: byWords(), note };
   }
 }
+
+export type VoiceBriefResult =
+  | { ok: true; source: "ia" | "palabras"; name: string; brief: string; hits: { clave: string; palabra: string }[]; note?: string }
+  | { ok: false; error: string };
+
+/**
+ * «Cuéntame tu brief»: el productor dicta como habla y la IA lo ordena en un brief limpio,
+ * propone el nombre del tipo de evento y marca los componentes con su razón.
+ */
+export async function briefFromVoice(spoken: string): Promise<VoiceBriefResult> {
+  const denied = await mustBeProducer();
+  if (denied) return { ok: false, error: denied };
+  const said = String(spoken ?? "").trim().slice(0, BRIEF_MAX_CHARS);
+  if (said.length < 15) return { ok: false, error: "No alcancé a escucharte. Toca el micrófono y cuéntame tu evento con más detalle." };
+  const byWords = () => suggestModules(said);
+  if (!aiReady()) return { ok: true, source: "palabras", name: "", brief: said, hits: byWords(), note: "La IA no está conectada: dejé tu dictado tal cual." };
+  try {
+    const out = await askJson<{ nombre_tipo: string; brief: string; componentes: { clave: string; razon: string }[] }>({
+      system: STYLE,
+      prompt:
+        "El productor general te contó su evento hablando, así que el texto viene de un dictado: puede tener muletillas, repeticiones o palabras mal entendidas.\n\n" +
+        "1. Escribe el brief del evento, claro y ordenado, en párrafos cortos: qué es, objetivo, dónde y cuándo, público y aforo, qué se necesita (montaje, técnica, talento, producto, transporte, importaciones), y lo que no puede fallar. " +
+        "Usa solo lo que dijo; si algo no lo dijo, no lo inventes. Máximo 4000 caracteres.\n" +
+        "2. Propón un nombre corto para este tipo de evento (de 3 a 60 caracteres).\n" +
+        "3. Del catálogo de abajo, elige los componentes que el evento necesita, con su clave exacta y una razón muy corta (máximo 8 palabras).\n\n" +
+        `Catálogo:\n${CATALOG}\n\n<dictado>\n${said}\n</dictado>`,
+      schema: {
+        type: "object",
+        properties: {
+          nombre_tipo: { type: "string" },
+          brief: { type: "string" },
+          componentes: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { clave: { type: "string" }, razon: { type: "string" } },
+              required: ["clave", "razon"],
+              additionalProperties: false,
+            },
+          },
+        },
+        required: ["nombre_tipo", "brief", "componentes"],
+        additionalProperties: false,
+      },
+      maxTokens: 8000,
+    });
+    const brief = String(out.brief ?? "").trim().slice(0, BRIEF_MAX_CHARS) || said;
+    const seen = new Set<string>();
+    const hits = (out.componentes ?? [])
+      .filter((c) => customModule(c.clave) && !seen.has(c.clave) && seen.add(c.clave))
+      .map((c) => ({ clave: c.clave, palabra: String(c.razon ?? "").trim().slice(0, 80) }));
+    for (const w of suggestModules(`${said}\n${brief}`)) if (!seen.has(w.clave)) hits.push({ clave: w.clave, palabra: `dijiste «${w.palabra}»` });
+    const name = String(out.nombre_tipo ?? "").replace(/\s+/g, " ").trim().slice(0, 60);
+    return { ok: true, source: "ia", name: name.length >= 3 ? name : "", brief, hits };
+  } catch (e) {
+    const note = e instanceof AiUnavailable ? e.message : "La IA no respondió: dejé tu dictado tal cual y marqué por palabras.";
+    return { ok: true, source: "palabras", name: "", brief: said, hits: byWords(), note };
+  }
+}

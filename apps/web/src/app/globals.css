@@ -944,3 +944,49 @@ a.mesa-pieza:active { transform: translateY(2px) scale(0.97); background: color-
 }
 .leer-brief:active:not(:disabled) { translate: 0 2px; background: color-mix(in srgb, var(--gold-300) 12%, var(--surface-100)); }
 .leer-brief:disabled { opacity: 0.45; }
+
+/* ---------------------------------------------------------------------------
+   «Cuéntame tu brief» (decisión 86): el micrófono que pulsa mientras la IA escucha.
+   --------------------------------------------------------------------------- */
+.cuentame { display: grid; gap: 0.6rem; }
+.cuentame-boton {
+  display: flex; align-items: center; gap: 1rem; width: 100%; padding: 1rem 1.1rem; text-align: left; color: #fff; overflow: hidden;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--record) 26%, var(--surface-100)), var(--surface-100));
+  box-shadow: inset 0 0 0 2px var(--record), 0 4px 0 rgba(0, 0, 0, 0.55);
+  transition: translate 0.1s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.cuentame-boton:active:not(:disabled) { translate: 0 3px; box-shadow: inset 0 0 0 2px var(--record); }
+.cuentame-boton:disabled { opacity: 0.75; }
+.cuentame-mic {
+  position: relative; flex: none; display: grid; place-items: center; width: 3.6rem; height: 3.6rem; border-radius: 999px;
+  color: #fff; background: var(--record); box-shadow: 0 0 0 4px color-mix(in srgb, var(--record) 30%, transparent);
+}
+.cuentame-mic::before, .cuentame-mic::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--record); opacity: 0; pointer-events: none;
+}
+.cuentame-texto { min-width: 0; }
+.cuentame-vivo {
+  max-height: 9rem; overflow-y: auto; padding: 0.7rem 0.85rem; font-size: 1rem; line-height: 1.45;
+  background: var(--surface-100); box-shadow: inset 3px 0 0 var(--record);
+}
+.cuentame-nota { font-size: 0.9rem; color: var(--ink-muted); }
+@media (prefers-reduced-motion: no-preference) {
+  /* En reposo late suave para que se note; al escuchar, ondas que salen del micrófono. */
+  .cuentame-boton:not([data-escucha]):not(:disabled) .cuentame-mic { animation: cuentame-late 1.6s ease-in-out infinite; }
+  .cuentame-boton[data-escucha] .cuentame-mic { animation: cuentame-parpadea 1s ease-in-out infinite; }
+  .cuentame-boton[data-escucha] .cuentame-mic::before { animation: cuentame-onda 1.4s ease-out infinite; }
+  .cuentame-boton[data-escucha] .cuentame-mic::after { animation: cuentame-onda 1.4s ease-out 0.7s infinite; }
+}
+@keyframes cuentame-late {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 4px color-mix(in srgb, var(--record) 30%, transparent); }
+  50% { transform: scale(1.06); box-shadow: 0 0 0 9px color-mix(in srgb, var(--record) 12%, transparent), 0 0 22px color-mix(in srgb, var(--record) 55%, transparent); }
+}
+@keyframes cuentame-parpadea {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.35); }
+}
+@keyframes cuentame-onda {
+  0% { transform: scale(1); opacity: 0.85; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
