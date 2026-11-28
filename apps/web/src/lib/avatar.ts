@@ -28,54 +28,91 @@ function prompt(style: AvatarStyle): string {
   ].join(" ");
 }
 
-/** Dibuja el avatar. Devuelve un PNG. */
+const PREFERRED = ["gpt-image-2", "gpt-image-1.5", "gpt-image-1", "gpt-image-1-mini", "chatgpt-image-latest"];
+const key = () => process.env.OPENAI_API_KEY!.trim();
+
+/** Modelos de imagen que esta cuenta de OpenAI sí puede usar, del mejor al más simple. */
+async function imageModels(): Promise<string[]> {
+  const override = process.env.OPENAI_IMAGE_MODEL?.trim();
+  let available: string[] = [];
+  try {
+    const res = await fetch("https://api.openai.com/v1/models", {
+      headers: { Authorization: `Bearer ${key()}` },
+      signal: AbortSignal.timeout(15_000),
+    });
+    const data = (await res.json().catch(() => null)) as { data?: { id: string }[] } | null;
+    available = (data?.data ?? []).map((m) => m.id).filter((id) => /image/i.test(id) && !/dall-e/i.test(id));
+  } catch {
+    // Si no se puede listar, se prueba con la lista conocida.
+  }
+  const rank = (id: string) => {
+    const i = PREFERRED.indexOf(id);
+    return i === -1 ? PREFERRED.length : i;
+  };
+  const ordered = available.length ? [...available].sort((a, b) => rank(a) - rank(b)) : PREFERRED;
+  return [...new Set([...(override ? [override] : []), ...ordered])];
+}
+
+const isModelProblem = (status: number, msg: string) =>
+  (status === 400 || status === 403 || status === 404) && /model|does not exist|not found|verif|access/i.test(msg);
+
+/** Dibuja el avatar. Prueba los modelos de imagen de la cuenta hasta que uno responda. Devuelve un PNG. */
 export async function drawAvatar(photo: Blob, fileName: string, style: AvatarStyle): Promise<Buffer> {
   if (!avatarReady()) throw new AvatarUnavailable("Falta conectar el servicio de imágenes: pega OPENAI_API_KEY en Vercel.");
-  const body = new FormData();
-  body.append("model", process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1");
   // El servicio exige el tipo exacto de la imagen; lo que baja del cubo a veces llega sin tipo.
   const ext = /\.(png|webp)$/i.exec(fileName)?.[1]?.toLowerCase();
   const type = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
   const image = new Blob([await photo.arrayBuffer()], { type });
-  body.append("image", image, ext ? fileName : fileName.replace(/\.[^.]*$/, "") + ".jpg");
-  body.append("prompt", prompt(style));
-  body.append("size", "1024x1024");
-  body.append("quality", "medium");
-  body.append("n", "1");
-  let res: Response;
-  try {
-    res = await fetch("https://api.openai.com/v1/images/edits", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY!.trim()}` },
-      body,
-      signal: AbortSignal.timeout(150_000),
-    });
-  } catch {
-    throw new Error("El servicio de imágenes tardó demasiado. Intenta de nuevo en un minuto.");
-  }
-  if (res.status === 401 || res.status === 403) {
-    const detail = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
-    if (/verif/i.test(detail?.error?.message ?? "")) {
-      throw new AvatarUnavailable("Tu cuenta de OpenAI todavía no está habilitada para crear imágenes. Hay que verificar la organización en platform.openai.com.");
+  const name = ext ? fileName : fileName.replace(/\.[^.]*$/, "") + ".jpg";
+
+  const tried: string[] = [];
+  let needsVerification = false;
+  for (const model of (await imageModels()).slice(0, 5)) {
+    const body = new FormData();
+    body.append("model", model);
+    body.append("image", image, name);
+    body.append("prompt", prompt(style));
+    body.append("size", "1024x1024");
+    body.append("quality", "medium");
+    body.append("n", "1");
+    let res: Response;
+    try {
+      res = await fetch("https://api.openai.com/v1/images/edits", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key()}` },
+        body,
+        signal: AbortSignal.timeout(150_000),
+      });
+    } catch {
+      throw new Error("El servicio de imágenes tardó demasiado. Intenta de nuevo en un minuto.");
     }
-    throw new AvatarUnavailable("La clave del servicio de imágenes no funciona. Revísala en Vercel.");
-  }
-  if (res.status === 429) throw new Error("El servicio de imágenes está muy pedido o sin saldo. Revisa el saldo en platform.openai.com.");
-  if (res.status === 400) {
+    if (res.ok) {
+      const data = (await res.json().catch(() => null)) as { data?: { b64_json?: string }[] } | null;
+      const b64 = data?.data?.[0]?.b64_json;
+      if (!b64) throw new Error("El servicio no devolvió el avatar. Intenta de nuevo.");
+      return Buffer.from(b64, "base64");
+    }
     const detail = (await res.json().catch(() => null)) as { error?: { message?: string; code?: string } } | null;
-    const msg = detail?.error?.message ?? "";
-    console.error("[MANDO] avatar 400", detail?.error?.code, msg);
-    if (/safety|moderation/i.test(msg + (detail?.error?.code ?? ""))) {
+    const msg = `${detail?.error?.message ?? ""} ${detail?.error?.code ?? ""}`.trim();
+    console.error("[MANDO] avatar", model, res.status, msg);
+    if (isModelProblem(res.status, msg)) {
+      tried.push(model);
+      if (/verif/i.test(msg)) needsVerification = true;
+      continue; // este modelo no está habilitado para la cuenta: se prueba el siguiente
+    }
+    if (res.status === 401) throw new AvatarUnavailable("La clave del servicio de imágenes no funciona. Revísala en Vercel.");
+    if (res.status === 429) throw new Error("El servicio de imágenes está muy pedido o sin saldo. Revisa el saldo en platform.openai.com.");
+    if (/safety|moderation/i.test(msg)) {
       throw new Error("El filtro de seguridad del servicio rechazó esta foto. Prueba otro estilo, o una foto de frente ante una pared lisa, sin espejos ni otras personas.");
     }
-    if (/verif/i.test(msg)) {
-      throw new AvatarUnavailable("Tu cuenta de OpenAI todavía no está habilitada para crear imágenes. Hay que verificar la organización en platform.openai.com.");
+    if (res.status === 400) {
+      throw new Error(`El servicio no pudo usar esa foto. Prueba con una de frente, ante una pared lisa y con buena luz. (Detalle: ${msg.slice(0, 140) || "sin detalle"})`);
     }
-    throw new Error(`El servicio no pudo usar esa foto. Prueba con una de frente, ante una pared lisa y con buena luz. (Detalle: ${msg.slice(0, 140) || "sin detalle"})`);
+    throw new Error("El servicio de imágenes no respondió bien. Intenta de nuevo.");
   }
-  if (!res.ok) throw new Error("El servicio de imágenes no respondió bien. Intenta de nuevo.");
-  const data = (await res.json().catch(() => null)) as { data?: { b64_json?: string }[] } | null;
-  const b64 = data?.data?.[0]?.b64_json;
-  if (!b64) throw new Error("El servicio no devolvió el avatar. Intenta de nuevo.");
-  return Buffer.from(b64, "base64");
+  throw new AvatarUnavailable(
+    needsVerification || tried.length
+      ? "Tu cuenta de OpenAI todavía no tiene habilitados los modelos de imagen. Entra a platform.openai.com → Settings → Organization → General y toca «Verify Organization». Al terminar, vuelve a intentar."
+      : "No encontré un modelo de imágenes en tu cuenta de OpenAI.",
+  );
 }
