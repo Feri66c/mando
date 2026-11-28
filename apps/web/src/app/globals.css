@@ -1030,3 +1030,56 @@ a.mesa-pieza:active { transform: translateY(2px) scale(0.97); background: color-
 .punto-ciego[data-nivel="alto"] { --tono: var(--critical); }
 .punto-ciego[data-nivel="medio"] { --tono: var(--naranja); }
 .punto-ciego-nivel { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tono); }
+
+/* Lista de cargos agrupada por mando (formulario de invitación). */
+.cargo-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  flex: none;
+  border-radius: 9999px;
+}
+.cargo-dots {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.cargo-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.9rem;
+  border-left: 3px solid transparent;
+  color: rgb(255 255 255 / 0.88);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.cargo-option[data-active] {
+  background: color-mix(in srgb, var(--cargo-color) 16%, transparent);
+  border-left-color: var(--cargo-color);
+  color: #fff;
+}
+.cargo-option[aria-selected="true"] {
+  font-weight: 600;
+  color: var(--cargo-color);
+}
+.cargo-nivel {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.4rem;
+  background: rgb(255 255 255 / 0.08);
+  color: rgb(255 255 255 / 0.55);
+}
+.cargo-menu {
+  animation: cargo-in 0.16s ease-out;
+}
+@keyframes cargo-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cargo-menu { animation: none; }
+  .cargo-option { transition: none; }
+}

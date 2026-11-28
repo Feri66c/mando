@@ -18,9 +18,11 @@
     "@mando/core": "*",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.119.2",
+    "@types/nodemailer": "^6.4.17",
     "docx": "^9.5.1",
     "exceljs": "^4.4.0",
     "next": "16.4.6",
+    "nodemailer": "^6.9.16",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1"
