@@ -231,3 +231,44 @@ export async function liftAlert(alertId: string, explanation: string): Promise<L
   refresh();
   return { ok: true, message: reading ? `Alerta levantada. La IA leyó: ${reading}` : "Alerta levantada con evidencia. Quedó en la bitácora." };
 }
+
+/**
+ * Momento crítico propio (decisión 97): con solo el nombre, la IA propone las preguntas guiadas y lo que
+ * suele prometer el proveedor. La persona las revisa y corrige antes de abrir el momento.
+ */
+export async function suggestMomentQuestions(input: {
+  eventId: string;
+  name: string;
+}): Promise<{ ok: true; questions: string[]; commitments: string[] } | { ok: false; error: string }> {
+  const who = await teamMember(input.eventId);
+  if (!who.ok) return who;
+  const name = input.name.trim().slice(0, 160);
+  if (name.length < 3) return { ok: false, error: "Escribe primero el nombre del momento." };
+  if (!aiReady()) return { ok: false, error: "La IA no está conectada. Escribe las preguntas tú mismo." };
+  try {
+    const out = await askJson<{ preguntas: string[]; compromisos: string[] }>({
+      system:
+        "Eres el jefe de producción de MANDO, una app para controlar eventos en vivo en Perú. Escribes en español de Perú, claro y corto. " +
+        "Un momento crítico es un punto del evento donde algo puede fallar. Para cada uno propones preguntas de verificación que el productor de campo responde en el lugar, " +
+        "y lo que el proveedor suele prometer para poder comparar lo prometido con lo encontrado.",
+      prompt:
+        `Momento crítico: «${name}».\n` +
+        "Da entre 4 y 7 preguntas concretas de verificación (cada una se responde mirando el lugar, termina en «?») " +
+        "y entre 2 y 4 compromisos típicos del proveedor, cada uno con el formato «Qué: detalle a anotar» (ejemplo de forma: «Hora de llegada: a qué hora dijo que llega»).",
+      schema: {
+        type: "object",
+        properties: {
+          preguntas: { type: "array", items: { type: "string" } },
+          compromisos: { type: "array", items: { type: "string" } },
+        },
+        required: ["preguntas", "compromisos"],
+        additionalProperties: false,
+      },
+      maxTokens: 1200,
+    });
+    const clean = (list: string[], max: number) => list.map((s) => String(s).trim()).filter(Boolean).slice(0, max).map((s) => s.slice(0, 200));
+    return { ok: true, questions: clean(out.preguntas ?? [], 8), commitments: clean(out.compromisos ?? [], 5) };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "La IA no respondió. Escribe las preguntas tú mismo." };
+  }
+}

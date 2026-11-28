@@ -106,21 +106,34 @@ export async function markItemAction(_prev: ActionState, fd: FormData): Promise<
 // ---------------------------------------------------------------- Momentos críticos
 
 export async function createMomentAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  const template = templateByKey(text(fd, "template_key"));
+  // «Otro»: momento propio (decisión 97). Nombre, preguntas y compromisos los escribe la persona (o la IA los sugiere).
+  const custom = text(fd, "template_key") === "otro";
+  const template = custom ? null : templateByKey(text(fd, "template_key"));
+  const lines = (key: string, max: number) =>
+    text(fd, key)
+      .split(/\r?\n/)
+      .map((l) => l.replace(/^[-•*\d.)\s]+/, "").trim())
+      .filter(Boolean)
+      .slice(0, max)
+      .map((l) => l.slice(0, 200));
   const title = text(fd, "title") || template?.nombre || "";
+  if (custom && title.length < 3) return { ok: false, error: "Ponle un nombre a tu momento crítico." };
+  const questions = custom ? lines("questions", 12) : (template?.preguntas ?? []);
+  if (custom && questions.length === 0) return { ok: false, error: "Escribe al menos una pregunta, una por línea." };
+  const commitmentLabels = custom ? lines("commitment_labels", 6).map((l) => l.split(":")[0].trim()).filter(Boolean) : (template?.compromisos_tipicos ?? []);
   try {
     const supabase = await db();
     const { data, error } = await supabase.rpc("create_moment", {
       p_event: text(fd, "event_id"),
       p_route_item: text(fd, "route_item_id") || null,
-      p_template_key: template?.clave ?? null,
+      p_template_key: custom ? "otro" : (template?.clave ?? null),
       p_title: title,
-      p_questions: template?.preguntas ?? [],
+      p_questions: questions,
     });
     if (error) throw error;
     const momentId = data as string;
     // Compromisos típicos de la plantilla: quedan listos para escribir lo prometido.
-    for (const label of template?.compromisos_tipicos ?? []) {
+    for (const label of commitmentLabels) {
       const promised = text(fd, `promised:${label}`);
       if (promised) {
         const r = await supabase.rpc("add_commitment", { p_moment: momentId, p_label: label, p_promised: promised });
