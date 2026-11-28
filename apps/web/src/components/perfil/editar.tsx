@@ -58,10 +58,9 @@ async function shrink(file: File): Promise<Blob> {
     image = await decode(source);
   } catch {
     if (!isHeic(file)) return file;
-    const heic2any = (await import("heic2any")).default;
-    const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
-    source = Array.isArray(converted) ? converted[0] : converted;
-    image = await decode(source);
+    const { heicTo } = await import("heic-to");
+    image = await heicTo({ blob: file, type: "bitmap" });
+    source = file;
   }
   const scale = Math.min(1, 1024 / Math.max(image.width, image.height));
   const canvas = document.createElement("canvas");
@@ -84,8 +83,9 @@ export function PhotoUpload({ profileId, label = "Subir foto", compact = false }
       }
       if (file.size > MAX_PHOTO_BYTES * 3) throw new Error("La foto es muy pesada. Elige otra.");
       setState({ ...INITIAL, working: "Preparando la foto…" });
-      const blob = await shrink(file).catch(() => {
-        throw new Error("No pude abrir esa foto. Prueba con otra o haz una captura de pantalla de ella.");
+      const blob = await shrink(file).catch((e: unknown) => {
+        console.error("[MANDO] foto", file.type, file.name, e);
+        throw new Error("No pude abrir esa foto del iPhone. Prueba en Safari, o envíatela por WhatsApp y súbela desde ahí (llega como JPG).");
       });
       if (blob.size > MAX_PHOTO_BYTES) throw new Error("La foto pesa más de 8 MB. Elige otra.");
       const isJpg = blob.type === "image/jpeg";
