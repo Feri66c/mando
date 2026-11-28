@@ -1083,3 +1083,38 @@ a.mesa-pieza:active { transform: translateY(2px) scale(0.97); background: color-
   .cargo-menu { animation: none; }
   .cargo-option { transition: none; }
 }
+
+/* Alertas: red flag abierta en rojo bajo que late despacio (está viva) y título de no negociables. */
+.alerta-roja {
+  color: #fff;
+  background: color-mix(in srgb, var(--critical) 16%, #161922);
+  box-shadow: inset 3px 0 0 var(--critical), inset 0 0 0 1px color-mix(in srgb, var(--critical) 40%, transparent);
+}
+.no-negociables-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+  color: var(--critical);
+  font-family: var(--font-display, inherit);
+  font-size: clamp(1rem, 4.6vw, 1.3rem);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.no-negociables-punto {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex: none;
+  border-radius: 9999px;
+  background: var(--critical);
+  box-shadow: 0 0 10px var(--critical);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .alerta-roja { animation: alerta-roja-late 2.6s ease-in-out infinite; }
+  .no-negociables-punto { animation: parpadeo 1.6s ease-in-out infinite; }
+}
+@keyframes alerta-roja-late {
+  0%, 100% { background: color-mix(in srgb, var(--critical) 20%, #161922); }
+  50% { background: color-mix(in srgb, var(--critical) 8%, #161922); }
+}
