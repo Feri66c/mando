@@ -990,3 +990,24 @@ a.mesa-pieza:active { transform: translateY(2px) scale(0.97); background: color-
   0% { transform: scale(1); opacity: 0.85; }
   100% { transform: scale(2.1); opacity: 0; }
 }
+
+/* Revisión del brief con el equipo o el cliente (decisión 87). */
+.revision { display: grid; gap: 0.6rem; padding: 1rem; background: var(--surface-100); box-shadow: inset 0 0 0 1px var(--surface-200); }
+.revision-accion {
+  display: grid; place-items: center; min-height: 3rem; padding: 0 0.75rem; text-align: center; font-weight: 700;
+  color: var(--ink); background: var(--surface-200); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.55);
+  transition: translate 0.08s ease; -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.revision-accion:active { translate: 0 3px; box-shadow: none; }
+.revision-caja { position: relative; }
+.revision-caja textarea { padding-right: 3.75rem; }
+.revision-mic {
+  position: absolute; right: 0.5rem; bottom: 0.6rem; display: grid; place-items: center; width: 2.75rem; height: 2.75rem;
+  border-radius: 999px; color: #fff; background: var(--record);
+}
+.revision-mic::after { content: ""; position: absolute; inset: 0; border-radius: inherit; border: 2px solid var(--record); opacity: 0; pointer-events: none; }
+.revision-cambios { padding: 0.75rem 0.85rem; font-size: 0.95rem; color: var(--ink-muted); background: var(--surface-200); box-shadow: inset 3px 0 0 var(--gold-300); }
+@media (prefers-reduced-motion: no-preference) {
+  .revision-mic[data-escucha] { animation: cuentame-parpadea 1s ease-in-out infinite; }
+  .revision-mic[data-escucha]::after { animation: cuentame-onda 1.4s ease-out infinite; }
+}
