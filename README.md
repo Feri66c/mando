@@ -8,7 +8,7 @@ el diseño completo (producto, roles, criticidad, pantallas, plan) está en el p
 
 - Next.js 16 (App Router) + TypeScript + Tailwind 4. PWA básica (instalable, ícono MANDO).
 - Marca: `src/app/tokens.css` (copia de `brand/tokens.css`), Space Grotesk, Inter e IBM Plex Mono servidas desde la app.
-- Supabase: esquema (`supabase/migrations/…01`), seguridad por fila en **todas** las tablas (`…02`) y evento de ejemplo con tres usuarios (`supabase/seed.sql`).
+- Supabase: esquema (`supabase/migrations/…01`), seguridad por fila en **todas** las tablas (`…02`) y evento de ejemplo con tres usuarios (`supabase/seed.sql`, solo local y pruebas).
 - Inicio de sesión con correo y contraseña (`/ingresar`), pantalla «Mis eventos» (`/eventos`) y vista de solo lectura del evento (`/eventos/[id]`).
 - Pruebas: unidad, permisos de la base de datos (criterio de aceptación) y navegador.
 
@@ -53,7 +53,7 @@ npm test           # pruebas de unidad (sin credenciales)
 npm run test:db    # permisos por evento y rol contra un PostgreSQL desechable (sin credenciales)
 npm run e2e        # navegador; con E2E_PASSWORD prueba el ingreso de los tres roles
 npm run db:reset   # con la CLI de Supabase en local: aplica migraciones y seed
-npm run db:bundle  # regenera supabase/instalar-todo.sql (todo) y supabase/actualizar-etapa-1.sql (solo lo nuevo)
+npm run db:bundle  # regenera supabase/instalar-todo.sql (todas las migraciones, sin seed) y supabase/actualizar-etapa-1.sql (solo lo nuevo)
 npm run check      # lint + tipos + unidad + permisos + compilación
 ```
 
@@ -82,11 +82,25 @@ Con `E2E_SCREENSHOTS=<carpeta>` guarda capturas de cada paso.
 | `torre@mando.test` | Backend (torre de control) |
 | `cliente@mando.test` | Viewer (cliente) |
 
-Contraseña de los tres: `MandoPrueba2026`. Bórralos o cámbiales la contraseña antes de dar acceso a personas reales.
+Contraseña de los tres: `MandoPrueba2026`. Solo existen en local y en las pruebas: los crea `supabase/seed.sql`,
+que ya **no** va dentro de `instalar-todo.sql`.
+
+## Retirar los usuarios de prueba (producción)
+
+Si una base de producción se instaló con el seed (las instalaciones anteriores al 28-11-2026 lo traían):
+
+1. Si `torre@mando.test` se usó como cuenta de trabajo, primero pasa su administración de la organización
+   y su rol Backend en cada evento a la cuenta real (con su correo), y cambia los `reports_to` que apuntan a él.
+2. Corre `supabase/retirar-usuarios-de-prueba.sql`: los bloquea, les pone una contraseña que nadie conoce
+   y cierra sus sesiones. No se borran porque el historial los nombra.
+
+En la base en vivo de MANDO esto ya se hizo el 28-11-2026.
 
 ## Instalar la base en Supabase (proyecto nuevo)
 
-Supabase → SQL Editor → New query → pegar `supabase/instalar-todo.sql` → Run.
+Supabase → SQL Editor → New query → pegar `supabase/instalar-todo.sql` → Run. No crea usuarios.
+Luego crea tu usuario (Authentication → Users → Add user, con «Auto Confirm User») y corre
+`supabase/primer-administrador.sql`: te deja como administrador de la organización.
 Luego, en la app, las variables `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 (Supabase → Project Settings → API Keys). Ver `.env.example`.
 
