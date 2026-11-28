@@ -7,13 +7,16 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isVisibility } from "@mando/core/command";
-import { DEFAULT_CARGOS, getTemplate, parseTemplate, validateTemplate } from "@mando/core/event-types";
+import { DEFAULT_CARGOS, getTemplate, invitationMessage, parseTemplate, validateTemplate } from "@mando/core/event-types";
+import { headers } from "next/headers";
 import { withDocuments } from "@mando/core/requirements";
 import { CUSTOM_KIND, checkCustom, composeCustomTemplate } from "@mando/core/custom-event";
-import { pickZone, zonedDateTimeToIso } from "@mando/core/time";
+import { formatDate, pickZone, zonedDateTimeToIso } from "@mando/core/time";
+import { MAX_COPIES, copyMailto, copyNotice, parseCopyList } from "@mando/core/invite-copy";
+import { canSendMail, mandoMailbox, sendMail } from "@/lib/mail";
 import { DEFAULT_CRITICALITY } from "@mando/core/default-config";
 
-export type PanelState = { ok: boolean; error: string | null; message?: string | null };
+export type PanelState = { ok: boolean; error: string | null; message?: string | null; copyMailto?: string | null };
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -105,18 +108,81 @@ export async function deleteCustomType(_prev: PanelState, formData: FormData): P
 }
 
 /** Invita a una persona con su cargo. El cargo elegido define su rol y su nivel en la jerarquía. */
+/** Nombre de quien está usando MANDO, para firmar los avisos. */
+async function myName(supabase: Awaited<ReturnType<typeof db>>): Promise<string | undefined> {
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return undefined;
+  const { data } = await supabase.from("profiles").select("full_name").eq("id", auth.user.id).maybeSingle();
+  return data?.full_name ? String(data.full_name) : undefined;
+}
+
+/** La invitación sale directo del buzón de MANDO; el buzón recibe copia oculta como acuse. */
+async function mailInvitation(opts: { email: string; name: string; title: string; eventName: string; inviter?: string }): Promise<boolean> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "";
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  const message = invitationMessage({
+    name: opts.name,
+    inviter: opts.inviter ?? "El equipo de producción",
+    eventName: opts.eventName,
+    cargo: opts.title,
+    link: `${proto}://${host}/ingresar?correo=${encodeURIComponent(opts.email)}`,
+  });
+  return sendMail({
+    to: [opts.email],
+    bcc: [mandoMailbox()],
+    subject: `Te invitaron a ${opts.eventName} en MANDO`,
+    text: `${message}\n\nMANDO · control de eventos en vivo`,
+  });
+}
+
+/** Botón «Enviar por correo» de una invitación pendiente: manda sin abrir Mail ni Outlook. */
+export async function sendInvitationEmail(invitationId: string): Promise<PanelState> {
+  if (!UUID.test(invitationId)) return { ok: false, error: "Invitación desconocida." };
+  if (!canSendMail()) return { ok: false, error: "Falta conectar el correo de MANDO en Vercel." };
+  try {
+    const supabase = await db();
+    // RLS: solo quien puede ver la invitación (backend del evento) la encuentra.
+    const { data: inv } = await supabase
+      .from("invitations")
+      .select("email, full_name, title, event_id, accepted_at, revoked_at")
+      .eq("id", invitationId)
+      .maybeSingle();
+    if (!inv || inv.accepted_at || inv.revoked_at) return { ok: false, error: "Esa invitación ya no está pendiente." };
+    const { data: ev } = await supabase.from("events").select("name").eq("id", inv.event_id).maybeSingle();
+    const sent = await mailInvitation({
+      email: String(inv.email),
+      name: String(inv.full_name),
+      title: String(inv.title),
+      eventName: String(ev?.name ?? "el evento"),
+      inviter: await myName(supabase),
+    });
+    return sent
+      ? { ok: true, error: null, message: `Enviado a ${inv.email}.` }
+      : { ok: false, error: "No se pudo enviar. Prueba otra vez en un minuto o mándalo por WhatsApp." };
+  } catch (e) {
+    return { ok: false, error: friendly(e) };
+  }
+}
+
 export async function inviteMember(_prev: PanelState, formData: FormData): Promise<PanelState> {
   const eventId = text(formData, "evento");
   if (!UUID.test(eventId)) return { ok: false, error: "Evento desconocido." };
   const name = text(formData, "nombre");
   const email = text(formData, "correo").toLowerCase();
   if (!name) return { ok: false, error: "Escribe el nombre de la persona." };
+  if (/[,;\s]/.test(email))
+    return { ok: false, error: "En «Correo» va solo la persona que recibe el mando. A los demás ponlos en «Con copia»." };
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Escribe un correo válido." };
+  const copies = parseCopyList(text(formData, "con_copia"), email);
+  if (copies.invalid.length)
+    return { ok: false, error: `En «Con copia» esto no es un correo: ${copies.invalid.slice(0, 3).join(", ")}. Sepáralos con coma.` };
+  if (copies.emails.length > MAX_COPIES) return { ok: false, error: `Puedes copiar hasta a ${MAX_COPIES} personas.` };
 
   try {
     const supabase = await db();
     // Los cargos salen de la plantilla guardada en el evento, no del formulario: nadie se inventa un nivel.
-    const { data: event } = await supabase.from("events").select("template").eq("id", eventId).maybeSingle();
+    const { data: event } = await supabase.from("events").select("template, name, starts_at, timezone").eq("id", eventId).maybeSingle();
     const cargos = parseTemplate(event?.template)?.cargos ?? DEFAULT_CARGOS;
     const chosen = cargos[Number(text(formData, "cargo"))];
     if (!chosen) return { ok: false, error: "Elige el cargo de la persona." };
@@ -137,13 +203,33 @@ export async function inviteMember(_prev: PanelState, formData: FormData): Promi
     if (error) throw error;
     const joined = (data as { joined?: boolean } | null)?.joined === true;
     refresh();
-    return {
-      ok: true,
-      error: null,
-      message: joined
-        ? `${name} ya tenía cuenta en MANDO y quedó en el equipo como ${title}.`
-        : `Invitación lista para ${name}. Mándale el mensaje de arriba para que active su mando.`,
-    };
+    let message = joined
+      ? `${name} ya tenía cuenta en MANDO y quedó en el equipo como ${title}.`
+      : `Invitación lista para ${name}. Mándale el mensaje de arriba para que active su mando.`;
+    let mailto: string | null = null;
+    const eventName = String(event?.name ?? "el evento");
+    const by = await myName(supabase);
+    // Si MANDO tiene su buzón conectado, la invitación sale sola en este momento.
+    if (!joined && canSendMail()) {
+      const sent = await mailInvitation({ email, name, title, eventName, inviter: by });
+      if (sent) message = `Listo: le mandamos la invitación por correo a ${name} (${email}).`;
+    }
+    if (copies.emails.length) {
+      // Los «con copia» solo reciben un aviso: no entran a MANDO ni ven nada del evento.
+      const notice = {
+        name,
+        title,
+        eventName,
+        eventDate: event?.starts_at ? formatDate(String(event.starts_at), String(event.timezone ?? "America/Lima")) : undefined,
+        by,
+      };
+      const n = copies.emails.length;
+      const { subject, body } = copyNotice(notice);
+      const sent = canSendMail() && (await sendMail({ to: [mandoMailbox()], bcc: copies.emails, subject, text: body }));
+      if (sent) message += ` Avisamos a ${n === 1 ? "1 persona" : `${n} personas`} con copia.`;
+      else mailto = copyMailto(copies.emails, notice);
+    }
+    return { ok: true, error: null, message, copyMailto: mailto };
   } catch (e) {
     return { ok: false, error: friendly(e) };
   }

@@ -1,8 +1,9 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { inviteMember, type PanelState } from "@/app/actions/panel";
+import { inviteMember, sendInvitationEmail, type PanelState } from "@/app/actions/panel";
 import { VISIBILITIES } from "@mando/core/command";
+import { CargoPicker } from "./cargo-picker";
 import { buttonGhost, buttonPrimary, inputClass } from "@/components/operacion/ui";
 
 const initial: PanelState = { ok: false, error: null };
@@ -41,18 +42,26 @@ export function InviteForm({
           Correo
         </label>
         <input id="inv-correo" name="correo" type="email" required maxLength={200} autoComplete="off" className={inputClass} />
+        <p className="text-sm text-ink-muted">Solo la persona que recibe el mando.</p>
       </div>
       <div className="space-y-1.5">
-        <label htmlFor="inv-cargo" className={label}>
-          Cargo
+        <label htmlFor="inv-copia" className={label}>
+          Con copia <span className="font-normal text-ink-muted">(opcional)</span>
         </label>
-        <select id="inv-cargo" name="cargo" defaultValue={defaultCargo} className={inputClass}>
-          {cargos.map((c, i) => (
-            <option key={`${c.cargo}-${i}`} value={i}>
-              {c.cargo} · {c.descripcion}
-            </option>
-          ))}
-        </select>
+        <textarea
+          id="inv-copia"
+          name="con_copia"
+          rows={2}
+          maxLength={1500}
+          autoComplete="off"
+          placeholder="Correos separados por coma"
+          className={`${inputClass} py-2.5`}
+        />
+        <p className="text-sm text-ink-muted">Les llega solo un aviso de a quién nombraste y con qué cargo. No entran a MANDO.</p>
+      </div>
+      <div className="space-y-1.5">
+        <span className={label}>Cargo</span>
+        <CargoPicker name="cargo" cargos={cargos} defaultIndex={defaultCargo} />
       </div>
       <div className="space-y-1.5">
         <label htmlFor="inv-cargo-propio" className={label}>
@@ -112,6 +121,14 @@ export function InviteForm({
           {state.message}
         </p>
       )}
+      {state.ok && state.copyMailto && (
+        <div className="space-y-2 border border-gold-500/40 px-3 py-3 text-sm">
+          <p>Falta avisar a los que van con copia. Se abre tu correo con el aviso listo; solo pulsa Enviar.</p>
+          <a href={state.copyMailto} className={`${buttonGhost} inline-flex`}>
+            Avisar a los con copia
+          </a>
+        </div>
+      )}
       <button type="submit" disabled={pending} className={`${buttonPrimary} w-full`}>
         {pending ? "Invitando…" : "Dar el mando"}
       </button>
@@ -138,5 +155,38 @@ export function CopyButton({ text }: { text: string }) {
     >
       {copied ? "Copiado" : "Copiar mensaje"}
     </button>
+  );
+}
+
+/** «Enviar por correo»: sale directo del buzón de MANDO. Sin buzón conectado, abre el correo propio. */
+export function SendInviteButton({ invitationId, mailto, direct }: { invitationId: string; mailto: string; direct: boolean }) {
+  const [state, setState] = useState<PanelState | null>(null);
+  const [pending, setPending] = useState(false);
+  if (!direct)
+    return (
+      <a href={mailto} className={buttonGhost}>
+        Enviar por correo
+      </a>
+    );
+  return (
+    <span className="inline-flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        disabled={pending}
+        className={buttonGhost}
+        onClick={async () => {
+          setPending(true);
+          setState(await sendInvitationEmail(invitationId));
+          setPending(false);
+        }}
+      >
+        {pending ? "Enviando…" : state?.ok ? "Enviado ✓ · reenviar" : "Enviar por correo"}
+      </button>
+      {state && (
+        <span role={state.ok ? "status" : "alert"} className={`text-sm ${state.ok ? "text-ok" : "text-critical"}`}>
+          {state.ok ? state.message : state.error}
+        </span>
+      )}
+    </span>
   );
 }

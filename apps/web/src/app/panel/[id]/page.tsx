@@ -10,7 +10,8 @@ import { SUGGESTED_AREAS } from "@mando/core/command";
 import { DEFAULT_CARGOS, LEVEL_LABEL, TIERS, invitationMessage, type TierKey } from "@mando/core/event-types";
 import { formatDate, formatTime } from "@mando/core/time";
 import { BriefForm, DoubtAnswer } from "./brief-panel";
-import { CopyButton, InviteForm } from "./invite-form";
+import { CopyButton, InviteForm, SendInviteButton } from "./invite-form";
+import { canSendMail } from "@/lib/mail";
 
 export const metadata: Metadata = { title: "Equipo del evento" };
 // La IA procesa el brief, busca en internet y arma el Excel: puede tardar unos minutos.
@@ -47,6 +48,7 @@ export default async function EventTeamPage({
   const cargos = template?.cargos ?? [...DEFAULT_CARGOS];
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
   const proto = headerList.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
+  const mailReady = canSendMail();
   const linkFor = (email: string) => `${proto}://${host}/ingresar?correo=${encodeURIComponent(email)}`;
 
   return (
@@ -192,12 +194,11 @@ export default async function EventTeamPage({
                           >
                             Enviar por WhatsApp
                           </a>
-                          <a
-                            href={`mailto:${inv.email}?subject=${encodeURIComponent(`Te invitaron a ${event.name} en MANDO`)}&body=${encodeURIComponent(message)}`}
-                            className={buttonGhost}
-                          >
-                            Enviar por correo
-                          </a>
+                          <SendInviteButton
+                            invitationId={inv.id}
+                            direct={mailReady}
+                            mailto={`mailto:${inv.email}?subject=${encodeURIComponent(`Te invitaron a ${event.name} en MANDO`)}&body=${encodeURIComponent(message)}`}
+                          />
                           <form action={revokeInvitation} className="ml-auto">
                             <input type="hidden" name="invitacion" value={inv.id} />
                             <button type="submit" className="min-h-11 px-3 text-sm font-medium text-ink-muted underline-offset-4 hover:underline">
