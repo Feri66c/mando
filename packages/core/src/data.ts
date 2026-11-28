@@ -747,13 +747,14 @@ export async function fetchApprovalGroups(client: SupabaseClient, eventId: strin
 // ---- Planificación: los 5 elementos ----
 
 
-export type Planning = { gate: boolean; elements: ElementStatus[] };
+/** `designMode`: el backend pausó candados y alertas automáticas para recorrer el evento (decisión 93). */
+export type Planning = { gate: boolean; designMode: boolean; elements: ElementStatus[] };
 
 export async function fetchPlanning(client: SupabaseClient, eventId: string): Promise<Planning> {
   const { data, error } = await client.rpc("planning_status", { p_event: eventId });
   if (error) throw new Error(`No se pudo leer la planificación: ${error.message}`);
-  const raw = (data ?? {}) as { gate?: boolean; elements?: ElementStatus[] };
-  return { gate: Boolean(raw.gate), elements: Array.isArray(raw.elements) ? raw.elements : [] };
+  const raw = (data ?? {}) as { gate?: boolean; design_mode?: boolean; elements?: ElementStatus[] };
+  return { gate: Boolean(raw.gate), designMode: raw.design_mode === true, elements: Array.isArray(raw.elements) ? raw.elements : [] };
 }
 
 export type CrewPerson = {

@@ -172,6 +172,7 @@ export async function addEvidenceAction(input: {
   capturedAt?: string | null;
   routeItemId?: string | null;
   momentId?: string | null;
+  alertId?: string | null;
   visible?: boolean;
 }): Promise<ActionState> {
   return run(
@@ -185,7 +186,7 @@ export async function addEvidenceAction(input: {
       p_captured_at: input.capturedAt ?? null,
       p_route_item: input.routeItemId ?? null,
       p_moment: input.momentId ?? null,
-      p_alert: null,
+      p_alert: input.alertId ?? null,
       p_visible: input.visible ?? true,
     },
     "Evidencia guardada con hora del servidor.",

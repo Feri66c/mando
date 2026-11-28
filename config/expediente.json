@@ -4,7 +4,7 @@
   "_tope": "Lo que se pide antes del evento vence, como máximo, estas horas antes de la hora clave. La base aplica el mismo tope.",
   "presion_dias": [15, 7, 3, 2],
   "_presion": "MANDO anota en la bitácora cuando a un documento le quedan estos días de plazo, y otra vez cuando vence.",
-  "declaracion_jurada": "Declaro bajo juramento que este documento es verdadero, tiene validez legal y lo verifiqué yo. Soy la única persona responsable de haberlo subido.",
+  "declaracion_jurada": "Declaro bajo juramento que este documento es verdadero y fidedigno, tiene validez legal, forma parte de la producción de este evento y lo verifiqué yo. Si queda algún trámite pendiente, lo regularizo en las próximas horas. Soy la única persona responsable de haberlo subido.",
   "categorias": [
     { "clave": "seguridad", "nombre": "Seguridad" },
     { "clave": "permisos", "nombre": "Permisos" },

@@ -5,6 +5,7 @@ import { BudgetExtraDecision, ClientNoticeForm, DeadlineForm, InstructionForm, R
 import { LogList } from "@/components/operacion/blocks";
 import { BrandForm, BrandRemove, ModalityForm } from "@/components/operacion/cadena";
 import { Semaforo } from "@/components/operacion/semaforo";
+import { DesignModeToggle } from "@/components/operacion/modo-diseno";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
 import { brandKindLabel } from "@mando/core/command";
 import { BUDGET_EXTRA_LABEL, NOTICE_LABEL } from "@mando/core/data";
@@ -47,6 +48,7 @@ export default async function BackendPage({ params }: { params: Promise<{ id: st
     <>
       <PageTitle>Backend</PageTitle>
       <p className="mb-3 mt-1 text-sm text-ink-muted">Desde aquí das instrucciones al productor e informas al cliente.</p>
+      {!closed && <DesignModeToggle eventId={id} on={planning.designMode} />}
 
       <SectionTitle>Te esperan</SectionTitle>
       {waiting === 0 ? (

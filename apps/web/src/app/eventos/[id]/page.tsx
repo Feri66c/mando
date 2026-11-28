@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { DesignModeBanner } from "@/components/operacion/modo-diseno";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertCard, EvidenceGrid, LogList } from "@/components/operacion/blocks";
@@ -74,7 +75,8 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
   const progress = planningProgress(planning.elements);
   const { current, next } = nowAndNext(items, new Date());
   const base = `/eventos/${id}`;
-  const active = alerts.filter((a) => a.status !== "resolved");
+  // Modo diseño: las alertas automáticas quedan en pausa y no bloquean la vista del evento.
+  const active = alerts.filter((a) => a.status !== "resolved" && !(planning.designMode && a.ruleKey));
   const stages = items.filter((i) => i.status !== "cancelled").slice(0, 14);
   const doneCount = stages.filter((i) => i.status === "done").length;
   const quick = [
@@ -166,6 +168,11 @@ export default async function TodayPage({ params }: { params: Promise<{ id: stri
   return (
     <>
       <h1 className="sr-only">Hoy</h1>
+      {planning.designMode && (
+        <div className="mb-4">
+          <DesignModeBanner />
+        </div>
+      )}
       {redFlags.length > 0 && (
         <section aria-label="Red flags" className="red-flag mb-6">
           <div className="red-flag-titulo">

@@ -3,16 +3,13 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import {
-  ackAlertAction,
   addCommitmentAction,
   answerCheckAction,
   checkCommitmentAction,
   confirmChangeAction,
   createMomentAction,
   markItemAction,
-  raiseAlertAction,
   requestChangeAction,
-  resolveAlertAction,
   resolveMomentAction,
   type ActionState,
   type ChangePreview,
@@ -23,6 +20,9 @@ import { formatShift } from "@mando/core/route";
 import type { MomentTemplate } from "@mando/core/templates";
 import { formatTime, wallTimeToIso } from "@mando/core/time";
 import { buttonGhost, buttonPrimary, buttonSecondary, inputClass } from "./ui";
+import { RequirementUpload } from "./expediente";
+import { ackWithTime, type AckState } from "@/app/actions/documento-ia";
+import { AlertVoiceNote, LiftAlert } from "./alerta-voz";
 
 const INITIAL: ActionState = { ok: false, error: null };
 
@@ -442,88 +442,149 @@ export function CreateMomentForm({
 
 // --------------------------------------------------------------------------- Alertas
 
-export function AlertActions({ alertId, status }: { alertId: string; status: "open" | "acknowledged" | "resolved" }) {
-  const [ackState, ack] = useActionState(ackAlertAction, INITIAL);
-  const [resState, resolve] = useActionState(resolveAlertAction, INITIAL);
-  const [showNote, setShowNote] = useState(false);
-  if (status === "resolved") return null;
+const PLAZOS = [
+  { min: 30, label: "30 min" },
+  { min: 60, label: "1 h" },
+  { min: 120, label: "2 h" },
+  { min: 240, label: "4 h" },
+];
+
+/**
+ * Red flag de un documento del expediente (decisión 93): no se «marca resuelta» con una palabra.
+ * «Resolver» = adjuntar el documento bajo declaración jurada; la IA de MANDO lo revisa y da el pase.
+ * «Necesito más tiempo» deja en la bitácora a qué hora se compromete la persona.
+ */
+function DocumentAlertActions({
+  alertId,
+  status,
+  document,
+}: {
+  alertId: string;
+  status: "open" | "acknowledged";
+  document: { eventId: string; requirementId: string; title: string };
+}) {
+  void status;
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [state, setState] = useState<AckState | null>(null);
   return (
     <div className="mt-3">
-      <div className="flex flex-wrap gap-2">
-        {status === "open" && (
-          <form action={ack}>
-            <input type="hidden" name="alert_id" value={alertId} />
-            <Submit className={buttonSecondary}>Reconocer</Submit>
-          </form>
-        )}
-        {!showNote && (
-          <button type="button" className={buttonGhost} onClick={() => setShowNote(true)}>
-            Resolver
-          </button>
-        )}
+      <div className="flex flex-wrap items-center gap-2">
+        <RequirementUpload eventId={document.eventId} requirementId={document.requirementId} title={document.title} done={false} label="Resolver" />
+        <button
+          type="button"
+          className="min-h-11 px-2 text-sm font-medium text-white/70 underline-offset-4 hover:underline"
+          aria-expanded={asking}
+          onClick={() => setAsking((v) => !v)}
+        >
+          Necesito más tiempo
+        </button>
       </div>
-      {showNote && (
-        <form action={resolve} className="mt-2 space-y-2">
-          <input type="hidden" name="alert_id" value={alertId} />
-          <input name="note" placeholder="Cómo se resolvió (opcional)" className={inputClass} aria-label="Cómo se resolvió" />
-          <Submit className={buttonSecondary}>Marcar resuelta</Submit>
-        </form>
+      {asking && (
+        <div className="mt-3">
+          <p className="text-sm font-medium">¿Cuánto tiempo más necesitas para adjuntarlo?</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {PLAZOS.map((p) => (
+              <button
+                key={p.min}
+                type="button"
+                disabled={busy}
+                className="plazo-chip"
+                onClick={async () => {
+                  setBusy(true);
+                  const r = await ackWithTime(alertId, p.min);
+                  setState(r);
+                  setBusy(false);
+                  if (r.ok) setAsking(false);
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-white/60">Queda en la bitácora a qué hora te comprometiste.</p>
+        </div>
       )}
-      <Feedback state={ackState.error ? ackState : resState} />
+      {state && (
+        <p role={state.ok ? "status" : "alert"} className={`mt-2 text-sm ${state.ok ? "text-[#8fe0b8]" : "text-[#ffd3c9]"}`}>
+          {state.ok ? state.message : state.error}
+        </p>
+      )}
     </div>
   );
 }
 
-export function RaiseAlertForm({
+export function AlertActions({
+  alertId,
   eventId,
-  levels,
-  items,
+  level,
+  status,
+  document,
 }: {
+  alertId: string;
   eventId: string;
-  levels: { nivel: number; nombre: string; descripcion: string }[];
-  items: { id: string; title: string }[];
+  level: number;
+  status: "open" | "acknowledged" | "resolved";
+  /** Si la alerta es por un documento del expediente, se resuelve adjuntándolo. */
+  document?: { eventId: string; requirementId: string; title: string } | null;
 }) {
-  const [state, action] = useActionState(raiseAlertAction, INITIAL);
+  const [asking, setAsking] = useState(false);
+  const [lifting, setLifting] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [state, setState] = useState<AckState | null>(null);
+  if (status === "resolved") return null;
+  if (document) return <DocumentAlertActions alertId={alertId} status={status} document={document} />;
+  // Decisión 94: se levanta solo con evidencia, se pide tiempo con plazo y se actualiza por audio.
   return (
-    <form action={action} className="space-y-3">
-      <input type="hidden" name="event_id" value={eventId} />
-      <label className="block text-sm">
-        <span className="mb-1 block text-ink-muted">¿Qué pasa?</span>
-        <input name="title" required placeholder="Ej.: no llegó el técnico de sala" className={inputClass} />
-      </label>
-      <label className="block text-sm">
-        <span className="mb-1 block text-ink-muted">Detalle (opcional)</span>
-        <textarea name="detail" rows={2} className={`${inputClass} py-2`} />
-      </label>
-      <label className="block text-sm">
-        <span className="mb-1 block text-ink-muted">Actividad (opcional)</span>
-        <select name="route_item_id" defaultValue="" className={inputClass}>
-          <option value="">Ninguna</option>
-          {items.map((i) => (
-            <option key={i.id} value={i.id}>
-              {i.title}
-            </option>
-          ))}
-        </select>
-      </label>
-      <fieldset>
-        <legend className="mb-1 text-sm text-ink-muted">Nivel</legend>
-        <div className="grid gap-2">
-          {levels.map((l) => (
-            <label key={l.nivel} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl bg-surface-200 px-3 py-2 text-sm has-checked:ring-2 has-checked:ring-ink">
-              <input type="radio" name="level" value={l.nivel} defaultChecked={l.nivel === 2} className="size-4 accent-[#f7f9fc]" />
-              <span>
-                <span className="font-semibold">{l.nombre}</span>
-                <span className="block text-xs text-ink-muted">{l.descripcion}</span>
-              </span>
-            </label>
-          ))}
+    <div className="mt-3">
+      {!lifting && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button type="button" className={buttonSecondary} onClick={() => setLifting(true)}>
+            Levantar alerta
+          </button>
+          <button
+            type="button"
+            className="min-h-11 px-2 text-sm font-medium text-white/70 underline-offset-4 hover:underline"
+            aria-expanded={asking}
+            onClick={() => setAsking((v) => !v)}
+          >
+            Necesito más tiempo
+          </button>
         </div>
-      </fieldset>
-      <Submit className={buttonPrimary} pendingLabel="Levantando…">
-        Levantar alerta
-      </Submit>
-      <Feedback state={state} />
-    </form>
+      )}
+      {lifting && <LiftAlert alertId={alertId} eventId={eventId} onClose={() => setLifting(false)} />}
+      {asking && !lifting && (
+        <div className="mt-3">
+          <p className="text-sm font-medium">¿Cuánto tiempo más necesitas para resolverlo?</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {PLAZOS.map((p) => (
+              <button
+                key={p.min}
+                type="button"
+                disabled={busy}
+                className="plazo-chip"
+                onClick={async () => {
+                  setBusy(true);
+                  const r = await ackWithTime(alertId, p.min);
+                  setState(r);
+                  setBusy(false);
+                  if (r.ok) setAsking(false);
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-white/60">Queda en la bitácora a qué hora te comprometiste.</p>
+        </div>
+      )}
+      {state && (
+        <p role={state.ok ? "status" : "alert"} className={`mt-2 text-sm ${state.ok ? "text-[#8fe0b8]" : "text-[#ffd3c9]"}`}>
+          {state.ok ? state.message : state.error}
+        </p>
+      )}
+      {!lifting && <AlertVoiceNote alertId={alertId} eventId={eventId} level={level} />}
+    </div>
   );
 }
+

@@ -63,6 +63,10 @@ export default async function PlanningPage({ params }: { params: Promise<{ id: s
         <Link href={`/eventos/${id}/hoja-de-ruta`} className="mt-4 block rounded-card border border-[#8fe0b8]/40 bg-surface-100 px-4 py-3 text-sm font-semibold text-[#8fe0b8]">
           ✓ Planificación completa. El timeline está desbloqueado: ábrelo.
         </Link>
+      ) : planning.designMode ? (
+        <Link href={`/eventos/${id}/hoja-de-ruta`} className="mt-4 block rounded-card border border-ice-300/40 bg-surface-100 px-4 py-3 text-sm font-semibold text-ice-300">
+          Modo diseño: el timeline está abierto aunque falte completar la planificación. Ábrelo.
+        </Link>
       ) : (
         <p role="status" className="mt-4 rounded-card border border-gold-300/50 bg-surface-100 px-4 py-3 text-sm">
           <span className="font-semibold text-gold-300">Timeline bloqueado.</span>{" "}

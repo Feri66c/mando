@@ -1,80 +1,105 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AlertCard } from "@/components/operacion/blocks";
-import { AlertActions, RaiseAlertForm } from "@/components/operacion/forms";
+import { AlertActions } from "@/components/operacion/forms";
+import { VoiceAlertForm } from "@/components/operacion/alerta-voz";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
 import { levelOf } from "@mando/core/criticality";
-import { getAlerts, getEventContext, getRouteItems } from "@/lib/data";
+import { getAlerts, getCurrentUser, getEventContext, getPlanning, getRouteItems } from "@/lib/data";
+import { DesignModeBanner } from "@/components/operacion/modo-diseno";
 
 export const metadata: Metadata = { title: "Alertas" };
 
 const NO_NEGOCIABLE = /^No negociable\b/i;
-/** «No negociable sin documento: SCTR» → «Sin documento: SCTR». */
-const withoutPrefix = (title: string) => {
-  const rest = title.replace(NO_NEGOCIABLE, "").trim();
-  return rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : title;
-};
+const VENCIDO = /^Documento vencido\b/i;
+/** En cada grupo el título dice solo el documento: «Documento vencido: RUC…» → «RUC…». */
+const docName = (title: string) => (title.includes(": ") ? title.slice(title.indexOf(": ") + 2) : title);
 
 export default async function AlertsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ctx = await getEventContext(id);
   if (!ctx) notFound();
   const { event, criticality, isTeam } = ctx;
-  const [alerts, items] = await Promise.all([getAlerts(id), isTeam ? getRouteItems(id) : Promise.resolve([])]);
-  const active = alerts.filter((a) => a.status !== "resolved");
+  const [alerts, items, planning, me] = await Promise.all([getAlerts(id), isTeam ? getRouteItems(id) : Promise.resolve([]), getPlanning(id), getCurrentUser()]);
+  const firstName = me.fullName.trim().split(/\s+/)[0] || "equipo";
+  const open = alerts.filter((a) => a.status !== "resolved");
+  // Modo diseño: las automáticas quedan en pausa (no bloquean) hasta «Listo, activa».
+  const paused = planning.designMode ? open.filter((a) => a.ruleKey) : [];
+  const active = open.filter((a) => !paused.includes(a));
   const resolved = alerts.filter((a) => a.status === "resolved");
-  // Las de no negociables van juntas bajo su propio título; así la tarjeta no repite «No negociable».
-  const mustHave = active.filter((a) => NO_NEGOCIABLE.test(a.title));
-  const others = active.filter((a) => !NO_NEGOCIABLE.test(a.title));
+  // Nomenclatura por grupo: Activas · Red flag, Activas · Vencidas y Activas (el resto).
+  const flags = active.filter((a) => NO_NEGOCIABLE.test(a.title));
+  const expired = active.filter((a) => VENCIDO.test(a.title));
+  const others = active.filter((a) => !flags.includes(a) && !expired.includes(a));
+  // Alertas de un documento del expediente: se resuelven adjuntándolo, no con una palabra.
+  const docOf = (a: (typeof alerts)[number]) =>
+    a.entityType === "requirement" && a.entityId ? { eventId: id, requirementId: a.entityId, title: docName(a.title) } : null;
   const levels = [1, 2, 3, 4].map((n) => levelOf(criticality, n));
+
+  const group = (key: string, heading: string, list: typeof alerts, tone: "rojo" | "ambar") => (
+    <section aria-labelledby={key} className="mt-6">
+      <h2 id={key} className={`no-negociables-titulo ${tone === "ambar" ? "grupo-ambar" : ""}`}>
+        <span className="no-negociables-punto" aria-hidden />
+        {heading}
+        <span className="ml-auto font-mono text-base">{list.length}</span>
+      </h2>
+      <ul className="grid gap-2">
+        {list.map((a) => (
+          <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} title={docName(a.title)}>
+            {isTeam && <AlertActions alertId={a.id} eventId={id} level={a.level} status={a.status} document={docOf(a)} />}
+            {isTeam && a.visibleToViewer && <p className="mt-2 text-xs opacity-70">El cliente ve esta alerta.</p>}
+          </AlertCard>
+        ))}
+      </ul>
+    </section>
+  );
 
   return (
     <>
       <PageTitle>Alertas</PageTitle>
       <p className="mt-1 text-sm text-ink-muted">
         {isTeam
-          ? "Abierta → reconocida → resuelta. Cada paso queda en la bitácora."
+          ? "Los documentos se resuelven adjuntándolos: la IA de MANDO los revisa y da el pase. Todo queda en la bitácora."
           : "Te avisamos aquí cuando algo compromete el evento."}
       </p>
+      {planning.designMode && <DesignModeBanner />}
 
-      {mustHave.length > 0 && (
-        <section aria-labelledby="no-negociables" className="mt-6">
-          <h2 id="no-negociables" className="no-negociables-titulo">
-            <span className="no-negociables-punto" aria-hidden />
-            Activas · No negociables
-            <span className="ml-auto font-mono text-base">{mustHave.length}</span>
-          </h2>
-          <ul className="grid gap-2">
-            {mustHave.map((a) => (
-              <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} title={withoutPrefix(a.title)}>
-                {isTeam && <AlertActions alertId={a.id} status={a.status} />}
-                {isTeam && a.visibleToViewer && <p className="mt-2 text-xs text-white/60">El cliente ve esta alerta.</p>}
-              </AlertCard>
-            ))}
-          </ul>
-        </section>
-      )}
+      {flags.length > 0 && group("activas-red-flag", "Activas · Red flag", flags, "rojo")}
+      {expired.length > 0 && group("activas-vencidas", "Activas · Vencidas", expired, "ambar")}
 
-      {(others.length > 0 || mustHave.length === 0) && <SectionTitle>Activas</SectionTitle>}
+      {(others.length > 0 || (flags.length === 0 && expired.length === 0)) && <SectionTitle>Activas</SectionTitle>}
       {active.length === 0 ? (
         <Empty>Sin alertas activas.</Empty>
       ) : (
         <ul className="grid gap-2">
           {others.map((a) => (
-            <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone}>
-              {isTeam && <AlertActions alertId={a.id} status={a.status} />}
+            <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} title={a.entityType === "requirement" ? docName(a.title) : undefined}>
+              {isTeam && <AlertActions alertId={a.id} eventId={id} level={a.level} status={a.status} document={docOf(a)} />}
               {isTeam && a.visibleToViewer && <p className="mt-2 text-xs text-ink-muted">El cliente ve esta alerta.</p>}
             </AlertCard>
           ))}
         </ul>
       )}
 
+      {paused.length > 0 && (
+        <details className="mt-6">
+          <summary className="etiqueta-mando cursor-pointer text-ice-300">En pausa por modo diseño · {paused.length}</summary>
+          <ul className="mt-2 grid gap-2 opacity-70">
+            {paused.map((a) => (
+              <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} title={docName(a.title)} paused />
+            ))}
+          </ul>
+        </details>
+      )}
+
       {isTeam && (
         <section id="reportar" className="scroll-mt-24">
           <SectionTitle>Reportar un problema</SectionTitle>
+          <p className="-mt-2 mb-3 text-sm text-ink-muted">Graba un audio como en WhatsApp: la IA de MANDO te contesta y llena la ficha.</p>
           <Card>
-            <RaiseAlertForm
+            <VoiceAlertForm
               eventId={id}
+              firstName={firstName}
               levels={levels.map((l) => ({ nivel: l.nivel, nombre: l.nombre, descripcion: l.descripcion }))}
               items={items.map((i) => ({ id: i.id, title: i.title }))}
             />
