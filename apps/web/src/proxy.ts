@@ -36,6 +36,16 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   if (signedIn && path === "/ingresar") {
+    // getClaims solo revisa la firma del token, que sigue valiendo hasta una hora aunque la cuenta
+    // se haya bloqueado o su sesión se haya cerrado. Las pantallas sí preguntan al servidor (getUser)
+    // y mandan aquí; si aquí se volviera a mandar a /eventos, el navegador entraría en un bucle
+    // (ERR_TOO_MANY_REDIRECTS). Así que antes de mandarlo adentro, se confirma con el servidor
+    // y, si la sesión ya no vale, se borra y se muestra el ingreso.
+    const { data: check, error } = await supabase.auth.getUser();
+    if (error || !check.user) {
+      await supabase.auth.signOut({ scope: "local" });
+      return response;
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/eventos";
     url.search = "";
