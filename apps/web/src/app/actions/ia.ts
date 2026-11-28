@@ -173,3 +173,82 @@ export async function briefFromVoice(spoken: string): Promise<VoiceBriefResult> 
     return { ok: true, source: "palabras", name: "", brief: said, hits: byWords(), note };
   }
 }
+
+export type ReviseBriefResult =
+  | {
+      ok: true;
+      brief: string;
+      changes: string[];
+      add: { clave: string; palabra: string }[];
+      remove: { clave: string; palabra: string }[];
+    }
+  | { ok: false; error: string };
+
+/**
+ * Ronda de revisión: el productor pega o dicta lo que le respondieron (productora, equipo o cliente)
+ * y la IA corrige el brief, dice qué cambió y qué componentes sumar o quitar.
+ */
+export async function reviseBrief(input: { brief: string; feedback: string; typeName?: string; selected?: string[] }): Promise<ReviseBriefResult> {
+  const denied = await mustBeProducer();
+  if (denied) return { ok: false, error: denied };
+  const brief = String(input.brief ?? "").trim().slice(0, BRIEF_MAX_CHARS);
+  const feedback = String(input.feedback ?? "").trim().slice(0, BRIEF_MAX_CHARS);
+  if (!brief) return { ok: false, error: "Primero arma el brief; luego le sumas las correcciones." };
+  if (feedback.length < 5) return { ok: false, error: "Pega o dicta lo que te respondieron." };
+  if (!aiReady()) return { ok: false, error: "La IA de MANDO aún no está conectada. Falta pegar la clave en Vercel." };
+  const marked = (input.selected ?? []).filter((k) => customModule(k)).join(", ") || "ninguno";
+  try {
+    const out = await askJson<{
+      brief: string;
+      cambios: string[];
+      agregar: { clave: string; razon: string }[];
+      quitar: { clave: string; razon: string }[];
+    }>({
+      system: STYLE,
+      prompt:
+        `Este es el brief actual${input.typeName?.trim() ? ` del evento «${input.typeName.trim().slice(0, 60)}»` : ""}:\n<brief>\n${brief}\n</brief>\n\n` +
+        "El productor general lo mandó a revisar y esto es lo que le respondieron (puede venir de un audio transcrito o de un chat, y puede traer muletillas):\n" +
+        `<respuesta>\n${feedback}\n</respuesta>\n\n` +
+        "1. Reescribe el brief completo con esas correcciones: suma lo que falta, quita lo que sobra o está exagerado, corrige lo que estaba mal entendido. " +
+        "Conserva todo lo demás tal cual. No inventes datos. Máximo 6000 caracteres.\n" +
+        "2. En «cambios», lista en frases muy cortas qué cambió (máximo 8).\n" +
+        `3. Componentes marcados hoy: ${marked}. Del catálogo de abajo, di cuáles hay que agregar y cuáles quitar por estas correcciones, con su clave exacta y una razón muy corta. Si no cambia nada, deja las listas vacías.\n\n` +
+        `Catálogo:\n${CATALOG}`,
+      schema: {
+        type: "object",
+        properties: {
+          brief: { type: "string" },
+          cambios: { type: "array", items: { type: "string" } },
+          agregar: {
+            type: "array",
+            items: { type: "object", properties: { clave: { type: "string" }, razon: { type: "string" } }, required: ["clave", "razon"], additionalProperties: false },
+          },
+          quitar: {
+            type: "array",
+            items: { type: "object", properties: { clave: { type: "string" }, razon: { type: "string" } }, required: ["clave", "razon"], additionalProperties: false },
+          },
+        },
+        required: ["brief", "cambios", "agregar", "quitar"],
+        additionalProperties: false,
+      },
+      maxTokens: 12000,
+    });
+    const clean = (list: { clave: string; razon: string }[] | undefined) => {
+      const seen = new Set<string>();
+      return (list ?? [])
+        .filter((c) => customModule(c.clave) && !seen.has(c.clave) && seen.add(c.clave))
+        .map((c) => ({ clave: c.clave, palabra: String(c.razon ?? "").trim().slice(0, 80) }));
+    };
+    const add = clean(out.agregar);
+    const remove = clean(out.quitar).filter((r) => !add.some((a) => a.clave === r.clave));
+    return {
+      ok: true,
+      brief: String(out.brief ?? "").trim().slice(0, BRIEF_MAX_CHARS) || brief,
+      changes: (out.cambios ?? []).map((c) => String(c).trim()).filter(Boolean).slice(0, 8),
+      add,
+      remove,
+    };
+  } catch (e) {
+    return { ok: false, error: failure(e) };
+  }
+}

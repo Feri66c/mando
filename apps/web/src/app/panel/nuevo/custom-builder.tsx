@@ -4,6 +4,7 @@ import { useActionState, useRef, useState, useTransition } from "react";
 import { deleteCustomType, type PanelState } from "@/app/actions/panel";
 import { suggestComponents } from "@/app/actions/ia";
 import { VoiceBrief } from "./voice-brief";
+import { BriefReview } from "./brief-review";
 import type { SavedCustomType } from "@/lib/data";
 import { playTap } from "@/components/operacion/pieza";
 import { inputClass } from "@/components/operacion/ui";
@@ -258,6 +259,7 @@ export function CustomBuilder({
   selected,
   onToggle,
   onAdd,
+  onRemove,
   onLoad,
   brief,
   onBrief,
@@ -268,6 +270,7 @@ export function CustomBuilder({
   selected: ReadonlySet<string>;
   onToggle: (key: string) => void;
   onAdd: (keys: string[]) => void;
+  onRemove: (keys: string[]) => void;
   onLoad: (name: string, keys: string[]) => void;
   brief: string;
   onBrief: (v: string) => void;
@@ -308,6 +311,7 @@ export function CustomBuilder({
         </label>
       </div>
       <BriefReader brief={brief} onBrief={onBrief} onSuggest={onAdd} typeName={typeName} onTypeName={onTypeName} />
+      <BriefReview typeName={typeName} brief={brief} selected={selected} onBrief={onBrief} onAdd={onAdd} onRemove={onRemove} />
       {CUSTOM_BLOCKS.map((block) => {
         const count = block.modulos.filter((m) => selected.has(m.clave)).length;
         return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { createEvent, type PanelState } from "@/app/actions/panel";
 import { PieceChain, TierMeter } from "@/components/panel/kit";
 import { buttonPrimary, inputClass } from "@/components/operacion/ui";
@@ -16,6 +16,20 @@ import { CustomBuilder, CustomSummary } from "./custom-builder";
 import type { SavedCustomType } from "@/lib/data";
 
 const initial: PanelState = { ok: false, error: null };
+
+// Borrador del evento personalizado en este navegador: el brief puede ir y venir con el equipo
+// durante horas, así que nombre, brief y componentes se guardan solos hasta crear el evento.
+const DRAFT_KEY = "mando:borrador-personalizado";
+type Draft = { typeName: string; brief: string; selected: string[] };
+function readDraft(): Draft | null {
+  try {
+    const d = JSON.parse(localStorage.getItem(DRAFT_KEY) ?? "null") as Draft | null;
+    if (!d || typeof d.brief !== "string" || !Array.isArray(d.selected)) return null;
+    return d;
+  } catch {
+    return null;
+  }
+}
 const label = "block text-sm font-medium";
 
 export function NewEventForm({
@@ -49,6 +63,29 @@ export function NewEventForm({
   const [brief, setBrief] = useState("");
   const addMany = (keys: string[]) =>
     setSelected((prev) => new Set([...prev, ...keys]));
+  const removeMany = (keys: string[]) =>
+    setSelected((prev) => new Set([...prev].filter((k) => !keys.includes(k))));
+  const [restored, setRestored] = useState(false);
+  /** Al elegir Personalizado se recupera el borrador que quedó en este navegador. */
+  const chooseCustom = () => {
+    setKind(CUSTOM_KIND);
+    if (restored) return;
+    setRestored(true);
+    const d = readDraft();
+    if (!d || typeName || brief || selected.size > 0) return;
+    setTypeName(d.typeName ?? "");
+    setBrief(d.brief);
+    setSelected(new Set(d.selected));
+  };
+  useEffect(() => {
+    if (!custom || !restored) return;
+    try {
+      if (!typeName && !brief && selected.size === 0) localStorage.removeItem(DRAFT_KEY);
+      else localStorage.setItem(DRAFT_KEY, JSON.stringify({ typeName, brief, selected: [...selected] }));
+    } catch {
+      /* sin almacenamiento: el borrador vive solo en pantalla */
+    }
+  }, [custom, restored, typeName, brief, selected]);
   const load = (name: string, keys: string[]) => {
     setTypeName(name);
     setSelected(new Set(keys));
@@ -64,6 +101,16 @@ export function NewEventForm({
   return (
     <form
       action={action}
+      onSubmit={() => {
+        // Al crear, el borrador ya cumplió: el evento lleva su propia copia.
+        if (custom) {
+          try {
+            localStorage.removeItem(DRAFT_KEY);
+          } catch {
+            /* nada */
+          }
+        }
+      }}
       className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
     >
       <input type="hidden" name="organizacion" value={organizationId} />
@@ -112,7 +159,7 @@ export function NewEventForm({
               name="tipo"
               value={CUSTOM_KIND}
               checked={custom}
-              onChange={() => setKind(CUSTOM_KIND)}
+              onChange={chooseCustom}
               className="mt-1 h-4 w-4 accent-[var(--gold-300)]"
             />
             <span className="min-w-0 flex-1">
@@ -143,6 +190,7 @@ export function NewEventForm({
             selected={selected}
             onToggle={toggle}
             onAdd={addMany}
+            onRemove={removeMany}
             onLoad={load}
             brief={brief}
             onBrief={setBrief}
