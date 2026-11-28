@@ -33,7 +33,11 @@ export async function drawAvatar(photo: Blob, fileName: string, style: AvatarSty
   if (!avatarReady()) throw new AvatarUnavailable("Falta conectar el servicio de imágenes: pega OPENAI_API_KEY en Vercel.");
   const body = new FormData();
   body.append("model", process.env.OPENAI_IMAGE_MODEL?.trim() || "gpt-image-1");
-  body.append("image", photo, fileName);
+  // El servicio exige el tipo exacto de la imagen; lo que baja del cubo a veces llega sin tipo.
+  const ext = /\.(png|webp)$/i.exec(fileName)?.[1]?.toLowerCase();
+  const type = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+  const image = new Blob([await photo.arrayBuffer()], { type });
+  body.append("image", image, ext ? fileName : fileName.replace(/\.[^.]*$/, "") + ".jpg");
   body.append("prompt", prompt(style));
   body.append("size", "1024x1024");
   body.append("quality", "medium");
@@ -57,7 +61,18 @@ export async function drawAvatar(photo: Blob, fileName: string, style: AvatarSty
     throw new AvatarUnavailable("La clave del servicio de imágenes no funciona. Revísala en Vercel.");
   }
   if (res.status === 429) throw new Error("El servicio de imágenes está muy pedido o sin saldo. Revisa el saldo en platform.openai.com.");
-  if (res.status === 400) throw new Error("El servicio no pudo usar esa foto. Prueba con otra donde se vea bien la cara.");
+  if (res.status === 400) {
+    const detail = (await res.json().catch(() => null)) as { error?: { message?: string; code?: string } } | null;
+    const msg = detail?.error?.message ?? "";
+    console.error("[MANDO] avatar 400", detail?.error?.code, msg);
+    if (/safety|moderation/i.test(msg + (detail?.error?.code ?? ""))) {
+      throw new Error("El filtro de seguridad del servicio rechazó esta foto. Prueba otro estilo, o una foto de frente ante una pared lisa, sin espejos ni otras personas.");
+    }
+    if (/verif/i.test(msg)) {
+      throw new AvatarUnavailable("Tu cuenta de OpenAI todavía no está habilitada para crear imágenes. Hay que verificar la organización en platform.openai.com.");
+    }
+    throw new Error(`El servicio no pudo usar esa foto. Prueba con una de frente, ante una pared lisa y con buena luz. (Detalle: ${msg.slice(0, 140) || "sin detalle"})`);
+  }
   if (!res.ok) throw new Error("El servicio de imágenes no respondió bien. Intenta de nuevo.");
   const data = (await res.json().catch(() => null)) as { data?: { b64_json?: string }[] } | null;
   const b64 = data?.data?.[0]?.b64_json;
