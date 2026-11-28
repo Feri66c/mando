@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AppHeader } from "@/components/brand";
 import { EventStatusText, RolePill } from "@/components/pills";
-import { getAdminOrgs, getCurrentUser, getMyEvents } from "@/lib/data";
+import { getAdminOrgs, getCardBrands, getCurrentUser, getMyEvents, getMyOrgBrand } from "@/lib/data";
 import { AcceptRole } from "@/components/accept-role";
 import { ROLE_DESCRIPTION, ROLE_LABEL } from "@mando/core/labels";
 import { formatEventRange, zoneLabel } from "@mando/core/time";
@@ -12,11 +12,16 @@ export const metadata: Metadata = { title: "Mis eventos" };
 export default async function MyEventsPage() {
   const user = await getCurrentUser();
   const events = await getMyEvents(user.id);
-  const canCreate = (await getAdminOrgs(user.id)).length > 0;
+  const [orgs, brand, cardBrands] = await Promise.all([
+    getAdminOrgs(user.id),
+    getMyOrgBrand(user.id),
+    getCardBrands(events.map((e) => e.id)),
+  ]);
+  const canCreate = orgs.length > 0;
 
   return (
     <>
-      <AppHeader userName={user.fullName} />
+      <AppHeader userName={user.fullName} brand={brand} />
       <main className="mx-auto max-w-3xl px-4 py-6">
         <h1 className="font-display text-[32px] font-bold leading-none">Mis eventos</h1>
         <p className="mt-2 text-base text-ink-muted">Hola, {user.fullName}. Elige el evento que vas a controlar.</p>
@@ -39,6 +44,10 @@ export default async function MyEventsPage() {
         ) : (
           <ul className="mt-6 space-y-3">
             {events.map((event) => {
+              // Marca del cliente (Entel, Movistar…): abajo a la derecha de la tarjeta (decisión 95).
+              // Sin marca cargada, va el nombre del cliente del evento.
+              const client = cardBrands[event.id] ?? (event.clientName ? { name: event.clientName, logoUrl: null } : null);
+              const clientMark = client ? <ClientMark name={client.name} logoUrl={client.logoUrl} /> : null;
               // «vie, 20 nov. 2026 · 10:00 – 20:00»: la fecha va en blanco con luz y las horas en naranja neón.
               const when = formatEventRange(event.startsAt, event.endsAt, event.timezone).split(" · ");
               const body = (
@@ -75,6 +84,7 @@ export default async function MyEventsPage() {
                   <li key={event.id} className="rounded-card bg-surface-100 p-4">
                     {body}
                     <AcceptRole eventId={event.id} />
+                    {clientMark && <div className="mt-3 flex justify-end">{clientMark}</div>}
                   </li>
                 );
               }
@@ -85,7 +95,10 @@ export default async function MyEventsPage() {
                     className="block rounded-card bg-surface-100 p-4"
                   >
                     {body}
-                    <p className="mt-3 border-t border-line pt-3 text-xs text-ink-muted">{ROLE_DESCRIPTION[event.role]}</p>
+                    <div className="mt-3 flex items-end justify-between gap-3 border-t border-line pt-3">
+                      <p className="min-w-0 text-xs text-ink-muted">{ROLE_DESCRIPTION[event.role]}</p>
+                      {clientMark}
+                    </div>
                   </Link>
                 </li>
               );
@@ -94,5 +107,20 @@ export default async function MyEventsPage() {
         )}
       </main>
     </>
+  );
+}
+
+/** Logo de la marca del cliente en su placa blanca; sin logo, su nombre en una señal. */
+function ClientMark({ name, logoUrl }: { name: string; logoUrl: string | null }) {
+  return (
+    <span className="shrink-0" title={`Evento de ${name}`}>
+      {logoUrl ? (
+        // Logo subido por el backend al cubo privado; el enlace firmado cambia cada hora.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logoUrl} alt={`Evento de ${name}`} className="h-12 w-auto max-w-[140px] rounded-md bg-white object-contain px-2 py-1 sm:h-14 sm:max-w-[170px]" />
+      ) : (
+        <span className="inline-flex h-10 items-center border border-line px-3 font-display text-sm font-bold uppercase tracking-wide text-ink">{name}</span>
+      )}
+    </span>
   );
 }

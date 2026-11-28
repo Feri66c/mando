@@ -5,6 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import {
   fetchAccessList,
   fetchAdminOrgs,
+  fetchCardBrands,
+  fetchMyOrgBrand,
+  fetchOrgRequests,
   fetchAreas,
   fetchBrands,
   fetchCommandChain,
@@ -129,6 +132,20 @@ export async function getEvidences(eventId: string, filter: { routeItemId?: stri
 export const getAdminOrgs = cache(async function getAdminOrgs(userId: string) {
   return fetchAdminOrgs(await requireClient(), userId);
 });
+
+/** «MANDO Momentum»: la marca de la organización de la persona, con su logo firmado por una hora. */
+export const getMyOrgBrand = cache(async function getMyOrgBrand(userId: string) {
+  return fetchMyOrgBrand(await requireClient(), userId);
+});
+
+/** Logo de la marca del cliente para cada tarjeta de «Mis eventos». */
+export async function getCardBrands(eventIds: string[]) {
+  return fetchCardBrands(await requireClient(), eventIds);
+}
+
+export async function getOrgRequests(orgId: string) {
+  return fetchOrgRequests(await requireClient(), orgId);
+}
 
 export async function getTeam(eventId: string) {
   return fetchTeam(await requireClient(), eventId);

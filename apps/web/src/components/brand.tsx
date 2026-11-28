@@ -16,16 +16,56 @@ export function Logo({ variant = "oscuro", className = "" }: { variant?: "oscuro
   );
 }
 
+/** La marca que acompaña a MANDO: «MANDO Momentum», «MANDO Circus» (decisión 95). */
+export type MandoBrand = { brandName: string | null; parentName: string | null; logoUrl: string | null };
+
+/**
+ * Logo MANDO grande y, a su lado, el mando de marca: el logo de la agencia en su placa blanca, o su nombre
+ * escrito en grande. Sin marca, queda solo MANDO.
+ */
+export function MandoLockup({ brand, size = "grande" }: { brand?: MandoBrand | null; size?: "grande" | "mediano" }) {
+  const big = size === "grande";
+  const hasBrand = Boolean(brand && (brand.brandName || brand.logoUrl));
+  return (
+    <span className="flex min-w-0 items-center gap-3 sm:gap-4">
+      <Logo className={big ? "h-14 w-auto shrink-0 sm:h-[72px]" : "h-11 w-auto shrink-0 sm:h-14"} />
+      {hasBrand && brand && (
+        <>
+          <span aria-hidden className={`w-[3px] shrink-0 rounded-full bg-gold-500 shadow-[0_0_10px_rgba(255,214,10,0.45)] ${big ? "h-12 sm:h-14" : "h-10 sm:h-12"}`} />
+          <span className="flex min-w-0 flex-col justify-center">
+            {brand.logoUrl ? (
+              // Logo subido por la organización al cubo privado; el enlace firmado cambia cada hora.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={brand.logoUrl}
+                alt={brand.brandName ?? "Marca"}
+                className={`w-auto max-w-[150px] rounded-md bg-white object-contain px-2 py-1 sm:max-w-[200px] ${big ? "h-11 sm:h-14" : "h-10 sm:h-12"}`}
+              />
+            ) : (
+              <span className={`truncate font-display font-bold uppercase leading-none tracking-wide text-ink-inverse ${big ? "text-[26px] sm:text-[34px]" : "text-[22px] sm:text-[28px]"}`}>
+                {brand.brandName}
+              </span>
+            )}
+            {brand.parentName && (
+              <span className="mt-1 truncate font-mono text-[11px] uppercase tracking-[0.16em] text-ice-300 sm:text-xs">{brand.parentName}</span>
+            )}
+          </span>
+        </>
+      )}
+    </span>
+  );
+}
+
 /** Cabecera navy de las pantallas con sesión. El oro del logo es el único acento de la pantalla. */
-export function AppHeader({ label, userName }: { label?: string; userName: string }) {
+export function AppHeader({ label, userName, brand }: { label?: string; userName: string; brand?: MandoBrand | null }) {
   return (
     <header className="text-ink-inverse">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
-        <Link href="/eventos" className="flex items-center gap-3" aria-label="Ir a Mis eventos">
-          <Logo className="h-11 w-auto sm:h-12" />
+        <Link href="/eventos" className="flex min-w-0 items-center gap-3" aria-label="Ir a Mis eventos">
+          <MandoLockup brand={brand} />
         </Link>
         <form action={signOut} className="flex items-center gap-3">
-          <span className="hidden text-sm text-ice-300 sm:inline">{userName}</span>
+          <span className="hidden text-sm text-ice-300 md:inline">{userName}</span>
           <button
             type="submit"
             className="min-h-11 rounded-full bg-surface-200 px-4 text-sm font-medium text-ink-inverse"
