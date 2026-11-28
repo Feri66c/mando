@@ -1,0 +1,138 @@
+{
+  "_nota": "País de cada evento según su zona horaria: moneda e impuesto al consumo para el Excel del desglose (decisión 90). Tasas generales de referencia: confírmalas con tu contador; en el Excel se cambian en una celda. «tc_referencia» es cuántas unidades de la moneda equivalen a 1 dólar: un valor aproximado que solo se usa si MANDO no logra leer el tipo de cambio del día.",
+  "por_defecto": "PE",
+  "paises": [
+    {
+      "codigo": "PE",
+      "nombre": "Perú",
+      "zonas": [
+        "America/Lima"
+      ],
+      "moneda": "PEN",
+      "simbolo": "S/",
+      "impuesto": "IGV",
+      "tasa": 0.18,
+      "tc_referencia": 3.75
+    },
+    {
+      "codigo": "CO",
+      "nombre": "Colombia",
+      "zonas": [
+        "America/Bogota"
+      ],
+      "moneda": "COP",
+      "simbolo": "$",
+      "impuesto": "IVA",
+      "tasa": 0.19,
+      "tc_referencia": 4000
+    },
+    {
+      "codigo": "EC",
+      "nombre": "Ecuador",
+      "zonas": [
+        "America/Guayaquil"
+      ],
+      "moneda": "USD",
+      "simbolo": "US$",
+      "impuesto": "IVA",
+      "tasa": 0.15,
+      "tc_referencia": 1
+    },
+    {
+      "codigo": "AR",
+      "nombre": "Argentina",
+      "zonas": [
+        "America/Argentina/Buenos_Aires"
+      ],
+      "moneda": "ARS",
+      "simbolo": "$",
+      "impuesto": "IVA",
+      "tasa": 0.21,
+      "tc_referencia": 1450
+    },
+    {
+      "codigo": "CL",
+      "nombre": "Chile",
+      "zonas": [
+        "America/Santiago"
+      ],
+      "moneda": "CLP",
+      "simbolo": "$",
+      "impuesto": "IVA",
+      "tasa": 0.19,
+      "tc_referencia": 950
+    },
+    {
+      "codigo": "BO",
+      "nombre": "Bolivia",
+      "zonas": [
+        "America/La_Paz"
+      ],
+      "moneda": "BOB",
+      "simbolo": "Bs",
+      "impuesto": "IVA",
+      "tasa": 0.13,
+      "tc_referencia": 6.96
+    },
+    {
+      "codigo": "BR",
+      "nombre": "Brasil",
+      "zonas": [
+        "America/Sao_Paulo"
+      ],
+      "moneda": "BRL",
+      "simbolo": "R$",
+      "impuesto": "Impuestos",
+      "tasa": 0,
+      "tc_referencia": 5.4
+    },
+    {
+      "codigo": "MX",
+      "nombre": "México",
+      "zonas": [
+        "America/Mexico_City"
+      ],
+      "moneda": "MXN",
+      "simbolo": "$",
+      "impuesto": "IVA",
+      "tasa": 0.16,
+      "tc_referencia": 18.5
+    },
+    {
+      "codigo": "PA",
+      "nombre": "Panamá",
+      "zonas": [
+        "America/Panama"
+      ],
+      "moneda": "USD",
+      "simbolo": "US$",
+      "impuesto": "ITBMS",
+      "tasa": 0.07,
+      "tc_referencia": 1
+    },
+    {
+      "codigo": "US",
+      "nombre": "Estados Unidos",
+      "zonas": [
+        "America/New_York"
+      ],
+      "moneda": "USD",
+      "simbolo": "US$",
+      "impuesto": "Sales tax",
+      "tasa": 0,
+      "tc_referencia": 1
+    },
+    {
+      "codigo": "ES",
+      "nombre": "España",
+      "zonas": [
+        "Europe/Madrid"
+      ],
+      "moneda": "EUR",
+      "simbolo": "€",
+      "impuesto": "IVA",
+      "tasa": 0.21,
+      "tc_referencia": 0.87
+    }
+  ]
+}

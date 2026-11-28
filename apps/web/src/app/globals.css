@@ -1022,3 +1022,11 @@ a.mesa-pieza:active { transform: translateY(2px) scale(0.97); background: color-
 .subir-audio svg { color: var(--record); }
 .subir-audio:active:not(:disabled) { translate: 0 3px; box-shadow: inset 0 0 0 1px var(--record); }
 .subir-audio:disabled { opacity: 0.6; }
+
+/* ---------------------------------------------------------------------------
+   Brief procesado (decisión 89): recomendaciones de la IA como posibles puntos ciegos.
+   --------------------------------------------------------------------------- */
+.punto-ciego { --tono: var(--gold-300); padding: 0.75rem 0.85rem; background: var(--surface-100); box-shadow: inset 3px 0 0 var(--tono), inset 0 0 0 1px var(--surface-200); }
+.punto-ciego[data-nivel="alto"] { --tono: var(--critical); }
+.punto-ciego[data-nivel="medio"] { --tono: var(--naranja); }
+.punto-ciego-nivel { font-family: var(--font-mono, ui-monospace, monospace); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--tono); }

@@ -940,6 +940,17 @@ export async function fetchBrief(client: SupabaseClient, eventId: string, userId
   };
 }
 
+/** Documentos complementarios del brief (decisión 89). Sin la migración 22, la lista sale vacía. */
+export type BriefDocument = { id: string; path: string; name: string; url: string | null; createdAt: string };
+
+export async function fetchBriefDocuments(client: SupabaseClient, eventId: string): Promise<BriefDocument[]> {
+  const { data, error } = await client.from("brief_documents").select("id, path, name, created_at").eq("event_id", eventId).order("created_at");
+  if (error || !data?.length) return [];
+  const { data: signed } = await client.storage.from("evidences").createSignedUrls(data.map((d) => d.path as string), 60 * 60);
+  const urls = new Map((signed ?? []).map((s) => [s.path, s.signedUrl]));
+  return data.map((d) => ({ id: d.id as string, path: d.path as string, name: d.name as string, url: urls.get(d.path as string) ?? null, createdAt: d.created_at as string }));
+}
+
 /** Dudas del brief de todo el evento, para el backend. La base solo se las muestra a él. */
 export type BriefDoubt = { id: string; who: string; question: string; status: "open" | "answered"; answer: string | null; createdAt: string };
 
