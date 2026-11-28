@@ -74,21 +74,27 @@ export function AlertCard({
   alert,
   config,
   timeZone,
+  title,
   children,
 }: {
   alert: Alert;
   config: CriticalityConfig | null;
   timeZone: string;
+  /** Título a mostrar si la sección ya dice lo que el título repite (por ejemplo «No negociable»). */
+  title?: string;
   children?: React.ReactNode;
 }) {
+  // Red flag abierta: fondo rojo bajo que late despacio, porque está viva.
+  const top = Math.max(4, ...(config?.niveles ?? []).map((n) => n.nivel));
+  const live = alert.level >= top && alert.status !== "resolved";
   return (
-    <li className={`rounded-card bg-surface-100 p-4 ${alert.status === "resolved" ? "opacity-70" : ""}`}>
+    <li className={`rounded-card p-4 ${live ? "alerta-roja" : "bg-surface-100"} ${alert.status === "resolved" ? "opacity-70" : ""}`}>
       <div className="flex flex-wrap items-center gap-2">
         <LevelChip level={alert.level} config={config} />
         <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">{ALERT_STATUS_LABEL[alert.status]}</span>
         <time className="ml-auto font-mono text-xs text-ink-muted">{formatTime(alert.raisedAt, timeZone)}</time>
       </div>
-      <p className="mt-2 font-medium">{alert.title}</p>
+      <p className="mt-2 font-medium">{title ?? alert.title}</p>
       {alert.detail && <p className="mt-1 text-sm text-ink-muted">{alert.detail}</p>}
       {children}
     </li>
