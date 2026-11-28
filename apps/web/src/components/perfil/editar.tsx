@@ -31,20 +31,45 @@ function Feedback({ state }: { state: CierreState }) {
   return null;
 }
 
+const isHeic = (file: File) => /^image\/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
+
+/** Abre la imagen para dibujarla. Safari abre HEIC solo; en Chrome la foto del iPhone (HEIC) se convierte antes. */
+async function decode(file: Blob): Promise<CanvasImageSource & { width: number; height: number }> {
+  try {
+    return await createImageBitmap(file);
+  } catch {
+    const url = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.src = url;
+      await img.decode();
+      return img;
+    } finally {
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  }
+}
+
 /** Achica la foto en el navegador antes de subirla: 1024 px de lado y JPG. Así sube rápido con poca señal. */
 async function shrink(file: File): Promise<Blob> {
+  let source: Blob = file;
+  let image: Awaited<ReturnType<typeof decode>>;
   try {
-    const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, 1024 / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, "image/jpeg", 0.88));
-    return blob ?? file;
+    image = await decode(source);
   } catch {
-    return file;
+    if (!isHeic(file)) return file;
+    const heic2any = (await import("heic2any")).default;
+    const converted = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 });
+    source = Array.isArray(converted) ? converted[0] : converted;
+    image = await decode(source);
   }
+  const scale = Math.min(1, 1024 / Math.max(image.width, image.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(image.width * scale);
+  canvas.height = Math.round(image.height * scale);
+  canvas.getContext("2d")!.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, "image/jpeg", 0.88));
+  return blob ?? source;
 }
 
 /** Subir la foto de una persona: la propia o, si eres el backend, la de alguien de tu equipo. */
@@ -54,16 +79,18 @@ export function PhotoUpload({ profileId, label = "Subir foto", compact = false }
 
   async function upload(file: File) {
     try {
-      if (!/^image\/(png|jpe?g|webp|heic|heif)$/i.test(file.type) && !/\.(png|jpe?g|webp|heic)$/i.test(file.name)) {
-        throw new Error("Elige una foto (JPG, PNG o WebP).");
+      if (!/^image\/(png|jpe?g|webp|heic|heif)$/i.test(file.type) && !/\.(png|jpe?g|webp|heic|heif)$/i.test(file.name)) {
+        throw new Error("Elige una foto (JPG, PNG, WebP o la del iPhone).");
       }
       if (file.size > MAX_PHOTO_BYTES * 3) throw new Error("La foto es muy pesada. Elige otra.");
       setState({ ...INITIAL, working: "Preparando la foto…" });
-      const blob = await shrink(file);
+      const blob = await shrink(file).catch(() => {
+        throw new Error("No pude abrir esa foto. Prueba con otra o haz una captura de pantalla de ella.");
+      });
       if (blob.size > MAX_PHOTO_BYTES) throw new Error("La foto pesa más de 8 MB. Elige otra.");
       const isJpg = blob.type === "image/jpeg";
       const path = profileFilePath(profileId, crypto.randomUUID(), isJpg ? "foto.jpg" : file.name);
-      if (!path) throw new Error("La foto tiene que ser JPG, PNG o WebP.");
+      if (!path) throw new Error("No pude convertir esa foto. Prueba con otra.");
       const supabase = getBrowserClient();
       if (!supabase) throw new Error("La app aún no está conectada a Supabase.");
       setState({ ...INITIAL, working: "Subiendo…" });
