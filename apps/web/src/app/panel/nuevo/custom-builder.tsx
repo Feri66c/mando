@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useRef, useState, useTransition } from "react";
 import { deleteCustomType, type PanelState } from "@/app/actions/panel";
+import { suggestComponents } from "@/app/actions/ia";
 import type { SavedCustomType } from "@/lib/data";
 import { playTap } from "@/components/operacion/pieza";
 import { inputClass } from "@/components/operacion/ui";
@@ -12,7 +13,6 @@ import {
   areaLoad,
   customModule,
   customSummary,
-  suggestModules,
   type CustomModule,
   type composeCustomTemplate,
 } from "@mando/core/custom-event";
@@ -149,7 +149,7 @@ function SavedTypes({
   );
 }
 
-/** El brief se escribe aquí y MANDO marca los componentes que el brief menciona. */
+/** El brief se escribe aquí y la IA de MANDO marca los componentes que el brief pide. */
 function BriefReader({
   brief,
   onBrief,
@@ -159,9 +159,14 @@ function BriefReader({
   onBrief: (v: string) => void;
   onSuggest: (keys: string[]) => void;
 }) {
-  const [found, setFound] = useState<
-    { clave: string; palabra: string }[] | null
-  >(null);
+  const [found, setFound] = useState<{
+    source: "ia" | "palabras";
+    hits: { clave: string; palabra: string }[];
+    note?: string;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [reading, startReading] = useTransition();
+  const name = (k: string) => customModule(k)?.nombre ?? k;
   return (
     <div className="space-y-2">
       <label htmlFor="brief" className="block text-base font-semibold">
@@ -171,7 +176,7 @@ function BriefReader({
         id="brief"
         name="brief"
         rows={5}
-        maxLength={4000}
+        maxLength={10000}
         value={brief}
         onChange={(e) => onBrief(e.target.value)}
         placeholder="Qué se quiere lograr, dónde, con quién y qué llega de fuera."
@@ -180,27 +185,53 @@ function BriefReader({
       <button
         type="button"
         className="leer-brief"
-        disabled={brief.trim().length === 0}
+        disabled={brief.trim().length === 0 || reading}
         onClick={() => {
           playTap("up");
-          const hits = suggestModules(brief);
-          setFound(hits);
-          onSuggest(hits.map((h) => h.clave));
+          setError(null);
+          startReading(async () => {
+            const r = await suggestComponents(brief);
+            if (!r.ok) {
+              setFound(null);
+              setError(r.error);
+              return;
+            }
+            setFound(r);
+            onSuggest(r.hits.map((h) => h.clave));
+          });
         }}
       >
-        Leer el brief y marcar
+        {reading ? "La IA está leyendo el brief…" : "Leer el brief con IA y marcar"}
       </button>
-      {found && (
-        <p aria-live="polite" className="text-sm text-ink-muted">
-          {found.length === 0
-            ? "No encontré componentes en el brief. Márcalos tú abajo."
-            : `Marqué ${found.length} por lo que dice el brief: ${found
-                .map(
-                  (f) =>
-                    `${customModule(f.clave)?.nombre ?? f.clave} («${f.palabra}»)`,
-                )
-                .join(", ")}. Revisa y ajusta.`}
+      {error && (
+        <p role="alert" className="text-sm text-[#ff6f86]">
+          {error}
         </p>
+      )}
+      {found && (
+        <div aria-live="polite" className="space-y-1 text-sm text-ink-muted">
+          {found.note && <p>{found.note}</p>}
+          {found.hits.length === 0 ? (
+            <p>No encontré componentes en el brief. Márcalos tú abajo.</p>
+          ) : found.source === "ia" ? (
+            <>
+              <p>La IA marcó {found.hits.length}. Revisa y ajusta:</p>
+              <ul className="list-disc space-y-0.5 pl-5">
+                {found.hits.map((f) => (
+                  <li key={f.clave}>
+                    <span className="font-semibold text-ink">{name(f.clave)}</span>
+                    {f.palabra && `: ${f.palabra}`}
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : (
+            <p>
+              Marqué {found.hits.length} por palabras del brief:{" "}
+              {found.hits.map((f) => `${name(f.clave)} («${f.palabra}»)`).join(", ")}. Revisa y ajusta.
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
