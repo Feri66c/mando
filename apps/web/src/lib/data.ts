@@ -40,6 +40,7 @@ import {
   fetchClientNotices,
   fetchPlanningDeadline,
   fetchBriefDoubts,
+  fetchBriefDocuments,
   fetchProfileName,
   fetchRouteItems,
   fetchRouteVersions,
@@ -257,6 +258,11 @@ export async function getFeedbackBoard(eventId: string) {
 /** Brief del evento con lo que respondió esta persona (decisión 41). */
 export async function getBrief(eventId: string, userId: string) {
   return fetchBrief(await requireClient(), eventId, userId);
+}
+
+/** Documentos complementarios del brief. */
+export async function getBriefDocuments(eventId: string) {
+  return fetchBriefDocuments(await requireClient(), eventId);
 }
 
 /** Dudas sobre el brief, para el backend. */

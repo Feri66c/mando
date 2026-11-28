@@ -1,0 +1,58 @@
+{
+  "_nota": "Desglose para cotizar armado por la IA (decisión 89). Rubros, cuántos ítems pedir y las reglas que la IA usa para calcular cantidades y revisar el Excel. Son guías iniciales: el productor general las ajusta a su mercado.",
+  "fuentes": "Las reglas son valores iniciales de referencia tomados de la práctica de producción y de guías de buenas prácticas de la industria (por ejemplo, The Purple Guide del Events Industry Forum, Reino Unido). No reemplazan la norma peruana vigente: la IA además busca en internet las normas y permisos de cada evento al procesar el brief.",
+  "items_minimo": 100,
+  "items_maximo": 150,
+  "grupos": [
+    {
+      "clave": "produccion",
+      "nombre": "Producción, permisos, personal y seguridad",
+      "rubros": ["PRD", "PER", "LOC", "STF", "SEG", "LIM"]
+    },
+    {
+      "clave": "tecnica",
+      "nombre": "Escenario, técnica y energía",
+      "rubros": ["ESC", "AUD", "ILU", "VID", "ENE", "TEC"]
+    },
+    {
+      "clave": "experiencia",
+      "nombre": "Experiencia, alimentos, marca y logística",
+      "rubros": ["AMB", "ALI", "MAR", "REG", "TAL", "TRA", "AVI", "CON"]
+    }
+  ],
+  "rubros": [
+    { "codigo": "PRD", "nombre": "Producción general", "ejemplos": "productor general, jefe de producción, coordinación, visitas técnicas, planos, caja chica" },
+    { "codigo": "PER", "nombre": "Permisos y seguros", "ejemplos": "licencia municipal de evento, certificado ITSE o ECSE, APDAYC y UNIMPRO si hay música, póliza de responsabilidad civil, SCTR del personal" },
+    { "codigo": "LOC", "nombre": "Locación", "ejemplos": "alquiler del local, horas extra de montaje y desmontaje, garantía, baños, camerinos" },
+    { "codigo": "STF", "nombre": "Personal del evento", "ejemplos": "anfitrionas, orientadores, stage manager, runners, montajistas, supervisores por turno" },
+    { "codigo": "SEG", "nombre": "Seguridad y salud", "ejemplos": "agentes de seguridad, control de acceso, ambulancia y paramédico, extintores, señalética de evacuación, botiquín, EPP del personal de montaje" },
+    { "codigo": "LIM", "nombre": "Limpieza y residuos", "ejemplos": "personal de limpieza, tachos y bolsas, segregación de residuos, recojo final" },
+    { "codigo": "ESC", "nombre": "Escenario y estructuras", "ejemplos": "tarima, truss, rigging, faldón, escaleras, rampa de acceso, carpas, tarimas de técnica" },
+    { "codigo": "AUD", "nombre": "Audio", "ejemplos": "sistema principal, monitores, consola, micrófonos inalámbricos, ingeniero de sala, backline" },
+    { "codigo": "ILU", "nombre": "Iluminación", "ejemplos": "luces robóticas, par LED, seguidores, consola, operador, máquina de humo" },
+    { "codigo": "VID", "nombre": "Pantallas y video", "ejemplos": "pantalla LED por metro cuadrado, procesador, switcher, cámaras, operador de VJ, proyector" },
+    { "codigo": "ENE", "nombre": "Energía", "ejemplos": "grupos electrógenos por kVA, tablero de distribución, cableado, combustible, electricista de guardia, grupo de respaldo" },
+    { "codigo": "TEC", "nombre": "Tecnología y comunicaciones", "ejemplos": "radios portátiles, internet dedicado, puntos de acceso wifi, laptops, impresoras" },
+    { "codigo": "AMB", "nombre": "Ambientación y mobiliario", "ejemplos": "mesas, sillas, salas lounge, manteles, arreglos florales, alfombra, decoración temática" },
+    { "codigo": "ALI", "nombre": "Alimentos e hidratación", "ejemplos": "catering, coffee break, bebidas, puntos de hidratación, agua para staff, refrigerios del personal, vajilla" },
+    { "codigo": "MAR", "nombre": "Marca e impresos", "ejemplos": "backing, photocall, banners, señalética del evento, credenciales, merchandising" },
+    { "codigo": "REG", "nombre": "Registro y acreditación", "ejemplos": "módulo de registro, lectores de QR, pulseras, personal de registro, sistema de invitados" },
+    { "codigo": "TAL", "nombre": "Talento y contenido", "ejemplos": "maestro de ceremonias, artistas, DJ, expositores, rider técnico y de camerino, ensayos" },
+    { "codigo": "TRA", "nombre": "Transporte y logística", "ejemplos": "fletes de carga, movilidad del personal, traslado de talento, estacionamiento, almacén" },
+    { "codigo": "AVI", "nombre": "Foto, video y transmisión", "ejemplos": "fotógrafo, videógrafo, edición de resumen, streaming, drone con permiso" },
+    { "codigo": "CON", "nombre": "Contingencias", "ejemplos": "imprevistos (5 a 10 % del total), plan B de lluvia, equipos de respaldo" }
+  ],
+  "reglas": [
+    "Hidratación: al menos 0,5 litros de agua por asistente en eventos de hasta 4 horas en interiores; 1 a 1,5 litros al aire libre o con calor, y un punto de hidratación cada 250 a 500 personas.",
+    "Agua y refrigerio para el staff: 1,5 litros y un refrigerio por persona por turno de 6 horas.",
+    "Baños: un sanitario cada 75 a 100 asistentes, al menos uno accesible; si el local no tiene, baños portátiles.",
+    "Seguridad: un agente cada 100 a 250 asistentes según el riesgo, más uno por cada acceso y en camerinos.",
+    "Salud: ambulancia con paramédico para más de 500 asistentes o cuando hay actividad física; botiquín siempre.",
+    "Extintores: al menos uno PQS cada 200 m² y uno junto a cada grupo electrógeno y tablero.",
+    "Energía: suma la potencia de audio, iluminación, pantallas, catering y otros; el grupo electrógeno se dimensiona con 25 a 30 % de margen (kVA ≈ kW / 0,8) y se considera un grupo de respaldo para lo crítico.",
+    "Pantalla LED: se cotiza por metro cuadrado; 1 m² consume cerca de 0,2 a 0,4 kW.",
+    "Radios: una por jefe de área y por supervisor, más un 10 % de respaldo.",
+    "Contingencia: entre 5 y 10 % del total, según el tamaño y el riesgo del evento.",
+    "Permisos en Perú: licencia municipal de evento y el certificado de seguridad (ITSE o ECSE) del local o del montaje; si hay música, APDAYC y UNIMPRO."
+  ]
+}

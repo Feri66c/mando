@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { revokeInvitation } from "@/app/actions/panel";
 import { Eyebrow, LevelBadge, PanelShell, PieceChain, TierMeter } from "@/components/panel/kit";
 import { Card, Empty, buttonGhost, buttonSecondary } from "@/components/operacion/ui";
-import { getAreas, getBrief, getBriefDoubts, getCurrentUser, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
+import { getAreas, getBrief, getBriefDocuments, getBriefDoubts, getCurrentUser, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
 import { SUGGESTED_AREAS } from "@mando/core/command";
 import { DEFAULT_CARGOS, LEVEL_LABEL, TIERS, invitationMessage, type TierKey } from "@mando/core/event-types";
 import { formatDate, formatTime } from "@mando/core/time";
@@ -13,6 +13,8 @@ import { BriefForm, DoubtAnswer } from "./brief-panel";
 import { CopyButton, InviteForm } from "./invite-form";
 
 export const metadata: Metadata = { title: "Equipo del evento" };
+// La IA procesa el brief, busca en internet y arma el Excel: puede tardar unos minutos.
+export const maxDuration = 300;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32,13 +34,14 @@ export default async function EventTeamPage({
   if (!event) notFound();
   if (event.role !== "backend") redirect(`/eventos/${id}`); // solo el productor general arma el equipo
 
-  const [areas, { template }, team, invitations, brief, doubts, headerList] = await Promise.all([
+  const [areas, { template }, team, invitations, brief, doubts, briefDocuments, headerList] = await Promise.all([
     getAreas(id).catch(() => []),
     getEventTemplate(id),
     getTeam(id),
     getPendingInvitations(id),
     getBrief(id, user.id),
     getBriefDoubts(id),
+    getBriefDocuments(id).catch(() => []),
     headers(),
   ]);
   const cargos = template?.cargos ?? [...DEFAULT_CARGOS];
@@ -93,7 +96,7 @@ export default async function EventTeamPage({
         </p>
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
-            <BriefForm eventId={id} brief={brief} />
+            <BriefForm eventId={id} brief={brief} documents={briefDocuments} />
           </Card>
           <div>
             <h3 className="mb-2 font-mono text-xs uppercase tracking-[0.14em] text-ink-muted">
