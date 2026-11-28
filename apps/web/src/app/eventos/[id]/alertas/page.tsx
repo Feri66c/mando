@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AlertCard } from "@/components/operacion/blocks";
-import { AlertActions, RaiseAlertForm } from "@/components/operacion/forms";
+import { AlertActions } from "@/components/operacion/forms";
+import { VoiceAlertForm } from "@/components/operacion/alerta-voz";
 import { Card, Empty, PageTitle, SectionTitle } from "@/components/operacion/ui";
 import { levelOf } from "@mando/core/criticality";
-import { getAlerts, getEventContext, getPlanning, getRouteItems } from "@/lib/data";
+import { getAlerts, getCurrentUser, getEventContext, getPlanning, getRouteItems } from "@/lib/data";
 import { DesignModeBanner } from "@/components/operacion/modo-diseno";
 
 export const metadata: Metadata = { title: "Alertas" };
@@ -19,7 +20,8 @@ export default async function AlertsPage({ params }: { params: Promise<{ id: str
   const ctx = await getEventContext(id);
   if (!ctx) notFound();
   const { event, criticality, isTeam } = ctx;
-  const [alerts, items, planning] = await Promise.all([getAlerts(id), isTeam ? getRouteItems(id) : Promise.resolve([]), getPlanning(id)]);
+  const [alerts, items, planning, me] = await Promise.all([getAlerts(id), isTeam ? getRouteItems(id) : Promise.resolve([]), getPlanning(id), getCurrentUser()]);
+  const firstName = me.fullName.trim().split(/\s+/)[0] || "equipo";
   const open = alerts.filter((a) => a.status !== "resolved");
   // Modo diseño: las automáticas quedan en pausa (no bloquean) hasta «Listo, activa».
   const paused = planning.designMode ? open.filter((a) => a.ruleKey) : [];
@@ -44,7 +46,7 @@ export default async function AlertsPage({ params }: { params: Promise<{ id: str
       <ul className="grid gap-2">
         {list.map((a) => (
           <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} title={docName(a.title)}>
-            {isTeam && <AlertActions alertId={a.id} status={a.status} document={docOf(a)} />}
+            {isTeam && <AlertActions alertId={a.id} eventId={id} level={a.level} status={a.status} document={docOf(a)} />}
             {isTeam && a.visibleToViewer && <p className="mt-2 text-xs opacity-70">El cliente ve esta alerta.</p>}
           </AlertCard>
         ))}
@@ -72,7 +74,7 @@ export default async function AlertsPage({ params }: { params: Promise<{ id: str
         <ul className="grid gap-2">
           {others.map((a) => (
             <AlertCard key={a.id} alert={a} config={criticality} timeZone={event.timezone} title={a.entityType === "requirement" ? docName(a.title) : undefined}>
-              {isTeam && <AlertActions alertId={a.id} status={a.status} document={docOf(a)} />}
+              {isTeam && <AlertActions alertId={a.id} eventId={id} level={a.level} status={a.status} document={docOf(a)} />}
               {isTeam && a.visibleToViewer && <p className="mt-2 text-xs text-ink-muted">El cliente ve esta alerta.</p>}
             </AlertCard>
           ))}
@@ -93,9 +95,11 @@ export default async function AlertsPage({ params }: { params: Promise<{ id: str
       {isTeam && (
         <section id="reportar" className="scroll-mt-24">
           <SectionTitle>Reportar un problema</SectionTitle>
+          <p className="-mt-2 mb-3 text-sm text-ink-muted">Graba un audio como en WhatsApp: la IA de MANDO te contesta y llena la ficha.</p>
           <Card>
-            <RaiseAlertForm
+            <VoiceAlertForm
               eventId={id}
+              firstName={firstName}
               levels={levels.map((l) => ({ nivel: l.nivel, nombre: l.nombre, descripcion: l.descripcion }))}
               items={items.map((i) => ({ id: i.id, title: i.title }))}
             />

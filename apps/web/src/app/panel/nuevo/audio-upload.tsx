@@ -7,7 +7,20 @@ import { playTap } from "@/components/operacion/pieza";
 const MAX_BYTES = 4 * 1024 * 1024;
 
 /** «Subir audio»: una nota de voz de WhatsApp se convierte en texto y sigue a la IA. */
-export function AudioUpload({ label, busyLabel, onText, disabled }: { label: string; busyLabel?: string; onText: (text: string) => void; disabled?: boolean }) {
+export function AudioUpload({
+  label,
+  busyLabel,
+  onText,
+  disabled,
+  transcriber = transcribeAudio,
+}: {
+  label: string;
+  busyLabel?: string;
+  onText: (text: string) => void;
+  disabled?: boolean;
+  /** Quién convierte el audio en texto. Por defecto, el del productor general (brief). */
+  transcriber?: (fd: FormData) => Promise<{ ok: true; text: string } | { ok: false; error: string }>;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState<string | null>(null);
@@ -22,7 +35,7 @@ export function AudioUpload({ label, busyLabel, onText, disabled }: { label: str
     const fd = new FormData();
     fd.append("audio", file);
     startWorking(async () => {
-      const r = await transcribeAudio(fd);
+      const r = await transcriber(fd);
       if (!r.ok) return setError(r.error);
       onText(r.text);
     });

@@ -378,11 +378,23 @@ describe("Alertas", () => {
       const backend = await asUser(USERS.backend);
       await backend(`select public.ack_alert($1)`, [id]);
       expect((await one(admin, `select status from alerts where id = $1`, [id])).status).toBe("acknowledged");
+      // Sin evidencia no se levanta (decisión 94).
+      expect(await errorOf(producer, `select public.resolve_alert($1, 'Llegó a las 15:10')`, [id])).toMatch(/adjunta una evidencia/);
+      const note = await one(producer, `select public.add_evidence($1, 'note', null, 'el cliente dijo que sí', null, null, null, null, $2) as id`, [EVENT, id]);
+      expect(note.id).toBeTruthy();
+      expect(await errorOf(producer, `select public.resolve_alert($1, 'Llegó a las 15:10')`, [id])).toMatch(/adjunta una evidencia/);
+      await producer(
+        `select public.add_evidence($1, 'photo', $2, 'Captura del WhatsApp del cliente', $3, null, null, null, $4, false)`,
+        [EVENT, `${EVENT}/captura-cliente.png`, "a".repeat(64), id],
+      );
       await producer(`select public.resolve_alert($1, 'Llegó a las 15:10')`, [id]);
       const a = await one(admin, `select status, resolved_by from alerts where id = $1`, [id]);
       expect(a).toEqual({ status: "resolved", resolved_by: USERS.producer });
       const kinds = (await admin(`select kind from log_entries where entity_id = $1 order by id`, [id])).rows.map((r) => r.kind);
       expect(kinds).toEqual(["alert_raised", "alert_acknowledged", "alert_resolved"]);
+      const last = await one(admin, `select summary, payload from log_entries where entity_id = $1 order by id desc limit 1`, [id]);
+      expect(last.summary).toMatch(/^Levantada con evidencia: Falta un técnico de sala\. Llegó a las 15:10\. .+ responde por lo que informa\.$/);
+      expect(last.payload).toMatchObject({ honor: true });
     });
   });
 
