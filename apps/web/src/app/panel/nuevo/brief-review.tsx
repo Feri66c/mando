@@ -6,6 +6,7 @@ import { playTap } from "@/components/operacion/pieza";
 import { inputClass } from "@/components/operacion/ui";
 import { customModule } from "@mando/core/custom-event";
 import { MicIcon, useDictation } from "./use-dictation";
+import { AudioUpload } from "./audio-upload";
 
 const name = (k: string) => customModule(k)?.nombre ?? k;
 
@@ -67,11 +68,11 @@ export function BriefReview({
     if (said) setFeedback((prev) => `${prev.trim()} ${said}`.trim());
   }
 
-  function revise() {
+  function revise(text = feedback) {
     playTap("up");
     setError(null);
     startRevising(async () => {
-      const r = await reviseBrief({ brief, feedback, typeName, selected: [...selected] });
+      const r = await reviseBrief({ brief, feedback: text, typeName, selected: [...selected] });
       if (!r.ok) return setError(r.error);
       onBrief(r.brief);
       if (r.add.length) onAdd(r.add.map((a) => a.clave));
@@ -132,8 +133,18 @@ export function BriefReview({
           </button>
         )}
       </div>
+      <AudioUpload
+        label="Subir el audio que te mandaron"
+        disabled={revising || dictation.listening}
+        onText={(text) => {
+          // El audio se escribe en la caja y la IA corrige el brief de una vez.
+          const all = `${feedback.trim()} ${text}`.trim();
+          setFeedback(all);
+          revise(all);
+        }}
+      />
       <p className="text-xs text-ink-muted">
-        ¿Te mandaron un audio? En WhatsApp mantenlo presionado, toca «Transcribir», copia el texto y pégalo aquí. O dale play y díctalo con el micrófono.
+        En el iPhone: en WhatsApp mantén presionado el audio, toca Reenviar, luego Compartir y «Guardar en Archivos». Después elígelo aquí.
       </p>
       {dictation.error && (
         <p role="alert" className="text-sm text-[#ff6f86]">
@@ -144,7 +155,7 @@ export function BriefReview({
         type="button"
         className="leer-brief"
         disabled={revising || dictation.listening || feedback.trim().length < 5}
-        onClick={revise}
+        onClick={() => revise()}
       >
         {revising ? "La IA está corrigiendo el brief…" : "Corregir el brief con esto"}
       </button>

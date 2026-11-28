@@ -4,6 +4,7 @@
 // Sin clave en Vercel, la sugerencia de componentes vuelve a la lectura por palabras clave.
 
 import { AiUnavailable, aiReady, askJson } from "@/lib/ai";
+import { checkAudio, transcribe } from "@/lib/transcribe";
 import { getAdminOrgs, getCurrentUser } from "@/lib/data";
 import { CUSTOM_BLOCKS, customModule, suggestModules } from "@mando/core/custom-event";
 import { BRIEF_MAX_CHARS, SYNOPSIS_MAX_CHARS } from "@mando/core/experience";
@@ -248,6 +249,23 @@ export async function reviseBrief(input: { brief: string; feedback: string; type
       add,
       remove,
     };
+  } catch (e) {
+    return { ok: false, error: failure(e) };
+  }
+}
+
+export type TranscribeResult = { ok: true; text: string } | { ok: false; error: string };
+
+/** Convierte un audio (por ejemplo, una nota de voz de WhatsApp) en texto, para el brief o sus correcciones. */
+export async function transcribeAudio(formData: FormData): Promise<TranscribeResult> {
+  const denied = await mustBeProducer();
+  if (denied) return { ok: false, error: denied };
+  const file = formData.get("audio");
+  if (!(file instanceof File)) return { ok: false, error: "Elige un audio." };
+  const problem = checkAudio(file);
+  if (problem) return { ok: false, error: problem };
+  try {
+    return { ok: true, text: (await transcribe(file)).slice(0, BRIEF_MAX_CHARS) };
   } catch (e) {
     return { ok: false, error: failure(e) };
   }
