@@ -116,10 +116,20 @@ export function useDictation() {
 
 /** El micrófono rojo de MANDO: late en reposo y lanza ondas mientras escucha. */
 export function MicIcon({ size = 30 }: { size?: number }) {
+  // Ícono de voz MANDO (decisión 96): una onda viva de cinco barras. Mientras se graba, las barras
+  // bailan (ver .onda-voz en globals.css); en reposo respiran despacio.
+  const bars = [
+    { x: 3, h: 6 },
+    { x: 7.5, h: 12 },
+    { x: 12, h: 18 },
+    { x: 16.5, h: 12 },
+    { x: 21, h: 6 },
+  ];
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
-      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
+    <svg viewBox="0 0 24 24" width={size} height={size} className="onda-voz" aria-hidden>
+      {bars.map((b, i) => (
+        <rect key={i} className={`onda-barra onda-${i}`} x={b.x - 1.4} y={12 - b.h / 2} width="2.8" height={b.h} rx="1.4" fill="currentColor" />
+      ))}
     </svg>
   );
 }

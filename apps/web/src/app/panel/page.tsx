@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { Eyebrow, PanelShell, TierMeter } from "@/components/panel/kit";
 import { Card, Empty, buttonPrimary } from "@/components/operacion/ui";
 import { EventStatusText } from "@/components/pills";
-import { getAdminOrgs, getCurrentUser, getMyOrgBrand, getMyEvents, getOrgRequests } from "@/lib/data";
+import { getAdminOrgs, getCurrentUser, getMyLook, getMyOrgBrand, getMyEvents, getOrgRequests } from "@/lib/data";
 import { MandoLockup } from "@/components/brand";
 import { CustomizationForm, CustomizationStatusForm, OrgBrandForm } from "@/components/panel/marca";
 import { REQUEST_STATUSES } from "@mando/core/command";
@@ -24,7 +24,7 @@ export default async function PanelPage() {
   const requests = myOrg ? await getOrgRequests(myOrg.id) : [];
 
   return (
-    <PanelShell userName={user.fullName} brand={brand}>
+    <PanelShell userName={user.fullName} brand={brand} face={(await getMyLook(user.id)).faceUrl}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Eyebrow>{orgs[0].name} · Productor general</Eyebrow>

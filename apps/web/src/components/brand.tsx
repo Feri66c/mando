@@ -1,18 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
 import { signOut } from "@/app/actions/auth";
+import { Cara } from "@/components/perfil/cara";
 
-/** Logo MANDO. "oscuro" va sobre navy; "claro" sobre fondos claros. */
-export function Logo({ variant = "oscuro", className = "" }: { variant?: "oscuro" | "claro"; className?: string }) {
-  return (
+/**
+ * Logo MANDO. "oscuro" va sobre fondo oscuro; "claro" sobre fondos claros. Con "auto" se pintan los dos
+ * y el modo de pantalla elige cuál se ve (en modo Sol, el claro).
+ */
+export function Logo({ variant = "auto", className = "" }: { variant?: "oscuro" | "claro" | "auto"; className?: string }) {
+  const img = (v: "oscuro" | "claro", extra = "") => (
     <Image
-      src={variant === "oscuro" ? "/brand/mando-logo-sobre-navy.svg" : "/brand/mando-logo-ajustado-claro.svg"}
+      src={v === "oscuro" ? "/brand/mando-logo-sobre-navy.svg" : "/brand/mando-logo-ajustado-claro.svg"}
       alt="MANDO · Event Control"
       width={2400}
       height={969}
       priority
-      className={className}
+      className={`${className} ${extra}`}
     />
+  );
+  if (variant !== "auto") return img(variant);
+  return (
+    <>
+      {img("oscuro", "logo-para-oscuro")}
+      {img("claro", "logo-para-claro")}
+    </>
   );
 }
 
@@ -42,7 +53,7 @@ export function MandoLockup({ brand, size = "grande" }: { brand?: MandoBrand | n
                 className={`w-auto max-w-[150px] rounded-md bg-white object-contain px-2 py-1 sm:max-w-[200px] ${big ? "h-11 sm:h-14" : "h-10 sm:h-12"}`}
               />
             ) : (
-              <span className={`truncate font-display font-bold uppercase leading-none tracking-wide text-ink-inverse ${big ? "text-[26px] sm:text-[34px]" : "text-[22px] sm:text-[28px]"}`}>
+              <span className={`truncate font-display font-bold uppercase leading-none tracking-wide text-ink ${big ? "text-[26px] sm:text-[34px]" : "text-[22px] sm:text-[28px]"}`}>
                 {brand.brandName}
               </span>
             )}
@@ -57,18 +68,21 @@ export function MandoLockup({ brand, size = "grande" }: { brand?: MandoBrand | n
 }
 
 /** Cabecera navy de las pantallas con sesión. El oro del logo es el único acento de la pantalla. */
-export function AppHeader({ label, userName, brand }: { label?: string; userName: string; brand?: MandoBrand | null }) {
+export function AppHeader({ label, userName, brand, face }: { label?: string; userName: string; brand?: MandoBrand | null; face?: string | null }) {
   return (
-    <header className="text-ink-inverse">
+    <header className="text-ink">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))]">
         <Link href="/eventos" className="flex min-w-0 items-center gap-3" aria-label="Ir a Mis eventos">
           <MandoLockup brand={brand} />
         </Link>
-        <form action={signOut} className="flex items-center gap-3">
-          <span className="hidden text-sm text-ice-300 md:inline">{userName}</span>
+        <form action={signOut} className="flex shrink-0 items-center gap-3">
+          <Link href="/perfil" className="flex min-h-11 items-center gap-2" aria-label={`Mi perfil: ${userName}`}>
+            <Cara url={face} name={userName} size={44} />
+            <span className="hidden text-sm text-ice-300 md:inline">{userName}</span>
+          </Link>
           <button
             type="submit"
-            className="min-h-11 rounded-full bg-surface-200 px-4 text-sm font-medium text-ink-inverse"
+            className="min-h-11 rounded-full bg-surface-200 px-4 text-sm font-medium text-ink"
           >
             Salir
           </button>

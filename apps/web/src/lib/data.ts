@@ -7,6 +7,8 @@ import {
   fetchAdminOrgs,
   fetchCardBrands,
   fetchMyOrgBrand,
+  fetchMyLook,
+  fetchFaces,
   fetchOrgRequests,
   fetchAreas,
   fetchBrands,
@@ -137,6 +139,16 @@ export const getAdminOrgs = cache(async function getAdminOrgs(userId: string) {
 export const getMyOrgBrand = cache(async function getMyOrgBrand(userId: string) {
   return fetchMyOrgBrand(await requireClient(), userId);
 });
+
+/** Foto, avatar y modo de pantalla de la persona. Una vez por pedido. */
+export const getMyLook = cache(async function getMyLook(userId: string) {
+  return fetchMyLook(await requireClient(), userId);
+});
+
+/** Caras (avatar o foto) de varias personas, con enlaces firmados por una hora. */
+export async function getFaces(profileIds: string[]) {
+  return fetchFaces(await requireClient(), profileIds);
+}
 
 /** Logo de la marca del cliente para cada tarjeta de «Mis eventos». */
 export async function getCardBrands(eventIds: string[]) {

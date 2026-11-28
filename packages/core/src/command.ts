@@ -149,6 +149,12 @@ export function orgLogoPath(orgId: string, fileId: string, fileName: string): st
   return ext ? `org/${orgId}/logo/${fileId}.${ext}` : null;
 }
 
+/** Ruta de la foto o el avatar de una persona en el cubo privado: perfil/<persona>/<archivo>. */
+export function profileFilePath(profileId: string, fileId: string, fileName: string): string | null {
+  const ext = /\.(png|jpe?g|webp)$/i.exec(fileName)?.[1]?.toLowerCase();
+  return ext ? `perfil/${profileId}/${fileId}.${ext}` : null;
+}
+
 /** Estados de un pedido especial de un mando (decisión 95). */
 export const REQUEST_STATUSES = [
   { clave: "pedido", nombre: "Pedido" },

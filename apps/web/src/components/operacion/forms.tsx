@@ -23,6 +23,7 @@ import { buttonGhost, buttonPrimary, buttonSecondary, inputClass } from "./ui";
 import { RequirementUpload } from "./expediente";
 import { ackWithTime, type AckState } from "@/app/actions/documento-ia";
 import { AlertVoiceNote, LiftAlert } from "./alerta-voz";
+import { suggestMomentQuestions } from "@/app/actions/alerta-voz";
 
 const INITIAL: ActionState = { ok: false, error: null };
 
@@ -385,6 +386,11 @@ export function CreateMomentForm({
   const [state, action] = useActionState(createMomentAction, INITIAL);
   const [key, setKey] = useState(defaultTemplate ?? templates[0]?.clave ?? "");
   const template = templates.find((t) => t.clave === key) ?? null;
+  const [customName, setCustomName] = useState("");
+  const [questionText, setQuestionText] = useState("");
+  const [commitmentText, setCommitmentText] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestError, setSuggestError] = useState<string | null>(null);
   if (state.ok && state.momentId) {
     return (
       <p role="status" className="text-sm text-[#8fe0b8]">
@@ -395,6 +401,12 @@ export function CreateMomentForm({
       </p>
     );
   }
+  const custom = key === "otro";
+  const labels = commitmentText
+    .split(/\r?\n/)
+    .map((l) => l.split(":")[0].replace(/^[-•*\d.)\s]+/, "").trim())
+    .filter(Boolean)
+    .slice(0, 6);
   return (
     <form action={action} className="space-y-3">
       <input type="hidden" name="event_id" value={eventId} />
@@ -406,8 +418,52 @@ export function CreateMomentForm({
               {t.nombre} · {t.area}
             </option>
           ))}
+          <option value="otro">Otro · crear mi propio momento</option>
         </select>
       </label>
+      {custom && (
+        <div className="space-y-3 border-l-2 border-gold-500 pl-3">
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium">Nombre del momento</span>
+            <input name="title" required minLength={3} maxLength={160} value={customName} onChange={(e) => setCustomName(e.target.value)} autoComplete="off" className={inputClass} />
+          </label>
+          <button
+            type="button"
+            disabled={suggesting || customName.trim().length < 3}
+            onClick={async () => {
+              setSuggesting(true);
+              setSuggestError(null);
+              const r = await suggestMomentQuestions({ eventId, name: customName });
+              setSuggesting(false);
+              if (!r.ok) return setSuggestError(r.error);
+              setQuestionText(r.questions.join("\n"));
+              setCommitmentText(r.commitments.join("\n"));
+            }}
+            className={`${buttonSecondary} w-full`}
+          >
+            {suggesting ? "MANDO está pensando las preguntas…" : "Sugerir preguntas con IA"}
+          </button>
+          {suggestError && (
+            <p role="alert" className="text-sm text-[#ff6f86]">
+              {suggestError}
+            </p>
+          )}
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium">Preguntas para el productor (una por línea)</span>
+            <textarea name="questions" rows={5} value={questionText} onChange={(e) => setQuestionText(e.target.value)} className={`${inputClass} py-2`} />
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium">Qué promete el proveedor (una cosa por línea, opcional)</span>
+            <textarea name="commitment_labels" rows={3} value={commitmentText} onChange={(e) => setCommitmentText(e.target.value)} className={`${inputClass} py-2`} />
+          </label>
+          {labels.map((label) => (
+            <label key={label} className="block text-sm">
+              <span className="mb-1 block">{label}</span>
+              <input name={`promised:${label}`} placeholder="Lo que prometió" className={inputClass} />
+            </label>
+          ))}
+        </div>
+      )}
       <label className="block text-sm">
         <span className="mb-1 block text-ink-muted">Actividad</span>
         <select name="route_item_id" defaultValue={defaultItemId ?? ""} className={inputClass}>

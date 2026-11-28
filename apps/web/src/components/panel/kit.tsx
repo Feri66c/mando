@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { MandoLockup, type MandoBrand } from "@/components/brand";
+import { Cara } from "@/components/perfil/cara";
 import { signOut } from "@/app/actions/auth";
 
 // Piezas visuales del panel y de la bienvenida. Están juntas y aisladas a propósito:
 // cuando se apruebe la nueva dirección visual, se cambia su forma aquí sin tocar la lógica.
 
 /** Marco del panel del productor general: tema oscuro, logo y salida. */
-export function PanelShell({ userName, brand, children }: { userName: string; brand?: MandoBrand | null; children: React.ReactNode }) {
+export function PanelShell({ userName, brand, face, children }: { userName: string; brand?: MandoBrand | null; face?: string | null; children: React.ReactNode }) {
   return (
     <div className="tema-operacion min-h-dvh">
       <header className="border-b border-line">
@@ -18,8 +19,11 @@ export function PanelShell({ userName, brand, children }: { userName: string; br
             <Link href="/eventos" className="min-h-11 content-center px-3 font-medium text-ink-muted hover:text-ink">
               Mis eventos
             </Link>
+            <Link href="/perfil" className="flex min-h-11 items-center gap-2" aria-label={`Mi perfil: ${userName}`}>
+              <Cara url={face} name={userName} size={40} />
+              <span className="hidden text-ink-muted md:inline">{userName}</span>
+            </Link>
             <form action={signOut} className="flex items-center gap-3">
-              <span className="hidden text-ink-muted sm:inline">{userName}</span>
               <button type="submit" className="min-h-11 rounded-full border border-line px-4 font-medium hover:bg-surface-200">
                 Salir
               </button>

@@ -1159,3 +1159,159 @@ a.mesa-pieza:active { transform: translateY(2px) scale(0.97); background: color-
 @media (prefers-reduced-motion: no-preference) {
   .nota-voz[data-escucha] { animation: cuentame-parpadea 1s ease-in-out infinite; }
 }
+
+/* ---------------------------------------------------------------------------
+   Decisión 96 · Cara, modo avatar, ícono de voz y modos de pantalla.
+   --------------------------------------------------------------------------- */
+
+/* La cara de cada persona: hexágono con borde de luz. */
+.cara {
+  position: relative; flex: none; display: inline-grid; place-items: center; overflow: hidden;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--gold-500) 85%, #fff), color-mix(in srgb, var(--ice-500) 70%, #000));
+}
+.cara > img, .cara > span {
+  width: calc(100% - 4px); height: calc(100% - 4px); object-fit: cover;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+}
+.cara > span {
+  display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; letter-spacing: 0.04em;
+  color: var(--ink); background: var(--surface-200);
+}
+.cara-grande { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--gold-500) 45%, transparent)); }
+
+/* Opciones grandes que se encienden al elegirlas (modo, estilo del avatar). */
+.modo-opcion {
+  color: var(--ink); background: var(--surface-200);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.modo-opcion[data-on] {
+  background: color-mix(in srgb, var(--gold-500) 16%, var(--surface-200));
+  box-shadow: inset 0 0 0 2px var(--gold-500), inset 0 0 18px color-mix(in srgb, var(--gold-500) 25%, transparent);
+}
+.modo-opcion:disabled { opacity: 0.6; }
+/* Muestra de cada modo en su botón. */
+.modo-opcion[data-muestra="sol"] { background: #f4f6fa; color: #05080f; }
+.modo-opcion[data-muestra="sol"][data-on] { background: #fff4cf; box-shadow: inset 0 0 0 2px #a86f00; }
+.modo-opcion[data-muestra="sobrio"] { background: #121620; color: #e8ebf1; }
+.modo-opcion[data-muestra="neon"] { background: #0b0c12; color: #fff; }
+.modo-opcion[data-muestra="neon"] span:first-child { color: #ffd60a; text-shadow: 0 0 10px rgba(255, 214, 10, 0.6); }
+
+/* Modo avatar: el protector del evento. */
+.modo-avatar {
+  position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 2rem 1.25rem;
+  padding-top: max(2rem, env(safe-area-inset-top)); padding-bottom: max(2rem, env(safe-area-inset-bottom));
+  text-align: center; color: var(--ink); cursor: pointer;
+  background: radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--gold-500) 14%, var(--surface-000)) 0%, var(--surface-000) 62%);
+  animation: entrada 0.6s ease both;
+}
+.modo-avatar-escena { display: flex; flex-direction: column; align-items: center; max-width: 30rem; }
+.modo-avatar-figura { position: relative; display: grid; place-items: center; }
+.modo-avatar-aura {
+  position: absolute; inset: -28px;
+  clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%);
+  background: conic-gradient(from 0deg, var(--gold-500), var(--ice-500), var(--ok), var(--gold-500));
+  opacity: 0.35; filter: blur(18px);
+}
+.modo-avatar-alerta {
+  padding: 0.5rem 1rem; font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; text-transform: uppercase;
+  color: #fff; background: var(--critical);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .modo-avatar-figura { animation: avatar-flota 5s ease-in-out infinite; }
+  .modo-avatar-aura { animation: avatar-gira 9s linear infinite; }
+}
+@keyframes avatar-flota {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-16px) rotate(2deg); }
+}
+@keyframes avatar-gira { to { transform: rotate(360deg); } }
+
+/* Ícono de voz: hexágono con una onda viva. Respira en reposo y baila mientras graba. */
+.cuentame-mic { border-radius: 0; clip-path: polygon(25% 3%, 75% 3%, 100% 50%, 75% 97%, 25% 97%, 0 50%); box-shadow: none; }
+.cuentame-mic::before, .cuentame-mic::after { display: none; }
+.onda-barra { transform-box: fill-box; transform-origin: center; }
+@media (prefers-reduced-motion: no-preference) {
+  .onda-voz .onda-barra { animation: onda-respira 2.4s ease-in-out infinite; }
+  .onda-voz .onda-1, .onda-voz .onda-3 { animation-delay: 0.3s; }
+  .onda-voz .onda-2 { animation-delay: 0.6s; }
+  [data-escucha] .onda-voz .onda-barra { animation: onda-baila 0.7s ease-in-out infinite; }
+  [data-escucha] .onda-voz .onda-1 { animation-delay: 0.12s; }
+  [data-escucha] .onda-voz .onda-2 { animation-delay: 0.24s; }
+  [data-escucha] .onda-voz .onda-3 { animation-delay: 0.36s; }
+  [data-escucha] .onda-voz .onda-4 { animation-delay: 0.48s; }
+}
+@keyframes onda-respira { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.75); } }
+@keyframes onda-baila { 0%, 100% { transform: scaleY(0.45); } 50% { transform: scaleY(1.15); } }
+
+/* Logo según el modo: el blanco sobre oscuro, el navy sobre claro. */
+.logo-para-claro { display: none; }
+html[data-modo="sol"] .logo-para-oscuro { display: none; }
+html[data-modo="sol"] .logo-para-claro { display: block; }
+
+/* Modo Sol: exterior a pleno sol. Fondo claro, contraste máximo, sin brillos, letras más gruesas. */
+html[data-modo="sol"] .tema-operacion {
+  --surface-000: #eef1f6;
+  --surface-100: #ffffff;
+  --surface-200: #e2e8f0;
+  --surface-300: #f6f8fb;
+  --ink: #05080f;
+  --ink-muted: #364152;
+  --line: #b9c3d2;
+  --gold-500: #a86f00;
+  --gold-300: #a86f00;
+  --naranja: #b34700;
+  --ice-500: #005f9e;
+  --ice-300: #005285;
+  --ok: #007a4a;
+  --critical: #cc0029;
+  --record: #cc0029;
+  color-scheme: light;
+}
+html[data-modo="sol"] .tema-operacion,
+html[data-modo="sol"] .tema-operacion * { text-shadow: none !important; }
+html[data-modo="sol"] .tema-operacion { font-weight: 500; }
+html[data-modo="sol"] :is(.luz-blanca, .reloj-evento, .categoria-titulo h2, .aviso-titulo, .aviso-texto strong, .plazo-nota strong,
+  .cuentame-boton, .ia-veredicto, .plazo-chip, .cargo-option[data-active], .honor-aviso) { color: var(--ink); }
+html[data-modo="sol"] .aviso { background: #ffffff; }
+html[data-modo="sol"] .mesa-pieza[data-activa] { background: color-mix(in srgb, var(--tono) 18%, #ffffff); }
+html[data-modo="sol"] .plazo-chip { background: var(--surface-200); }
+/* Colores escritos a mano en las pantallas, pensados para fondo oscuro: su par para fondo claro. */
+html[data-modo="sol"] .text-\[\#ff6f86\] { color: #b0002a; }
+html[data-modo="sol"] .border-\[\#ff6f86\] { border-color: #b0002a; }
+html[data-modo="sol"] .text-\[\#8fe0b8\] { color: #00663d; }
+html[data-modo="sol"] .border-\[\#8fe0b8\] { border-color: #00663d; }
+html[data-modo="sol"] .text-\[\#ffd3c9\] { color: #7a1500; }
+html[data-modo="sol"] .text-\[\#ffb19e\] { color: #8f2a00; }
+html[data-modo="sol"] .bg-\[\#3a1620\] { background-color: #ffe2e7; }
+html[data-modo="sol"] :is(.text-\[\#d5e2f0\], .text-\[\#a9bdd6\]) { color: var(--ink-muted); }
+html[data-modo="sol"] .bg-\[\#0c1f3d\] { background-color: var(--surface-200); }
+html[data-modo="sol"] body { background: #eef1f6; }
+
+/* Modo Sobrio: oscuro, colores calmados y sin brillos. */
+html[data-modo="sobrio"] .tema-operacion {
+  --surface-000: #0b0e14;
+  --surface-100: #151923;
+  --surface-200: #1f2430;
+  --surface-300: #1a1e28;
+  --ink: #eef1f6;
+  --ink-muted: #b4bccb;
+  --line: #2f3646;
+  --gold-500: #e3c35a;
+  --gold-300: #e3c35a;
+  --naranja: #e0985a;
+  --ice-500: #7fb6d6;
+  --ice-300: #a8cde3;
+  --ok: #5fc79c;
+  --critical: #e5566f;
+  --record: #e5566f;
+}
+html[data-modo="sobrio"] .tema-operacion,
+html[data-modo="sobrio"] .tema-operacion * { text-shadow: none !important; }
+html[data-modo="sobrio"] .cara-grande { filter: none; }
+/* El panel inclinado de la cabecera también se aclara en Sol. */
+html[data-modo="sol"] body.tema-operacion::before { background: #dfe5ee; }
+html[data-modo="sobrio"] body.tema-operacion::before { background: #121620; }
