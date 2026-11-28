@@ -3,6 +3,7 @@
 import { useActionState, useRef, useState, useTransition } from "react";
 import { deleteCustomType, type PanelState } from "@/app/actions/panel";
 import { suggestComponents } from "@/app/actions/ia";
+import { VoiceBrief } from "./voice-brief";
 import type { SavedCustomType } from "@/lib/data";
 import { playTap } from "@/components/operacion/pieza";
 import { inputClass } from "@/components/operacion/ui";
@@ -154,10 +155,14 @@ function BriefReader({
   brief,
   onBrief,
   onSuggest,
+  typeName,
+  onTypeName,
 }: {
   brief: string;
   onBrief: (v: string) => void;
   onSuggest: (keys: string[]) => void;
+  typeName: string;
+  onTypeName: (v: string) => void;
 }) {
   const [found, setFound] = useState<{
     source: "ia" | "palabras";
@@ -169,8 +174,17 @@ function BriefReader({
   const name = (k: string) => customModule(k)?.nombre ?? k;
   return (
     <div className="space-y-2">
+      <VoiceBrief
+        onResult={(r) => {
+          setError(null);
+          onBrief(r.brief);
+          if (r.name && !typeName.trim()) onTypeName(r.name);
+          setFound({ source: r.source, hits: r.hits, note: r.note });
+          onSuggest(r.hits.map((h) => h.clave));
+        }}
+      />
       <label htmlFor="brief" className="block text-base font-semibold">
-        Brief <span className="font-normal text-ink-muted">(opcional)</span>
+        Brief <span className="font-normal text-ink-muted">(opcional, por voz o escrito)</span>
       </label>
       <textarea
         id="brief"
@@ -293,7 +307,7 @@ export function CustomBuilder({
           Guardar este tipo para reusarlo
         </label>
       </div>
-      <BriefReader brief={brief} onBrief={onBrief} onSuggest={onAdd} />
+      <BriefReader brief={brief} onBrief={onBrief} onSuggest={onAdd} typeName={typeName} onTypeName={onTypeName} />
       {CUSTOM_BLOCKS.map((block) => {
         const count = block.modulos.filter((m) => selected.has(m.clave)).length;
         return (
