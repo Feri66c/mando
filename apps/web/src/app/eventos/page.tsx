@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AppHeader } from "@/components/brand";
 import { EventStatusText, RolePill } from "@/components/pills";
-import { getAdminOrgs, getCardBrands, getCurrentUser, getMyEvents, getMyOrgBrand } from "@/lib/data";
+import { getAdminOrgs, getCardBrands, getCurrentUser, getMyEvents, getMyLook, getMyOrgBrand } from "@/lib/data";
+import { ModoSync } from "@/components/perfil/modo-sync";
 import { AcceptRole } from "@/components/accept-role";
 import { ROLE_DESCRIPTION, ROLE_LABEL } from "@mando/core/labels";
 import { formatEventRange, zoneLabel } from "@mando/core/time";
@@ -12,16 +13,18 @@ export const metadata: Metadata = { title: "Mis eventos" };
 export default async function MyEventsPage() {
   const user = await getCurrentUser();
   const events = await getMyEvents(user.id);
-  const [orgs, brand, cardBrands] = await Promise.all([
+  const [orgs, brand, cardBrands, look] = await Promise.all([
     getAdminOrgs(user.id),
     getMyOrgBrand(user.id),
     getCardBrands(events.map((e) => e.id)),
+    getMyLook(user.id),
   ]);
   const canCreate = orgs.length > 0;
 
   return (
     <>
-      <AppHeader userName={user.fullName} brand={brand} />
+      <AppHeader userName={user.fullName} brand={brand} face={look.faceUrl} />
+      <ModoSync mode={look.mode} />
       <main className="mx-auto max-w-3xl px-4 py-6">
         <h1 className="font-display text-[32px] font-bold leading-none">Mis eventos</h1>
         <p className="mt-2 text-base text-ink-muted">Hola, {user.fullName}. Elige el evento que vas a controlar.</p>

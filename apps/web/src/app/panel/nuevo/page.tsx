@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Eyebrow, PanelShell } from "@/components/panel/kit";
-import { getAdminOrgs, getCurrentUser, getMyOrgBrand, getCustomTypes } from "@/lib/data";
+import { getAdminOrgs, getCurrentUser, getMyLook, getMyOrgBrand, getCustomTypes } from "@/lib/data";
 import { EVENT_TEMPLATES, TIERS } from "@mando/core/event-types";
 import { NewEventForm } from "./new-event-form";
 
@@ -15,7 +15,7 @@ export default async function NewEventPage() {
   const savedTypes = await getCustomTypes(orgs[0].id);
 
   return (
-    <PanelShell userName={user.fullName} brand={await getMyOrgBrand(user.id)}>
+    <PanelShell userName={user.fullName} brand={await getMyOrgBrand(user.id)} face={(await getMyLook(user.id)).faceUrl}>
       <Link href="/panel" className="text-sm text-ink-muted hover:text-ink">
         ← Panel
       </Link>

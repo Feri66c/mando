@@ -1178,6 +1178,62 @@ export async function fetchOrgRequests(client: SupabaseClient, orgId: string): P
   }));
 }
 
+export type DisplayMode = "neon" | "sol" | "sobrio";
+export const DISPLAY_MODES: { clave: DisplayMode; nombre: string; detalle: string }[] = [
+  { clave: "neon", nombre: "Neón", detalle: "Oscuro con brillos de colores. De noche y en interiores." },
+  { clave: "sol", nombre: "Sol", detalle: "Fondo claro, contraste máximo y sin brillos. Para exteriores." },
+  { clave: "sobrio", nombre: "Sobrio", detalle: "Oscuro, sin brillos ni parpadeos fuertes. Más conservador." },
+];
+export const isDisplayMode = (v: string): v is DisplayMode => v === "neon" || v === "sol" || v === "sobrio";
+
+export type MyLook = {
+  photoPath: string | null;
+  avatarPath: string | null;
+  photoUrl: string | null;
+  avatarUrl: string | null;
+  showAvatar: boolean;
+  mode: DisplayMode;
+  /** Lo que se muestra de la persona: el avatar si lo eligió, si no la foto. */
+  faceUrl: string | null;
+};
+
+async function signMany(client: SupabaseClient, paths: (string | null)[]): Promise<Map<string, string>> {
+  const list = [...new Set(paths.filter((p): p is string => Boolean(p)))];
+  const urls = new Map<string, string>();
+  if (list.length === 0) return urls;
+  const { data } = await client.storage.from("evidences").createSignedUrls(list, 60 * 60);
+  for (const s of data ?? []) if (s.path && s.signedUrl) urls.set(s.path, s.signedUrl);
+  return urls;
+}
+
+/** Foto, avatar y modo de pantalla de la persona (decisión 96). */
+export async function fetchMyLook(client: SupabaseClient, userId: string): Promise<MyLook> {
+  const { data } = await client.from("profiles").select("photo_path, avatar_path, show_avatar, display_mode").eq("id", userId).maybeSingle();
+  const photoPath = (data?.photo_path as string | null) ?? null;
+  const avatarPath = (data?.avatar_path as string | null) ?? null;
+  const urls = await signMany(client, [photoPath, avatarPath]);
+  const photoUrl = photoPath ? (urls.get(photoPath) ?? null) : null;
+  const avatarUrl = avatarPath ? (urls.get(avatarPath) ?? null) : null;
+  const showAvatar = Boolean(data?.show_avatar) && Boolean(avatarUrl);
+  const mode = isDisplayMode(String(data?.display_mode ?? "")) ? (data!.display_mode as DisplayMode) : "neon";
+  return { photoPath, avatarPath, photoUrl, avatarUrl, showAvatar, mode, faceUrl: showAvatar ? avatarUrl : photoUrl };
+}
+
+/** Caras del equipo: por persona, el avatar si lo eligió o la foto. Sin permiso o sin foto, no aparece. */
+export async function fetchFaces(client: SupabaseClient, profileIds: string[]): Promise<Record<string, string>> {
+  const ids = [...new Set(profileIds.filter(Boolean))];
+  if (ids.length === 0) return {};
+  const { data } = await client.from("profiles").select("id, photo_path, avatar_path, show_avatar").in("id", ids);
+  const rows = (data ?? []).map((r) => ({
+    id: r.id as string,
+    path: ((r.show_avatar && r.avatar_path) || r.photo_path || null) as string | null,
+  }));
+  const urls = await signMany(client, rows.map((r) => r.path));
+  const out: Record<string, string> = {};
+  for (const r of rows) if (r.path && urls.get(r.path)) out[r.id] = urls.get(r.path)!;
+  return out;
+}
+
 export type EmergencyChange = {
   id: string;
   kind: EmergencyKind;

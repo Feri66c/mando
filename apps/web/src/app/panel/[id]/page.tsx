@@ -5,7 +5,9 @@ import { notFound, redirect } from "next/navigation";
 import { revokeInvitation } from "@/app/actions/panel";
 import { Eyebrow, LevelBadge, PanelShell, PieceChain, TierMeter } from "@/components/panel/kit";
 import { Card, Empty, buttonGhost, buttonSecondary } from "@/components/operacion/ui";
-import { getAreas, getBrief, getBriefDocuments, getBriefDoubts, getCurrentUser, getMyOrgBrand, getEventTemplate, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
+import { getAreas, getBrief, getBriefDocuments, getBriefDoubts, getCurrentUser, getMyLook, getMyOrgBrand, getEventTemplate, getFaces, getMyEvent, getPendingInvitations, getTeam } from "@/lib/data";
+import { Cara } from "@/components/perfil/cara";
+import { PhotoUpload } from "@/components/perfil/editar";
 import { SUGGESTED_AREAS } from "@mando/core/command";
 import { DEFAULT_CARGOS, LEVEL_LABEL, TIERS, invitationMessage, type TierKey } from "@mando/core/event-types";
 import { formatDate, formatTime } from "@mando/core/time";
@@ -45,6 +47,7 @@ export default async function EventTeamPage({
     getBriefDocuments(id).catch(() => []),
     headers(),
   ]);
+  const faces = await getFaces(team.map((m) => m.profileId));
   const cargos = template?.cargos ?? [...DEFAULT_CARGOS];
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host") ?? "";
   const proto = headerList.get("x-forwarded-proto") ?? (host.startsWith("localhost") || host.startsWith("127.") ? "http" : "https");
@@ -52,7 +55,7 @@ export default async function EventTeamPage({
   const linkFor = (email: string) => `${proto}://${host}/ingresar?correo=${encodeURIComponent(email)}`;
 
   return (
-    <PanelShell userName={user.fullName} brand={await getMyOrgBrand(user.id)}>
+    <PanelShell userName={user.fullName} brand={await getMyOrgBrand(user.id)} face={(await getMyLook(user.id)).faceUrl}>
       <Link href="/panel" className="text-sm text-ink-muted hover:text-ink">
         ← Panel
       </Link>
@@ -142,12 +145,16 @@ export default async function EventTeamPage({
                   style={{ marginLeft: m.level ? `${(m.level - 1) * 16}px` : 0 }}
                 >
                   <LevelBadge level={m.level} />
+                  <Cara url={faces[m.profileId]} name={m.fullName} size={48} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-display font-semibold">{m.fullName}</p>
                     <p className="text-sm text-ink-muted">
                       {m.title ?? (m.level ? LEVEL_LABEL[m.level] : "Cliente")}
                       {m.level ? ` · Nivel ${m.level}` : " · Solo mira"}
                     </p>
+                    {m.role !== "viewer" && (
+                      <PhotoUpload profileId={m.profileId} label={faces[m.profileId] ? "Cambiar foto" : "Subir su foto"} compact />
+                    )}
                   </div>
                   <span className="shrink-0 font-mono text-xs uppercase tracking-wider text-ink-muted">
                     {m.welcomedAt ? "Activo" : "Sin entrar"}
