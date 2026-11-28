@@ -42,6 +42,15 @@ export default async function ProfilePage() {
               <PhotoUpload profileId={user.id} label={look.photoUrl ? "Cambiar mi foto" : "Subir mi foto"} />
             </div>
           </div>
+          <div className="mt-5 border-l-2 border-gold-500 bg-surface-000 px-4 py-3">
+            <p className="font-mono text-xs uppercase tracking-[0.14em] text-ink-muted">Para una buena foto (y un buen avatar)</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-ink-muted">
+              <li>Ponte frente a una pared lisa de un solo color. Sin espejos, ventanas ni gente detrás.</li>
+              <li>Mira a la cámara, con la cara completa y de frente, de los hombros hacia arriba.</li>
+              <li>Buena luz de frente, de día o de una lámpara. Que no quede la luz a tu espalda.</li>
+              <li>Sin lentes de sol, gorra ni filtros. Solo tú en la foto.</li>
+            </ul>
+          </div>
         </Card>
 
         <Card>
