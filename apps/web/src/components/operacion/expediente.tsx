@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   addRequirementAction,
   completeRequirementAction,
@@ -12,6 +13,7 @@ import {
 import { MAX_EVIDENCE_BYTES, requirementPath, sha256Hex } from "@mando/core/evidence";
 import { SWORN_STATEMENT } from "@mando/core/requirements";
 import { getBrowserClient } from "@/lib/supabase/browser";
+import { reviewRequirementDocument, type ReviewResult } from "@/app/actions/documento-ia";
 import { buttonGhost, buttonPrimary, buttonSecondary, inputClass } from "./ui";
 
 const INITIAL: CierreState = { ok: false, error: null };
@@ -36,8 +38,22 @@ function Feedback({ state }: { state: CierreState }) {
  * Subir un documento del expediente: se calcula su huella, se sube al cubo privado y el servidor lo registra.
  * Si el dato no es un archivo (una placa, un número de póliza), se puede escribir.
  */
-export function RequirementUpload({ eventId, requirementId, title, done }: { eventId: string; requirementId: string; title: string; done: boolean }) {
+export function RequirementUpload({
+  eventId,
+  requirementId,
+  title,
+  done,
+  label,
+}: {
+  eventId: string;
+  requirementId: string;
+  title: string;
+  done: boolean;
+  /** Texto del botón principal (en una red flag: «Adjuntar documento»). */
+  label?: string;
+}) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [review, setReview] = useState<(ReviewResult & { fileName: string }) | null>(null);
   const [note, setNote] = useState("");
   const [open, setOpen] = useState(false);
   const [swearing, setSwearing] = useState(false);
@@ -65,7 +81,15 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
       setState({ ...INITIAL, working: "Registrando…" });
       // Llega aquí solo después de aceptar la declaración jurada en pantalla.
       const result = await completeRequirementAction({ requirementId, filePath, fileName: file?.name ?? null, sha256: sha, note, sworn: true });
-      setState(result);
+      if (result.ok && file) {
+        // La IA de MANDO revisa lo que se acaba de adjuntar: vigencia y que sea lo que se pide.
+        setState({ ...INITIAL, working: "La IA de MANDO está revisando el documento…" });
+        const r = await reviewRequirementDocument(requirementId);
+        setReview({ ...r, fileName: file.name });
+        setState({ ok: true, error: null });
+      } else {
+        setState(result);
+      }
       if (result.ok) {
         setNote("");
         setOpen(false);
@@ -91,9 +115,9 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
       />
       <div className="flex flex-wrap gap-2">
         <button type="button" disabled={busy} onClick={() => setSwearing(true)} aria-label={`${done ? "Reemplazar" : "Subir"}: ${title}`} className={done ? buttonGhost : buttonPrimary}>
-          {done ? "Reemplazar archivo" : "Subir documento"}
+          {done ? "Reemplazar archivo" : (label ?? "Subir documento")}
         </button>
-        {!done && (
+        {!done && !label && (
           <button type="button" disabled={busy} onClick={() => setOpen((v) => !v)} aria-expanded={open} aria-label={`Escribir el dato: ${title}`} className={buttonGhost}>
             Escribir el dato
           </button>
@@ -111,12 +135,16 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
           </button>
         </div>
       )}
-      {swearing && (
+      {swearing && createPortal(
         <div className="aviso-fondo" role="dialog" aria-modal="true" aria-labelledby={`jurada-${requirementId}`}>
           <div className="aviso">
-            <p className="aviso-eyebrow">Declaración jurada</p>
+            <p className="aviso-eyebrow">{label ? "Adjunta el documento · declaración jurada" : "Declaración jurada"}</p>
             <p id={`jurada-${requirementId}`} className="aviso-titulo">{title}</p>
             <p className="aviso-texto">{SWORN_STATEMENT}</p>
+            <p className="aviso-texto ia-aviso">
+              Este expediente lo administra la IA de MANDO: revisa que sea el documento que se pide, que se lea bien y que esté
+              vigente para la fecha del evento. Si todo está bien, te da el pase. Adjunta el PDF, una foto o una captura.
+            </p>
             <button
               type="button"
               autoFocus
@@ -132,7 +160,8 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
               Cancelar
             </button>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
       {state.working && (
         <p role="status" className="mt-2 text-sm text-ink-muted">
@@ -140,6 +169,67 @@ export function RequirementUpload({ eventId, requirementId, title, done }: { eve
         </p>
       )}
       <Feedback state={state} />
+      {review &&
+        createPortal(
+          <ReviewDialog title={title} review={review} onClose={() => setReview(null)} onRetry={() => { setReview(null); setSwearing(true); }} />,
+          document.body,
+        )}
+    </div>
+  );
+}
+
+const VERDICT_TEXT: Record<NonNullable<ReviewResult["verdict"]>, { head: string; tone: "ok" | "warn" | "bad" }> = {
+  vigente: { head: "Pase concedido · vigente", tone: "ok" },
+  sin_fecha: { head: "Sin fecha de vencimiento a la vista", tone: "warn" },
+  ilegible: { head: "No se lee bien · vuelve a tomar la foto", tone: "bad" },
+  vencido: { head: "Documento vencido", tone: "bad" },
+  no_corresponde: { head: "No es el documento que se pide", tone: "bad" },
+};
+
+const day = (iso: string | null | undefined) => (iso ? iso.split("-").reverse().join("/") : null);
+
+/** Pop-up después de adjuntar: «Adjuntado» y lo que vio la IA. Si lo rechaza, invita a subir otro. */
+function ReviewDialog({ title, review, onClose, onRetry }: { title: string; review: ReviewResult & { fileName: string }; onClose: () => void; onRetry: () => void }) {
+  const v = review.verdict ? VERDICT_TEXT[review.verdict] : null;
+  const rejected = v?.tone === "bad";
+  return (
+    <div className="aviso-fondo" role="dialog" aria-modal="true" aria-labelledby={`adjuntado-${title}`}>
+      <div className={`aviso ${rejected ? "aviso-rechazo" : ""}`}>
+        <p className="aviso-eyebrow">{rejected ? "No aceptado" : "Adjuntado"}</p>
+        <p id={`adjuntado-${title}`} className="aviso-titulo">{title}</p>
+        <p className="aviso-texto">{review.fileName}</p>
+        {review.reviewed && v ? (
+          <div className={`ia-veredicto ia-${v.tone}`}>
+            <p className="font-semibold">
+              Revisión de la IA de MANDO: {v.head}
+              {review.verdict === "vigente" && review.expiresOn ? ` hasta el ${day(review.expiresOn)}` : ""}
+              {review.verdict === "vencido" && review.expiresOn ? ` desde el ${day(review.expiresOn)}` : ""}
+            </p>
+            {review.summary && <p className="mt-1 text-sm">{review.summary}</p>}
+            <p className="mt-2 text-xs opacity-80">
+              {rejected
+                ? "El documento vuelve a pendiente y la red flag sigue encendida. Quedó en la bitácora."
+                : "Quedó en el expediente bajo tu declaración jurada y en la bitácora."}
+            </p>
+          </div>
+        ) : (
+          <p className="aviso-texto">{review.note ?? "Quedó en el expediente bajo tu declaración jurada."}</p>
+        )}
+        {rejected ? (
+          <>
+            <button type="button" autoFocus onClick={onRetry} className={`${buttonPrimary} w-full`}>
+              Adjuntar otro documento
+            </button>
+            <button type="button" onClick={onClose} className={`${buttonGhost} mt-2 w-full`}>
+              Cerrar
+            </button>
+          </>
+        ) : (
+          <button type="button" autoFocus onClick={onClose} className={`${buttonPrimary} w-full`}>
+            Listo
+          </button>
+        )}
+      </div>
     </div>
   );
 }

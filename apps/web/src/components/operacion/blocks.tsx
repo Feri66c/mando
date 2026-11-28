@@ -75,6 +75,7 @@ export function AlertCard({
   config,
   timeZone,
   title,
+  paused = false,
   children,
 }: {
   alert: Alert;
@@ -82,11 +83,13 @@ export function AlertCard({
   timeZone: string;
   /** Título a mostrar si la sección ya dice lo que el título repite (por ejemplo «No negociable»). */
   title?: string;
+  /** En pausa por modo diseño: no late. */
+  paused?: boolean;
   children?: React.ReactNode;
 }) {
   // Red flag abierta: fondo rojo bajo que late despacio, porque está viva.
   const top = Math.max(4, ...(config?.niveles ?? []).map((n) => n.nivel));
-  const live = alert.level >= top && alert.status !== "resolved";
+  const live = alert.level >= top && alert.status !== "resolved" && !paused;
   return (
     <li className={`rounded-card p-4 ${live ? "alerta-roja" : "bg-surface-100"} ${alert.status === "resolved" ? "opacity-70" : ""}`}>
       <div className="flex flex-wrap items-center gap-2">

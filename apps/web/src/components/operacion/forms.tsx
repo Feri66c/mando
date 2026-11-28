@@ -23,6 +23,8 @@ import { formatShift } from "@mando/core/route";
 import type { MomentTemplate } from "@mando/core/templates";
 import { formatTime, wallTimeToIso } from "@mando/core/time";
 import { buttonGhost, buttonPrimary, buttonSecondary, inputClass } from "./ui";
+import { RequirementUpload } from "./expediente";
+import { ackWithTime, type AckState } from "@/app/actions/documento-ia";
 
 const INITIAL: ActionState = { ok: false, error: null };
 
@@ -442,11 +444,93 @@ export function CreateMomentForm({
 
 // --------------------------------------------------------------------------- Alertas
 
-export function AlertActions({ alertId, status }: { alertId: string; status: "open" | "acknowledged" | "resolved" }) {
+const PLAZOS = [
+  { min: 30, label: "30 min" },
+  { min: 60, label: "1 h" },
+  { min: 120, label: "2 h" },
+  { min: 240, label: "4 h" },
+];
+
+/**
+ * Red flag de un documento del expediente (decisión 93): no se «marca resuelta» con una palabra.
+ * «Resolver» = adjuntar el documento bajo declaración jurada; la IA de MANDO lo revisa y da el pase.
+ * «Necesito más tiempo» deja en la bitácora a qué hora se compromete la persona.
+ */
+function DocumentAlertActions({
+  alertId,
+  status,
+  document,
+}: {
+  alertId: string;
+  status: "open" | "acknowledged";
+  document: { eventId: string; requirementId: string; title: string };
+}) {
+  void status;
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [state, setState] = useState<AckState | null>(null);
+  return (
+    <div className="mt-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <RequirementUpload eventId={document.eventId} requirementId={document.requirementId} title={document.title} done={false} label="Resolver" />
+        <button
+          type="button"
+          className="min-h-11 px-2 text-sm font-medium text-white/70 underline-offset-4 hover:underline"
+          aria-expanded={asking}
+          onClick={() => setAsking((v) => !v)}
+        >
+          Necesito más tiempo
+        </button>
+      </div>
+      {asking && (
+        <div className="mt-3">
+          <p className="text-sm font-medium">¿Cuánto tiempo más necesitas para adjuntarlo?</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {PLAZOS.map((p) => (
+              <button
+                key={p.min}
+                type="button"
+                disabled={busy}
+                className="plazo-chip"
+                onClick={async () => {
+                  setBusy(true);
+                  const r = await ackWithTime(alertId, p.min);
+                  setState(r);
+                  setBusy(false);
+                  if (r.ok) setAsking(false);
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-white/60">Queda en la bitácora a qué hora te comprometiste.</p>
+        </div>
+      )}
+      {state && (
+        <p role={state.ok ? "status" : "alert"} className={`mt-2 text-sm ${state.ok ? "text-[#8fe0b8]" : "text-[#ffd3c9]"}`}>
+          {state.ok ? state.message : state.error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function AlertActions({
+  alertId,
+  status,
+  document,
+}: {
+  alertId: string;
+  status: "open" | "acknowledged" | "resolved";
+  /** Si la alerta es por un documento del expediente, se resuelve adjuntándolo. */
+  document?: { eventId: string; requirementId: string; title: string } | null;
+}) {
   const [ackState, ack] = useActionState(ackAlertAction, INITIAL);
   const [resState, resolve] = useActionState(resolveAlertAction, INITIAL);
   const [showNote, setShowNote] = useState(false);
   if (status === "resolved") return null;
+  if (document) return <DocumentAlertActions alertId={alertId} status={status} document={document} />;
   return (
     <div className="mt-3">
       <div className="flex flex-wrap gap-2">
