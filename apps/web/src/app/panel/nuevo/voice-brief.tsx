@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { briefFromVoice, type VoiceBriefResult } from "@/app/actions/ia";
 import { playTap } from "@/components/operacion/pieza";
 import { MicIcon, useDictation } from "./use-dictation";
+import { AudioUpload } from "./audio-upload";
 
 /** «Cuéntame tu brief»: un botón que pulsa, escucha y entrega el dictado a la IA para ordenarlo. */
 export function VoiceBrief({ onResult }: { onResult: (r: Extract<VoiceBriefResult, { ok: true }>) => void }) {
@@ -11,9 +12,7 @@ export function VoiceBrief({ onResult }: { onResult: (r: Extract<VoiceBriefResul
   const { listening, heard, error, setError } = dictation;
   const [thinking, startThinking] = useTransition();
 
-  function finish() {
-    const said = dictation.stop();
-    if (!said) return setError("No alcancé a escucharte. Toca el micrófono y cuéntame tu evento.");
+  function build(said: string) {
     startThinking(async () => {
       const r = await briefFromVoice(said);
       if (!r.ok) return setError(r.error);
@@ -21,11 +20,31 @@ export function VoiceBrief({ onResult }: { onResult: (r: Extract<VoiceBriefResul
     });
   }
 
+  function finish() {
+    const said = dictation.stop();
+    if (!said) return setError("No alcancé a escucharte. Toca el micrófono y cuéntame tu evento.");
+    build(said);
+  }
+
+  const upload = (
+    <AudioUpload
+      label="O sube un audio de WhatsApp con la idea"
+      onText={(text) => {
+        setError(null);
+        build(text);
+      }}
+      disabled={thinking || listening}
+    />
+  );
+
   if (!dictation.supported)
     return (
-      <p className="cuentame-nota">
-        Este navegador no deja dictar. Ábrelo en Chrome (computadora) o Safari (iPhone), o usa el micrófono del teclado para escribir el brief.
-      </p>
+      <div className="cuentame">
+        <p className="cuentame-nota">
+          Este navegador no deja dictar. Ábrelo en Chrome (computadora) o Safari (iPhone), o usa el micrófono del teclado para escribir el brief.
+        </p>
+        {upload}
+      </div>
     );
 
   const live = `${heard.final} ${heard.interim}`.trim();
@@ -55,6 +74,7 @@ export function VoiceBrief({ onResult }: { onResult: (r: Extract<VoiceBriefResul
           </span>
         </span>
       </button>
+      {upload}
       {(listening || thinking) && live && (
         <p className="cuentame-vivo" aria-live="polite">
           {heard.final}
