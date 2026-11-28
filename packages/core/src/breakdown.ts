@@ -1,6 +1,7 @@
 // Desglose para cotizar (decisión 89). La IA arma de 100 a 150 ítems por rubro; el productor recorta
 // el Excel y lo vuelve a subir para que la IA revise lo que quitó o cambió. Lo ajustable vive en config/desglose.json.
 import config from "../../../config/desglose.json";
+import countries from "../../../config/paises.json";
 
 export type Rubro = { codigo: string; nombre: string; ejemplos: string };
 export type BreakdownGroup = { clave: string; nombre: string; rubros: string[] };
@@ -85,4 +86,13 @@ export function compareBreakdown(base: readonly BreakdownItem[], current: readon
   });
   const added = current.filter((c) => !c.codigo || !before.has(c.codigo));
   return { removed, changed, added };
+}
+
+
+export type Country = { codigo: string; nombre: string; zonas: string[]; moneda: string; simbolo: string; impuesto: string; tasa: number; tc_referencia: number };
+export const COUNTRIES: readonly Country[] = countries.paises;
+
+/** País del evento según su zona horaria (config/paises.json): moneda e impuesto del Excel. */
+export function countryForZone(zone: string | null | undefined): Country {
+  return COUNTRIES.find((c) => zone && c.zonas.includes(zone)) ?? COUNTRIES.find((c) => c.codigo === countries.por_defecto)!;
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { BREAKDOWN_GROUPS, ITEMS_MAX, ITEMS_MIN, RUBROS, assignCodes, compareBreakdown, itemsPerGroup } from "../src/breakdown";
+import zones from "../../../config/zonas-horarias.json";
+import { BREAKDOWN_GROUPS, COUNTRIES, ITEMS_MAX, ITEMS_MIN, RUBROS, assignCodes, compareBreakdown, countryForZone, itemsPerGroup } from "../src/breakdown";
 
 describe("Desglose para cotizar", () => {
   it("cada rubro está en un solo grupo y los grupos suman el rango pedido", () => {
@@ -43,5 +44,15 @@ describe("Desglose para cotizar", () => {
     expect(diff.changed[0].before.cantidad).toBe(8);
     expect(diff.changed[0].after.cantidad).toBe(4);
     expect(diff.added.map((a) => a.item)).toEqual(["Photocall"]);
+  });
+});
+
+
+describe("País del desglose", () => {
+  it("cada zona horaria que se puede elegir tiene país, moneda e impuesto", () => {
+    for (const z of zones.zonas) expect(COUNTRIES.some((c) => c.zonas.includes(z.zona))).toBe(true);
+    expect(countryForZone("America/Lima").impuesto).toBe("IGV");
+    expect(countryForZone("America/Mexico_City").tasa).toBe(0.16);
+    expect(countryForZone(null).codigo).toBe("PE");
   });
 });
