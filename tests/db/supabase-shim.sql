@@ -16,7 +16,7 @@ create table if not exists auth.users (
   encrypted_password varchar(255), email_confirmed_at timestamptz,
   raw_app_meta_data jsonb, raw_user_meta_data jsonb, created_at timestamptz, updated_at timestamptz,
   confirmation_token varchar(255), email_change varchar(255), email_change_token_new varchar(255),
-  recovery_token varchar(255)
+  recovery_token varchar(255), banned_until timestamptz
 );
 create table if not exists auth.identities (
   id uuid primary key, user_id uuid references auth.users(id) on delete cascade, provider_id text,

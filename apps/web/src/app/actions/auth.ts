@@ -24,6 +24,7 @@ function safeReturnPath(value: FormDataEntryValue | null): string {
 async function afterSignIn(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>, fallback: string): Promise<string> {
   try {
     await supabase.rpc("claim_invitations");
+    await supabase.rpc("claim_org_invitations"); // invitado como nuevo backend de una productora
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return fallback;
     const { data } = await supabase
