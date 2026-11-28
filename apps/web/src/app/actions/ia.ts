@@ -105,6 +105,8 @@ export async function suggestComponents(briefText: string): Promise<SuggestResul
     const hits = (out.componentes ?? [])
       .filter((c) => customModule(c.clave) && !seen.has(c.clave) && seen.add(c.clave))
       .map((c) => ({ clave: c.clave, palabra: String(c.razon ?? "").trim().slice(0, 80) }));
+    // Lo que el brief nombra con palabras del catálogo también se marca, aunque la IA lo haya pasado por alto.
+    for (const w of byWords()) if (!seen.has(w.clave)) hits.push({ clave: w.clave, palabra: `el brief dice «${w.palabra}»` });
     return { ok: true, source: "ia", hits };
   } catch (e) {
     // Si la IA falla, el productor no se queda sin ayuda: vuelve la lectura por palabras clave.
