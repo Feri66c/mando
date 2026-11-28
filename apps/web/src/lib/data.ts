@@ -347,3 +347,33 @@ export async function getRouteVersions(eventId: string) {
 export async function getExperience(eventId: string) {
   return fetchExperience(await requireClient(), eventId);
 }
+
+/** «Backends» de la organización: quienes ya administran y las invitaciones pendientes. Solo para administradores. */
+export async function getOrgBackends(orgId: string): Promise<{
+  admins: { profileId: string; fullName: string; email: string; isMe: boolean }[];
+  pending: { id: string; fullName: string; email: string; createdAt: string }[];
+}> {
+  const client = await requireClient();
+  const { data: admins } = await client.rpc("org_admins", { p_org: orgId });
+  const { data: pending } = await client
+    .from("org_invitations")
+    .select("id, full_name, email, created_at")
+    .eq("organization_id", orgId)
+    .is("accepted_at", null)
+    .is("revoked_at", null)
+    .order("created_at", { ascending: true });
+  return {
+    admins: ((admins ?? []) as { profile_id: string; full_name: string; email: string; is_me: boolean }[]).map((a) => ({
+      profileId: a.profile_id,
+      fullName: a.full_name,
+      email: a.email,
+      isMe: a.is_me,
+    })),
+    pending: (pending ?? []).map((p) => ({
+      id: String(p.id),
+      fullName: String(p.full_name),
+      email: String(p.email),
+      createdAt: String(p.created_at),
+    })),
+  };
+}

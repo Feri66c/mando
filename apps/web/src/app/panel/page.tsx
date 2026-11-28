@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Eyebrow, PanelShell, TierMeter } from "@/components/panel/kit";
-import { Card, Empty, buttonPrimary } from "@/components/operacion/ui";
+import { Card, Empty, buttonGhost, buttonPrimary } from "@/components/operacion/ui";
 import { EventStatusText } from "@/components/pills";
-import { getAdminOrgs, getCurrentUser, getMyLook, getMyOrgBrand, getMyEvents, getOrgRequests } from "@/lib/data";
+import { getAdminOrgs, getCurrentUser, getMyLook, getMyOrgBrand, getMyEvents, getOrgBackends, getOrgRequests } from "@/lib/data";
+import { NewBackendForm, RevokeBackendButton } from "@/components/panel/backends";
 import { MandoLockup } from "@/components/brand";
 import { CustomizationForm, CustomizationStatusForm, OrgBrandForm } from "@/components/panel/marca";
 import { REQUEST_STATUSES } from "@mando/core/command";
@@ -22,6 +23,7 @@ export default async function PanelPage() {
   const brand = await getMyOrgBrand(user.id);
   const myOrg = brand?.isAdmin ? brand : null;
   const requests = myOrg ? await getOrgRequests(myOrg.id) : [];
+  const backends = await getOrgBackends(orgs[0].id);
 
   return (
     <PanelShell userName={user.fullName} brand={brand} face={(await getMyLook(user.id)).faceUrl}>
@@ -33,9 +35,14 @@ export default async function PanelPage() {
             Crea el evento, elige su tipo e invita a cada persona con su cargo. Nadie entra sin tu invitación.
           </p>
         </div>
-        <Link href="/panel/nuevo" className={buttonPrimary}>
-          Crear evento
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/panel/nuevo" className={buttonPrimary}>
+            Crear evento
+          </Link>
+          <a href="#backends" className={buttonGhost}>
+            Crear nuevo backend
+          </a>
+        </div>
       </div>
 
       <h2 className="mb-3 mt-10 font-display text-lg font-semibold">Tus eventos</h2>
@@ -60,6 +67,56 @@ export default async function PanelPage() {
           ))}
         </ul>
       )}
+
+
+      <section className="mt-12 scroll-mt-6" id="backends" aria-labelledby="backends-titulo">
+        <h2 id="backends-titulo" className="font-display text-lg font-semibold">
+          Backends de tu productora
+        </h2>
+        <p className="mt-1 max-w-xl text-sm text-ink-muted">
+          Un backend tiene tu mismo poder: crea eventos, arma equipos e invita. Para que alguien sea backend de un solo evento,
+          invítalo dentro del evento con el cargo «Productor general».
+        </p>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <Card>
+            <Eyebrow>Crear nuevo backend</Eyebrow>
+            <p className="mt-2 text-sm text-ink-muted">Le llega un correo; entra con su correo y el código de 6 dígitos.</p>
+            <div className="mt-4">
+              <NewBackendForm orgId={orgs[0].id} />
+            </div>
+          </Card>
+          <Card>
+            <Eyebrow>Quiénes tienen el mando</Eyebrow>
+            <ul className="mt-3 space-y-2">
+              {backends.admins.map((a) => (
+                <li key={a.profileId} className="flex flex-wrap items-baseline justify-between gap-2 border-t border-line pt-2 first:border-0 first:pt-0">
+                  <span className="font-medium">
+                    {a.fullName}
+                    {a.isMe && <span className="text-ink-muted"> · tú</span>}
+                  </span>
+                  <span className="font-mono text-sm text-ink-muted">{a.email}</span>
+                </li>
+              ))}
+            </ul>
+            {backends.pending.length > 0 && (
+              <>
+                <Eyebrow className="mt-6">Invitados, aún no entran</Eyebrow>
+                <ul className="mt-3 space-y-2">
+                  {backends.pending.map((p) => (
+                    <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2 first:border-0 first:pt-0">
+                      <span>
+                        <span className="font-medium">{p.fullName}</span>{" "}
+                        <span className="font-mono text-sm text-ink-muted">{p.email}</span>
+                      </span>
+                      <RevokeBackendButton id={p.id} />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </Card>
+        </div>
+      </section>
 
       {myOrg && (
         <section className="mt-12" aria-labelledby="mi-mando">
